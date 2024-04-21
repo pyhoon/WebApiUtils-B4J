@@ -1,0 +1,16 @@
+' Router for PUT request
+Private Sub RoutePut
+	Select Version
+		Case "v2"
+			Select ElementLastIndex
+				Case FirstIndex
+					If WebApiUtils.CheckInteger(FirstElement) = False Then
+						WebApiUtils.ReturnErrorUnprocessableEntity(Response)
+						Return
+					End If
+					Put$Controller$(FirstElement)
+					Return
+			End Select
+	End Select
+	WebApiUtils.ReturnBadRequest(Response)
+End Sub

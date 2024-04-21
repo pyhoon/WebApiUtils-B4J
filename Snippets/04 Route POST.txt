@@ -1,0 +1,12 @@
+' Router for POST request
+Private Sub RoutePost
+	Select Version
+		Case "v2"
+			Select ElementLastIndex
+				Case ControllerIndex
+					Post$Controller$
+					Return
+			End Select
+	End Select
+	WebApiUtils.ReturnBadRequest(Response)
+End Sub

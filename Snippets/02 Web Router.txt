@@ -1,0 +1,23 @@
+' Base Router for Web
+Public Sub RouteWeb
+	Method = Request.Method.ToUpperCase
+	Elements = WebApiUtils.GetUriElements(Request.RequestURI)
+	ElementLastIndex = Elements.Length - 1
+	ControllerIndex = Main.Element.WebControllerIndex
+	If ElementLastIndex > ControllerIndex Then
+		FirstIndex = ControllerIndex + 1
+		FirstElement = Elements(FirstIndex)
+	End If
+	
+	Select Method
+		Case "GET"
+			Select ElementLastIndex
+				Case ControllerIndex
+					ShowPage
+					Return
+			End Select
+		Case Else
+			Log("Unsupported method: " & Method)
+			WebApiUtils.ReturnMethodNotAllow(Response)
+	End Select
+End Sub

@@ -1,0 +1,23 @@
+' Router for DELETE request
+Private Sub RouteDelete
+	Select Version
+		Case "v2"
+			Select ElementLastIndex
+				Case FirstIndex
+					If WebApiUtils.CheckInteger(FirstElement) = False Then
+						WebApiUtils.ReturnErrorUnprocessableEntity(Response)
+						Return
+					End If
+					Delete$Controller$(FirstElement)
+					Return
+				Case SecondIndex
+					If WebApiUtils.CheckInteger(FirstElement) = False Then
+						WebApiUtils.ReturnErrorUnprocessableEntity(Response)
+						Return
+					End If
+					Delete$Controller$Key(FirstElement, SecondElement)
+					Return
+			End Select
+	End Select
+	WebApiUtils.ReturnBadRequest(Response)
+End Sub

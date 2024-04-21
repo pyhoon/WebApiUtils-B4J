@@ -1,0 +1,20 @@
+' Router for GET request
+Private Sub RouteGet
+	Select Version
+		Case "v2"
+			Select ElementLastIndex
+				Case ControllerIndex
+					Get$Controller$s
+					Return
+				Case FirstIndex
+					Dim FirstElement As String = Elements(FirstIndex)
+					If WebApiUtils.CheckInteger(FirstElement) = False Then
+						WebApiUtils.ReturnErrorUnprocessableEntity(Response)
+						Return
+					End If
+					Get$Controller$(FirstElement)
+					Return
+			End Select
+	End Select
+	WebApiUtils.ReturnBadRequest(Response)
+End Sub
