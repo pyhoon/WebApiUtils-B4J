@@ -1,0 +1,9 @@
+# ignore files
+*.b4a.meta
+*.b4i.meta
+*.b4j.meta
+*.zip
+
+# ignore ALL files in these directories
+AutoBackups/
+Objects/
