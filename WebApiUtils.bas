@@ -83,26 +83,6 @@ Public Sub BuildDocView (strHTML As String, View As String) As String
 	Return strHTML
 End Sub
 
-'Public Sub BuildDocScript (strHTML As String, Script As String) As String
-'	' Replace @DOCSCRIPT@ tag with new content
-'	strHTML = strHTML.Replace("@DOCSCRIPT@", Script)
-'	Return strHTML
-'End Sub
-'Public Sub BuildDocScript (strHTML As String, Script As String) As String
-'	' Replace @DOCSCRIPT@ tag with new content
-'	If Script.Length > 0 Then
-'		Script = $"  <script>
-'    $(document).ready(function() {
-'    ${Script}
-'    });
-'  </script>"$
-'		strHTML = strHTML.Replace("@DOCSCRIPT@", Script)
-'	Else
-'		strHTML = strHTML.Replace("@DOCSCRIPT@", "")
-'	End If
-'	Return strHTML
-'End Sub
-
 Public Sub BuildScript (strHTML As String, Script As String) As String
 	' Replace @SCRIPT@ tag with new content
 	strHTML = strHTML.Replace("@SCRIPT@", Script)
@@ -219,11 +199,6 @@ Public Sub RequestData (Request As ServletRequest) As Map
 	If inp.BytesAvailable <= 0 Then
 		Return data
 	End If
-	'Dim tr As TextReader
-	'tr.Initialize(inp)
-	'Dim json As JSONParser
-	'json.Initialize(tr.ReadAll)
-	'data = json.NextObject
 	Dim buffer() As Byte = Bit.InputStreamToBytes(inp)
 	Dim str As String = BytesToString(buffer, 0, buffer.Length, "UTF-8")
 	data = str.As(JSON).ToMap
@@ -494,9 +469,9 @@ End Sub
 ' HRM.Initialize
 ' HRM.SimpleResponse = Main.SimpleResponse</code>
 Public Sub ReturnHttpResponse (mess As HttpResponseMessage, resp As ServletResponse)
-	' =======================
-	' SimpleResponse = False
-	' =======================
+	' ==============================
+	' SimpleResponse.Enable = False
+	' ==============================
 	' {
 	'  "m": "Success",
 	'  "e": Null,
@@ -504,9 +479,9 @@ Public Sub ReturnHttpResponse (mess As HttpResponseMessage, resp As ServletRespo
 	'  "r": [ { "connect": "true" } ]
 	'  "a": 200
 	' }
-	' =======================
-	' SimpleResponse = True
-	' =======================
+	' =============================
+	' SimpleResponse.Enable = True
+	' =============================
 	' Format: Auto
 	' {
 	'  "connect": "true"
