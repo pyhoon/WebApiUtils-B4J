@@ -4,9 +4,9 @@ Private Sub RoutePost
 		Case "v2"
 			Select ElementLastIndex
 				Case ControllerIndex
-					Post$Controller$
+					Post$Plural$
 					Return
 			End Select
 	End Select
-	WebApiUtils.ReturnBadRequest(Response)
+	ReturnBadRequest
 End Sub

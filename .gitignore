@@ -1,9 +1,22 @@
 # ignore files
-*.b4a.meta
-*.b4i.meta
 *.b4j.meta
+*.b4j
 *.zip
+ApiHandler.bas
+CategoriesController.bas
+CorsFilter.bas
+DatabaseConfiguration.bas
+DatabaseConnector.bas
+FindController.bas
+HelpHandler.bas
+HttpsFilter.bas
+IndexController.bas
+MiniORM.bas
+ProductsController.bas
+ServerConfiguration.bas
+WebHandler.bas
 
 # ignore ALL files in these directories
 AutoBackups/
 Objects/
+Files/

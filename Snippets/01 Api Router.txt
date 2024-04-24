@@ -22,6 +22,6 @@ Public Sub RouteApi
 			RouteDelete
 		Case Else
 			Log("Unsupported method: " & Method)
-			WebApiUtils.ReturnMethodNotAllow(Response)
+			ReturnMethodNotAllow
 	End Select
 End Sub

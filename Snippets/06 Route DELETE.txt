@@ -4,20 +4,20 @@ Private Sub RouteDelete
 		Case "v2"
 			Select ElementLastIndex
 				Case FirstIndex
-					If WebApiUtils.CheckInteger(FirstElement) = False Then
-						WebApiUtils.ReturnErrorUnprocessableEntity(Response)
+					If IsNumber(FirstElement) = False Then
+						ReturnErrorUnprocessableEntity
 						Return
 					End If
-					Delete$Controller$(FirstElement)
+					Delete$Singular$(FirstElement)
 					Return
-				Case SecondIndex
-					If WebApiUtils.CheckInteger(FirstElement) = False Then
-						WebApiUtils.ReturnErrorUnprocessableEntity(Response)
+				Case SecondIndex ' use in MinimaList API to remove a key in the Map
+					If IsNumber(FirstElement) = False Then
+						ReturnErrorUnprocessableEntity
 						Return
 					End If
-					Delete$Controller$Key(FirstElement, SecondElement)
+					Delete$Singular$Key(FirstElement, SecondElement)
 					Return
 			End Select
 	End Select
-	WebApiUtils.ReturnBadRequest(Response)
+	ReturnBadRequest
 End Sub

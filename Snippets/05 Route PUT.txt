@@ -4,13 +4,13 @@ Private Sub RoutePut
 		Case "v2"
 			Select ElementLastIndex
 				Case FirstIndex
-					If WebApiUtils.CheckInteger(FirstElement) = False Then
-						WebApiUtils.ReturnErrorUnprocessableEntity(Response)
+					If IsNumber(FirstElement) = False Then
+						ReturnErrorUnprocessableEntity
 						Return
 					End If
-					Put$Controller$(FirstElement)
+					Put$Singular$(FirstElement)
 					Return
 			End Select
 	End Select
-	WebApiUtils.ReturnBadRequest(Response)
+	ReturnBadRequest
 End Sub

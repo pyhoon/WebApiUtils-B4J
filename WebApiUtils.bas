@@ -1,11 +1,11 @@
 ﻿B4J=true
-Group=Default Group
+Group=Modules
 ModulesStructureVersion=1
 Type=StaticCode
 Version=8.1
 @EndOfDesignText@
 ' Web API Utility
-' Version 2.05
+' Version 2.06
 Sub Process_Globals
 	Private const CONTENT_TYPE_JSON As String = "application/json"
 	Private const CONTENT_TYPE_HTML As String = "text/html"

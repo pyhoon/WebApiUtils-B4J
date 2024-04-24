@@ -24,6 +24,6 @@ Public Sub Route
 			'RoutePost
 		Case Else
 			Log("Unsupported method: " & Method)
-			WebApiUtils.ReturnMethodNotAllow(Response)
+			ReturnMethodNotAllow
 	End Select
 End Sub

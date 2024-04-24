@@ -18,6 +18,6 @@ Public Sub RouteWeb
 			End Select
 		Case Else
 			Log("Unsupported method: " & Method)
-			WebApiUtils.ReturnMethodNotAllow(Response)
+			ReturnMethodNotAllow
 	End Select
 End Sub
