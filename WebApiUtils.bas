@@ -5,7 +5,7 @@ Type=StaticCode
 Version=8.1
 @EndOfDesignText@
 ' Web API Utility
-' Version 2.06
+' Version 2.07
 Sub Process_Globals
 	Private const CONTENT_TYPE_JSON As String = "application/json"
 	Private const CONTENT_TYPE_HTML As String = "text/html"
@@ -560,7 +560,7 @@ Public Sub ReturnHttpResponse (mess As HttpResponseMessage, resp As ServletRespo
 						mess.ResponseData.Initialize
 					End If
 					' Add object to Map
-					If mess.SimpleResponse.DataKey = Null Then
+					If mess.SimpleResponse.DataKey = Null Or mess.SimpleResponse.DataKey = "" Then
 						mess.ResponseObject.Put("data", mess.ResponseData)
 					Else
 						mess.ResponseObject.Put(mess.SimpleResponse.DataKey, mess.ResponseData)
