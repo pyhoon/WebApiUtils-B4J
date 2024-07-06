@@ -1,11 +1,11 @@
 ﻿B4J=true
-Group=Modules
+Group=Classes
 ModulesStructureVersion=1
 Type=StaticCode
 Version=8.1
 @EndOfDesignText@
 ' Web API Utility
-' Version 2.07
+' Version 2.08
 Sub Process_Globals
 	Private const CONTENT_TYPE_JSON As String = "application/json"
 	Private const CONTENT_TYPE_HTML As String = "text/html"
@@ -256,24 +256,24 @@ End Sub
 ' ====================================================
 ' Requires StringUtils library
 ' ====================================================
-'Public Sub RequestBasicAuth (Auths As List) As Map
-'	Dim client As Map = CreateMap("CLIENT_ID": "", "CLIENT_SECRET": "")
-'	If Auths.Size > 0 Then
-'		Dim auth As String = Auths.Get(0)
-'		If auth.StartsWith("Basic") Then
-'			Dim b64 As String = auth.SubString("Basic ".Length)
-'			Dim su As StringUtils
-'			Dim b() As Byte = su.DecodeBase64(b64)
-'			Dim raw As String = BytesToString(b, 0, b.Length, "utf8")
-'			Dim UsernameAndPassword() As String = Regex.Split(":", raw)
-'			If UsernameAndPassword.Length = 2 Then
-'				client.Put("CLIENT_ID", UsernameAndPassword(0))
-'				client.Put("CLIENT_SECRET", UsernameAndPassword(1))
-'			End If
-'		End If
-'	End If
-'	Return client
-'End Sub
+Public Sub RequestBasicAuth (Auths As List) As Map
+	Dim client As Map = CreateMap("CLIENT_ID": "", "CLIENT_SECRET": "")
+	If Auths.Size > 0 Then
+		Dim auth As String = Auths.Get(0)
+		If auth.StartsWith("Basic") Then
+			Dim b64 As String = auth.SubString("Basic ".Length)
+			Dim su As StringUtils
+			Dim b() As Byte = su.DecodeBase64(b64)
+			Dim raw As String = BytesToString(b, 0, b.Length, "utf8")
+			Dim UsernameAndPassword() As String = Regex.Split(":", raw)
+			If UsernameAndPassword.Length = 2 Then
+				client.Put("CLIENT_ID", UsernameAndPassword(0))
+				client.Put("CLIENT_SECRET", UsernameAndPassword(1))
+			End If
+		End If
+	End If
+	Return client
+End Sub
 ' ====================================================
 
 ' Get Access Token from Header
@@ -315,7 +315,7 @@ Public Sub RequestBearerToken (req As ServletRequest) As String
 	Dim Auths As List = req.GetHeaders("Authorization")
 	If Auths.Size > 0 Then
 		Dim auth As String = Auths.Get(0)
-		If auth.StartsWith("Bearer") Then
+		If auth.StartsWith("Bearer") And auth.Length > "Bearer ".Length Then
 			Return auth.SubString("Bearer ".Length)
 		End If
 	End If
@@ -452,6 +452,7 @@ Public Sub ReturnErrorCredentialNotProvided (resp As ServletResponse)
 	mess.Initialize
 	mess.ResponseCode = 400
 	mess.ResponseError = "Credential Not Provided"
+	mess.SimpleResponse = Main.SimpleResponse
 	ReturnHttpResponse(mess, resp)
 End Sub
 
