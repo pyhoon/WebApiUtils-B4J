@@ -2,20 +2,16 @@
 Group=Classes
 ModulesStructureVersion=1
 Type=StaticCode
-Version=8.1
+Version=10
 @EndOfDesignText@
 ' Web API Utility
-' Version 2.08
+' Version 3.02
 Sub Process_Globals
-	Private const CONTENT_TYPE_JSON As String = "application/json"
 	Private const CONTENT_TYPE_HTML As String = "text/html"
-	Type HttpResponseMessage (ResponseCode As Int, ResponseString As String, ResponseData As List, ResponseObject As Map, ResponseMessage As String, ResponseError As Object, ResponseType As String, ContentType As String, SimpleResponse As SimpleResponse)
+	Private const CONTENT_TYPE_JSON As String = "application/json"
 	Type HttpResponseContent (ResponseBody As String)
-	Type ApiElement (Name As String, Versioning As Boolean)
-	Type WebElement (Root As String, Path As String)
-	Type Element (Web As WebElement, Api As ApiElement, Elements As List, PathIndex As Int, ApiVersionIndex As Int, ApiControllerIndex As Int, WebControllerIndex As Int)
+	Type HttpResponseMessage (ResponseCode As Int, ResponseString As String, ResponseData As List, ResponseObject As Map, ResponseMessage As String, ResponseError As Object, ResponseType As String, ContentType As String, SimpleResponse As SimpleResponse)
 	Type SimpleResponse (Enable As Boolean, Format As String, DataKey As String)
-	Type KeyValueList (Keys As List, Values As List)
 End Sub
 
 Public Sub CheckMaxElements (Elements() As String, Max_Elements As Int) As Boolean
@@ -50,6 +46,27 @@ End Sub
 Public Sub GetUriElements (Uri As String) As String()
 	Dim element() As String = Regex.Split("\/", Uri)
 	Return element
+End Sub
+
+' Use the following code sample if your API URL pattern looks like this:
+' Web = /products
+' Api = /api/products
+' <code>Elements = WebApiUtils.CropElements(FullElements, 2) ' for Web handler</code>
+' <code>Elements = WebApiUtils.CropElements(FullElements, 3) ' for Api handler</code>
+Public Sub CropElements (FullElements() As String, StartingElementIndex As Int) As String()
+	If StartingElementIndex > FullElements.Length Then
+		StartingElementIndex = FullElements.Length
+	End If
+	Dim TempList As List
+	TempList.Initialize
+	For i = StartingElementIndex To FullElements.Length - 1
+		TempList.Add(FullElements(i))
+	Next
+	Dim NewArray(TempList.Size) As String
+	For i = 0 To NewArray.Length - 1
+		NewArray(i) = TempList.Get(i)
+	Next
+	Return NewArray
 End Sub
 
 Public Sub BuildHtml (strHTML As String, Settings As Map) As String
@@ -138,24 +155,6 @@ Public Sub Object2Json (O As Object) As String
 	Return O.As(JSON).ToString
 End Sub
 
-' Make a copy of an object
-'Public Sub CopyObject (obj As Object) As Object
-'	Dim ser As B4XSerializator
-'	Return ser.ConvertBytesToObject(ser.ConvertObjectToBytes(obj))
-'End Sub
-
-Public Sub ConvertMap2KeyValueList (obj As Map) As KeyValueList
-	Dim Keys As List
-	Dim Values As List
-	Keys.Initialize
-	Values.Initialize
-	For Each key As String In obj.Keys
-		Keys.Add(key)
-		Values.Add(obj.Get(key))
-	Next
-	Return CreateKeyValueList(Keys, Values)
-End Sub
-
 Public Sub GetCurrentTimezone As String
 	Dim CurrentTimezone As Double = DateTime.GetTimeZoneOffsetAt(DateTime.Now)
 	Return CurrentTimezone
@@ -180,7 +179,7 @@ Public Sub FileNameByCurrentDateTime As String
 End Sub
 
 ' Read Request Cookie As Map
-Public Sub RequestCookie (req As ServletRequest) As Object
+Public Sub RequestCookie (req As ServletRequest) As Map
 	Dim Munchies() As Cookie = req.GetCookies
 	Dim M As Map
 	M.Initialize
@@ -205,47 +204,58 @@ Public Sub RequestData (Request As ServletRequest) As Map
 	Return data
 End Sub
 
-'Public Sub RequestMultipartList (Request As ServletRequest, Folder As String, MaxSize As Long) As List
-'	Dim config As JavaObject
-'	'config.InitializeNewInstance("javax.servlet.MultipartConfigElement", Array(Folder, MaxSize, MaxSize, 81920))
-'	config.InitializeNewInstance("jakarta.servlet.MultipartConfigElement", Array(Folder, MaxSize, MaxSize, 81920))
-'	Dim f As JavaObject
-'	f.InitializeNewInstance("java.io.File", Array(Folder))
-'	Dim parser As JavaObject
-'	'parser.InitializeNewInstance("org.eclipse.jetty.util.MultiPartInputStreamParser", Array(Request.InputStream, Request.ContentType, config, f))
-'	parser.InitializeNewInstance("org.eclipse.jetty.server.MultiPartFormInputStream", Array(Request.InputStream, Request.ContentType, config, f))
-'	Dim parts As JavaObject = parser.RunMethod("getParts", Null)
-'	Dim result() As Object = parts.RunMethod("toArray", Null)
-'	Return result
-'End Sub
+Public Sub RequestMultiPart (Request As ServletRequest, Folder As String, MaxSize As Long) As Part
+	Dim p As Part
+	Dim config As JavaObject
+	config.InitializeNewInstance("jakarta.servlet.MultipartConfigElement", Array(Folder, MaxSize, MaxSize, 81920))
+	Dim f As JavaObject
+	f.InitializeNewInstance("java.io.File", Array(Folder))
+	Dim parser As JavaObject
+	parser.InitializeNewInstance("org.eclipse.jetty.server.MultiPartFormInputStream", Array(Request.InputStream, Request.ContentType, config, f))
+	Dim parts As JavaObject = parser.RunMethod("getParts", Null)
+	Dim result() As Object = parts.RunMethod("toArray", Null)
+	Dim list As List = result
+	If list.Size > 0 Then
+		p = list.Get(0)
+	End If
+	Return p
+End Sub
 
-Public Sub RequestMultipartData (Request As ServletRequest) As Map
+Public Sub RequestMultipartList (Request As ServletRequest, Folder As String, MaxSize As Long) As List
+	Dim config As JavaObject
+	'config.InitializeNewInstance("javax.servlet.MultipartConfigElement", Array(Folder, MaxSize, MaxSize, 81920))
+	config.InitializeNewInstance("jakarta.servlet.MultipartConfigElement", Array(Folder, MaxSize, MaxSize, 81920))
+	Dim f As JavaObject
+	f.InitializeNewInstance("java.io.File", Array(Folder))
+	Dim parser As JavaObject
+	'parser.InitializeNewInstance("org.eclipse.jetty.util.MultiPartInputStreamParser", Array(Request.InputStream, Request.ContentType, config, f))
+	parser.InitializeNewInstance("org.eclipse.jetty.server.MultiPartFormInputStream", Array(Request.InputStream, Request.ContentType, config, f))
+	Dim parts As JavaObject = parser.RunMethod("getParts", Null)
+	Dim result() As Object = parts.RunMethod("toArray", Null)
+	Return result
+End Sub
+
+Public Sub RequestMultipartData (Request As ServletRequest, Folder As String, MaxSize As Long) As Map
 	Try
-		Dim fd As String =  File.DirApp & "\www\tmp" ' & Main.inspectFolder
-		Dim data As Map = Request.GetMultipartData(fd, 100000000 * 1000) 'max 10000000000 bytes
+		Dim data As Map = Request.GetMultipartData(Folder, MaxSize)
 		For Each key As String In data.Keys
 			Dim p As Part = data.Get(key)
 			Dim name As String = p.SubmittedFilename 'data.Get("fn")
 			Dim temp As String = File.GetName(p.TempFile)
 			If key.StartsWith("post-") Then
-				If File.Exists(fd, name) Then File.Delete(fd, name)
-				Dim inp As InputStream = File.OpenInput(fd, temp)
-				Dim out As OutputStream = File.OpenOutput(fd, name, False)
+				If File.Exists(Folder, name) Then File.Delete(Folder, name)
+				Dim inp As InputStream = File.OpenInput(Folder, temp)
+				Dim out As OutputStream = File.OpenOutput(Folder, name, False)
 				File.Copy2(inp, out)
 				out.Close
 			End If
 			If key.StartsWith("json") Then
-				Dim ins As InputStream = File.OpenInput(fd, temp)
-				'Dim tr As TextReader
-				'tr.Initialize(ins)
-				'Dim json As JSONParser
-				'json.Initialize(tr.ReadAll)
-				'data = json.NextObject
+				Dim ins As InputStream = File.OpenInput(Folder, temp)
 				Dim buffer() As Byte = Bit.InputStreamToBytes(ins)
 				Dim str As String = BytesToString(buffer, 0, buffer.Length, "UTF-8")
 				data = str.As(JSON).ToMap
 			End If
-			If File.Exists(fd, name) Then File.Delete(fd, temp) ' Delete temp file if new file generated
+			If File.Exists(Folder, name) Then File.Delete(Folder, temp) ' Delete temp file if new file generated
 		Next
 	Catch
 		LogError(LastException.Message)
@@ -253,9 +263,6 @@ Public Sub RequestMultipartData (Request As ServletRequest) As Map
 	Return data
 End Sub
 
-' ====================================================
-' Requires StringUtils library
-' ====================================================
 Public Sub RequestBasicAuth (Auths As List) As Map
 	Dim client As Map = CreateMap("CLIENT_ID": "", "CLIENT_SECRET": "")
 	If Auths.Size > 0 Then
@@ -274,42 +281,36 @@ Public Sub RequestBasicAuth (Auths As List) As Map
 	End If
 	Return client
 End Sub
-' ====================================================
+
+Public Sub EncodeBase64 (data() As Byte) As String
+	Dim su As StringUtils
+	Return su.EncodeBase64(data)
+End Sub
+
+Public Sub DecodeBase64 (str As String) As Byte()
+	Dim su As StringUtils
+	Return su.DecodeBase64(str)
+End Sub
+
+Public Sub EncodeURL (str As String) As String
+	Dim su As StringUtils
+	Return su.EncodeUrl(str, "UTF8")
+End Sub
+
+Public Sub DecodeURL (str As String) As String
+	Dim su As StringUtils
+	Return su.DecodeUrl(str, "UTF8")
+End Sub
 
 ' Get Access Token from Header
 Public Sub RequestAccessToken (req As ServletRequest) As String
 	Dim token As String
-'	Dim jo As JavaObject = req
-'	Dim collections As JavaObject
-'	collections.InitializeStatic("java.util.Collections")
-'	Dim headers As List = collections.RunMethod("list", Array(jo.RunMethodJO("getHeaderNames", Null)))
-'	For Each h As String In headers
-'		Log(h & ": " & req.GetHeader(h))
-'	Next
 	Dim auths As List = req.GetHeaders("Authorization")
 	If auths.Size > 0 Then
 		token = auths.Get(0)
 	End If
 	Return token
 End Sub
-
-' Get Refresh Token from Cookie
-'Public Sub RequestRefreshToken (req As ServletRequest) 'As String
-''	Dim Munchies() As Cookie = req.GetCookies
-''	Log(Munchies)
-'	Log(req.GetCookies)
-''	Dim DeliciousCookie As List = Munchies
-''	For Each DeliciousCookie In Munchies
-''		Log(DeliciousCookie)
-''	Next
-''	For i = 0 To Munchies.Length - 1
-''		Log(Munchies(i))
-''	Next
-''	For i = 0 To DeliciousCookie.Size - 1
-''		Log(DeliciousCookie.Get(i))
-''	Next
-'	'Return Cookie
-'End Sub
 
 Public Sub RequestBearerToken (req As ServletRequest) As String
 	Dim Auths As List = req.GetHeaders("Authorization")
@@ -322,15 +323,13 @@ Public Sub RequestBearerToken (req As ServletRequest) As String
 	Return ""
 End Sub
 
-'Public Sub RequestCookie (req As ServletRequest) As Cookie
-'	Return req.GetCookies
-'End Sub
-
+' max_age = number of seconds the cookie is valid, 0 to expire immediately
 Public Sub ReturnCookie (key As String, value As String, max_age As Int, http_only As Boolean, resp As ServletResponse)
 	Dim session_cookie As Cookie
 	session_cookie.Initialize(key, value)
 	session_cookie.HttpOnly = http_only
 	session_cookie.MaxAge = max_age
+	'resp.SetHeader(key, session_cookie.Value & "; SameSite=Lax")
 	resp.AddCookie(session_cookie)
 End Sub
 
@@ -338,131 +337,88 @@ Public Sub ReturnLocation (Location As String, resp As ServletResponse) ' Code =
 	resp.SendRedirect(Location)
 End Sub
 
-Public Sub ReturnConnect (resp As ServletResponse)
+Public Sub ReturnConnect (mess As HttpResponseMessage, resp As ServletResponse)
 	Dim Data As List
 	Data.Initialize
-	Dim mess As HttpResponseMessage
-	mess.Initialize
 	mess.ResponseCode = 200
 	mess.ResponseObject = CreateMap("connect": True)
-	mess.SimpleResponse = Main.SimpleResponse
 	ReturnHttpResponse(mess, resp)
 End Sub
 
-Public Sub ReturnConnect2 (resp As ServletResponse)
+Public Sub ReturnConnect2 (mess As HttpResponseMessage, resp As ServletResponse)
 	Dim Data As List
 	Data.Initialize
 	Data.Add(CreateMap("connect": True))
-	Dim mess As HttpResponseMessage
-	mess.Initialize
 	mess.ResponseCode = 200
 	mess.ResponseData = Data
-	mess.SimpleResponse = Main.SimpleResponse
 	ReturnHttpResponse(mess, resp)
 End Sub
 
-Public Sub ReturnError (Error As String, Code As Int, resp As ServletResponse)
+Public Sub ReturnError (mess As HttpResponseMessage, resp As ServletResponse, Code As Int, Error As String)
 	If Code = 0 Then Code = 400
 	If Error = "" Then Error = "Bad Request"
-	Dim mess As HttpResponseMessage
-	mess.Initialize
 	mess.ResponseCode = Code
 	mess.ResponseError = Error
 	mess.ResponseString = "error"
-	mess.SimpleResponse = Main.SimpleResponse
 	ReturnHttpResponse(mess, resp)
 End Sub
 
-Public Sub ReturnSuccess (Data As Map, Code As Int, resp As ServletResponse)
-	If Data.IsInitialized = False Then Data.Initialize
+Public Sub ReturnSuccess (mess As HttpResponseMessage, resp As ServletResponse, Code As Int, Data As Map)
 	If Code = 0 Then Code = 200
-	Dim mess As HttpResponseMessage
-	mess.Initialize
+	If Data.IsInitialized = False Then Data.Initialize
 	mess.ResponseCode = Code
 	mess.ResponseObject = Data
 	mess.ResponseString = "ok"
-	mess.SimpleResponse = Main.SimpleResponse
 	ReturnHttpResponse(mess, resp)
 End Sub
 
-Public Sub ReturnSuccess2 (Data As List, Code As Int, resp As ServletResponse)
-	If Data.IsInitialized = False Then Data.Initialize
+Public Sub ReturnSuccess2 (mess As HttpResponseMessage, resp As ServletResponse, Code As Int, Data As List)
 	If Code = 0 Then Code = 200
-	Dim mess As HttpResponseMessage
-	mess.Initialize
+	If Data.IsInitialized = False Then Data.Initialize
 	mess.ResponseCode = Code
 	mess.ResponseData = Data
 	mess.ResponseString = "ok"
-	mess.SimpleResponse = Main.SimpleResponse
 	ReturnHttpResponse(mess, resp)
 End Sub
 
-Public Sub ReturnBadRequest (resp As ServletResponse)
-	'ReturnError("Bad Request", 400, resp)
-	Dim mess As HttpResponseMessage
-	mess.Initialize
+Public Sub ReturnBadRequest (mess As HttpResponseMessage, resp As ServletResponse)
 	mess.ResponseCode = 400
-	mess.SimpleResponse = Main.SimpleResponse
 	ReturnHttpResponse(mess, resp)
 End Sub
 
-Public Sub ReturnAuthorizationRequired (resp As ServletResponse)
-	'ReturnError("Authentication required", 401, resp)
-	Dim mess As HttpResponseMessage
-	mess.Initialize
+Public Sub ReturnAuthorizationRequired (mess As HttpResponseMessage, resp As ServletResponse)
 	mess.ResponseCode = 401
 	mess.ResponseError = "Authentication required"
-	mess.SimpleResponse = Main.SimpleResponse
 	ReturnHttpResponse(mess, resp)
 End Sub
 
-Public Sub ReturnTokenExpired (resp As ServletResponse)
-	'ReturnError("Token Expired", 401, resp)
-	Dim mess As HttpResponseMessage
-	mess.Initialize
+Public Sub ReturnTokenExpired (mess As HttpResponseMessage, resp As ServletResponse)
 	mess.ResponseCode = 401
 	mess.ResponseError = "Token Expired"
-	mess.SimpleResponse = Main.SimpleResponse
 	ReturnHttpResponse(mess, resp)
 End Sub
 
-Public Sub ReturnMethodNotAllow (resp As ServletResponse)
-	'ReturnError("Method Not Allowed", 405, resp)
-	Dim mess As HttpResponseMessage
-	mess.Initialize
+Public Sub ReturnMethodNotAllow (mess As HttpResponseMessage, resp As ServletResponse)
 	mess.ResponseCode = 405
 	mess.ResponseError = "Method Not Allowed"
-	mess.SimpleResponse = Main.SimpleResponse
 	ReturnHttpResponse(mess, resp)
 End Sub
 
-Public Sub ReturnErrorUnprocessableEntity (resp As ServletResponse)
-	'ReturnError("Error Unprocessable Entity", 422, resp)
-	Dim mess As HttpResponseMessage
-	mess.Initialize
+Public Sub ReturnErrorUnprocessableEntity (mess As HttpResponseMessage, resp As ServletResponse)
 	mess.ResponseCode = 422
 	mess.ResponseError = "Unprocessable Entity"
-	mess.SimpleResponse = Main.SimpleResponse
 	ReturnHttpResponse(mess, resp)
 End Sub
 
-Public Sub ReturnErrorCredentialNotProvided (resp As ServletResponse)
-	'ReturnError("Error Credential Not Provided", 400, resp)
-	Dim mess As HttpResponseMessage
-	mess.Initialize
+Public Sub ReturnErrorCredentialNotProvided (mess As HttpResponseMessage, resp As ServletResponse)
 	mess.ResponseCode = 400
 	mess.ResponseError = "Credential Not Provided"
-	mess.SimpleResponse = Main.SimpleResponse
 	ReturnHttpResponse(mess, resp)
 End Sub
 
-Public Sub ReturnErrorExecuteQuery (resp As ServletResponse)
-	'ReturnError("Error Execute Query", 422, resp)
-	Dim mess As HttpResponseMessage
-	mess.Initialize
+Public Sub ReturnErrorExecuteQuery (mess As HttpResponseMessage, resp As ServletResponse)
 	mess.ResponseCode = 422
 	mess.ResponseError = "Execute Query"
-	mess.SimpleResponse = Main.SimpleResponse
 	ReturnHttpResponse(mess, resp)
 End Sub
 
@@ -613,13 +569,18 @@ Public Sub ReturnHtmlBody (cont As HttpResponseContent, resp As ServletResponse)
 	resp.Write(cont.ResponseBody)
 End Sub
 
-'Public Sub ReturnHtmlBadRequest (resp As ServletResponse)
-'	Dim str As String = $"<h1>Bad Request</h1>"$
-'	ReturnHtml(str, resp)
-'End Sub
-
 Public Sub ReturnHtmlPageNotFound (resp As ServletResponse)
 	Dim str As String = $"<h1>404 Page Not Found</h1>"$
+	ReturnHtml(str, resp)
+End Sub
+
+Public Sub ReturnHtmlBadRequest (resp As ServletResponse)
+	Dim str As String = $"<h1>400 Bad Request</h1>"$
+	ReturnHtml(str, resp)
+End Sub
+
+Public Sub ReturnHtmlMethodNotAllowed (resp As ServletResponse)
+	Dim str As String = $"<h1>405 Method Not Allowed</h1>"$
 	ReturnHtml(str, resp)
 End Sub
 
@@ -639,9 +600,6 @@ End Sub
 ' Check anti csrf-token variable sent from client in request header is same as variable stored in server session  
 Public Sub ValidateCsrfToken (session_name As String, header_name As String, req As ServletRequest) As Boolean
 	Dim headers As List = req.GetHeaders(header_name)
-	'Log(session_name)
-	'Log(headers.Get(0))
-	'Log(req.GetSession.GetAttribute(session_name).As(String))
 	If req.GetSession.GetAttribute2(session_name, "").As(String).EqualsIgnoreCase(headers.Get(0)) Then
 		'Log("matched")
 		Return True
@@ -665,11 +623,47 @@ Public Sub GUID As String
 	Return sb.ToString
 End Sub
 
+' It is not recommended to use this method
 Public Sub Slugify (str As String) As String
 	str = str.ToLowerCase.Trim
-	str = Regex.Replace("/[^\w\s-]/g", str, "")
-	str = Regex.Replace("/[\s_-]+/g", str, "-")
-	str = Regex.Replace("/^-+|-+$/g", str, "")
+	'str = Regex.Replace("/[^\w\s-]/g", str, "")
+	'str = Regex.Replace("/[\s_-]+/g", str, "-")
+	'str = Regex.Replace("/^-+|-+$/g", str, "")
+	str = str.Replace($"~"$, "")
+	str = str.Replace($"`"$, "")
+	str = str.Replace($"!"$, "")
+	str = str.Replace($"@"$, "")
+	str = str.Replace($"#"$, "")
+	str = str.Replace($"$"$, "")
+	str = str.Replace($"%"$, "")
+	str = str.Replace($"^"$, "")
+	str = str.Replace($"&"$, "")
+	str = str.Replace($"*"$, "")
+	str = str.Replace($"("$, "")
+	str = str.Replace($")"$, "")
+	str = str.Replace($"-"$, "")
+	str = str.Replace($"+"$, "")
+	str = str.Replace($"_"$, "")
+	str = str.Replace($"="$, "")
+	str = str.Replace($"{"$, "")
+	str = str.Replace($"}"$, "")
+	str = str.Replace($"["$, "")
+	str = str.Replace($"]"$, "")
+	str = str.Replace($"|"$, "")
+	str = str.Replace($"\"$, "")
+	str = str.Replace($":"$, "")
+	str = str.Replace($";"$, "")
+	str = str.Replace($"""$, "")
+	str = str.Replace($"'"$, "")
+	str = str.Replace($"<"$, "")
+	str = str.Replace($">"$, "")
+	str = str.Replace($","$, "")
+	str = str.Replace($"."$, "")
+	str = str.Replace($"?"$, "")
+	str = str.Replace($"/"$, "")
+	str = str.Replace(CRLF, "")
+	str = str.Replace(TAB, "")
+	str = str.Replace(" ", "-")
 	Return str
 End Sub
 
@@ -677,38 +671,6 @@ Public Sub ProperCase (Word As String) As String
 	If Word.Length = 0 Then Return ""
 	If Word.Length = 1 Then Return Word.ToUpperCase
 	Return Word.CharAt(0).As(String).ToUpperCase & Word.SubString(1)
-End Sub
-
-' ====================================================
-' Requires StringUtils library
-' ====================================================
-'Public Sub EncodeBase64 (data() As Byte) As String
-'	Dim su As StringUtils
-'	Return su.EncodeBase64(data)
-'End Sub
-'
-'Public Sub DecodeBase64 (str As String) As Byte()
-'	Dim su As StringUtils
-'	Return su.DecodeBase64(str)
-'End Sub
-'
-'Public Sub EncodeURL (str As String) As String
-'	Dim su As StringUtils
-'	Return su.EncodeUrl(str, "UTF8")
-'End Sub
-'
-'Public Sub DecodeURL (str As String) As String
-'	Dim su As StringUtils
-'	Return su.DecodeUrl(str, "UTF8")
-'End Sub
-' ====================================================
-
-Public Sub CreateKeyValueList (Keys As List, Values As List) As KeyValueList
-	Dim t1 As KeyValueList
-	t1.Initialize
-	t1.Keys = Keys
-	t1.Values = Values
-	Return t1
 End Sub
 
 ' ===================================================================

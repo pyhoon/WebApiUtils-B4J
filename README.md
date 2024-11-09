@@ -1,4 +1,4 @@
 # WebApiUtils
-Version: 2.08
+Version: 3.02
 
-For use in Web API Server 2 and MinimaList API Server templates
+For use in Web API Server 3

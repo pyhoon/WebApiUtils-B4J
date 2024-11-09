@@ -2,19 +2,14 @@
 *.b4j.meta
 *.b4j
 *.zip
-ApiHandler.bas
-CategoriesController.bas
 CorsFilter.bas
-DatabaseConfiguration.bas
-DatabaseConnector.bas
-FindController.bas
-HelpHandler.bas
 HttpsFilter.bas
-IndexController.bas
-MiniORM.bas
-ProductsController.bas
-ServerConfiguration.bas
-WebHandler.bas
+HelpHandler.bas
+CategoriesApiHandler.bas
+CategoriesWebHandler.bas
+FindApiHandler.bas
+IndexWebHandler.bas
+ProductsApiHandler.bas
 
 # ignore ALL files in these directories
 AutoBackups/
