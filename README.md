@@ -1,4 +1,4 @@
 # WebApiUtils
-Version: 3.02
+Version: 3.03
 
 For use in Web API Server 3
