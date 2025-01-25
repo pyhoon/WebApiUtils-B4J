@@ -5,7 +5,7 @@ Type=StaticCode
 Version=10
 @EndOfDesignText@
 ' Web API Utility
-' Version 3.02
+' Version 3.03
 Sub Process_Globals
 	Private const CONTENT_TYPE_HTML As String = "text/html"
 	Private const CONTENT_TYPE_JSON As String = "application/json"
@@ -205,7 +205,7 @@ Public Sub RequestData (Request As ServletRequest) As Map
 End Sub
 
 Public Sub RequestMultiPart (Request As ServletRequest, Folder As String, MaxSize As Long) As Part
-	Dim p As Part
+	Dim part As Part
 	Dim config As JavaObject
 	config.InitializeNewInstance("jakarta.servlet.MultipartConfigElement", Array(Folder, MaxSize, MaxSize, 81920))
 	Dim f As JavaObject
@@ -216,9 +216,9 @@ Public Sub RequestMultiPart (Request As ServletRequest, Folder As String, MaxSiz
 	Dim result() As Object = parts.RunMethod("toArray", Null)
 	Dim list As List = result
 	If list.Size > 0 Then
-		p = list.Get(0)
+		part = list.Get(0)
 	End If
-	Return p
+	Return part
 End Sub
 
 Public Sub RequestMultipartList (Request As ServletRequest, Folder As String, MaxSize As Long) As List
@@ -239,9 +239,9 @@ Public Sub RequestMultipartData (Request As ServletRequest, Folder As String, Ma
 	Try
 		Dim data As Map = Request.GetMultipartData(Folder, MaxSize)
 		For Each key As String In data.Keys
-			Dim p As Part = data.Get(key)
-			Dim name As String = p.SubmittedFilename 'data.Get("fn")
-			Dim temp As String = File.GetName(p.TempFile)
+			Dim part As Part = data.Get(key)
+			Dim name As String = part.SubmittedFilename 'data.Get("fn")
+			Dim temp As String = File.GetName(part.TempFile)
 			If key.StartsWith("post-") Then
 				If File.Exists(Folder, name) Then File.Delete(Folder, name)
 				Dim inp As InputStream = File.OpenInput(Folder, temp)
@@ -319,6 +319,14 @@ Public Sub RequestBearerToken (req As ServletRequest) As String
 		If auth.StartsWith("Bearer") And auth.Length > "Bearer ".Length Then
 			Return auth.SubString("Bearer ".Length)
 		End If
+	End If
+	Return ""
+End Sub
+
+Public Sub RequestApiKey (req As ServletRequest) As String
+	Dim Auths As List = req.GetHeaders("X-API-Key")
+	If Auths.Size > 0 Then
+		Return Auths.Get(0)
 	End If
 	Return ""
 End Sub
