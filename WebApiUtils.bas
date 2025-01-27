@@ -706,11 +706,11 @@ Public Sub ReplaceMap(Base As String, Replacements As Map) As String
 	Return result.ToString
 End Sub
 
-Public Sub EscapeHtml(Raw As String) As String
+Public Sub EscapeHtml (Value As String) As String
 	Dim sb As StringBuilder
 	sb.Initialize
-	For n = 0 To Raw.Length - 1
-		Dim c As Char = Raw.CharAt(n)
+	For n = 0 To Value.Length - 1
+		Dim c As Char = Value.CharAt(n)
 		Select c
 			Case QUOTE
 				sb.Append("&quot;")
