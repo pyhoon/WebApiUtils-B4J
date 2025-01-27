@@ -29,9 +29,9 @@ Public Sub CheckAllowedVerb (SupportedMethods As List, Method As String) As Bool
 	Return True
 End Sub
 
-Public Sub CheckInteger (Input As Object) As Boolean
+Public Sub CheckInteger (Value As Object) As Boolean
 	Try
-		Return Input > -1
+		Return Value > -1
 	Catch
 		'Log(LastException.Message)
 		Return False
@@ -88,9 +88,9 @@ Public Sub BuildCsrfToken (strHTML As String, Content As String) As String
 	Return strHTML
 End Sub
 
-Public Sub BuildTag (strHTML As String, Tag As String, Value As String) As String
-	' Replace @TAG@ keyword with new content
-	strHTML = strHTML.Replace("@" & Tag & "@", Value)
+Public Sub BuildTag (strHTML As String, Key As String, Value As String) As String
+	' Replace @KEY@ keyword with new content
+	strHTML = strHTML.Replace("@" & Key & "@", Value)
 	Return strHTML
 End Sub
 
@@ -270,9 +270,9 @@ Public Sub RequestBasicAuth (Auths As List) As Map
 		If auth.StartsWith("Basic") Then
 			Dim b64 As String = auth.SubString("Basic ".Length)
 			Dim su As StringUtils
-			Dim b() As Byte = su.DecodeBase64(b64)
-			Dim raw As String = BytesToString(b, 0, b.Length, "utf8")
-			Dim UsernameAndPassword() As String = Regex.Split(":", raw)
+			Dim ab() As Byte = su.DecodeBase64(b64)
+			Dim str As String = BytesToString(ab, 0, ab.Length, "utf8")
+			Dim UsernameAndPassword() As String = Regex.Split(":", str)
 			If UsernameAndPassword.Length = 2 Then
 				client.Put("CLIENT_ID", UsernameAndPassword(0))
 				client.Put("CLIENT_SECRET", UsernameAndPassword(1))
