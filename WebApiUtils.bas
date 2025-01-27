@@ -5,7 +5,7 @@ Type=StaticCode
 Version=10
 @EndOfDesignText@
 ' Web API Utility
-' Version 3.03
+' Version 3.04
 Sub Process_Globals
 	Private const CONTENT_TYPE_HTML As String = "text/html"
 	Private const CONTENT_TYPE_JSON As String = "application/json"
@@ -59,12 +59,12 @@ Public Sub CropElements (FullElements() As String, StartingElementIndex As Int) 
 	End If
 	Dim TempList As List
 	TempList.Initialize
-	For i = StartingElementIndex To FullElements.Length - 1
-		TempList.Add(FullElements(i))
+	For n = StartingElementIndex To FullElements.Length - 1
+		TempList.Add(FullElements(n))
 	Next
 	Dim NewArray(TempList.Size) As String
-	For i = 0 To NewArray.Length - 1
-		NewArray(i) = TempList.Get(i)
+	For n = 0 To NewArray.Length - 1
+		NewArray(n) = TempList.Get(n)
 	Next
 	Return NewArray
 End Sub
@@ -709,9 +709,9 @@ End Sub
 Public Sub EscapeHtml(Raw As String) As String
 	Dim sb As StringBuilder
 	sb.Initialize
-	For i = 0 To Raw.Length - 1
-		Dim C As Char = Raw.CharAt(i)
-		Select C
+	For n = 0 To Raw.Length - 1
+		Dim c As Char = Raw.CharAt(n)
+		Select c
 			Case QUOTE
 				sb.Append("&quot;")
 			Case "'"
@@ -723,7 +723,7 @@ Public Sub EscapeHtml(Raw As String) As String
 			Case "&"
 				sb.Append("&amp;")
 			Case Else
-				sb.Append(C)
+				sb.Append(c)
 		End Select
 	Next
 	Return sb.ToString
