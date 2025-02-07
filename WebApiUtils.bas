@@ -5,10 +5,11 @@ Type=StaticCode
 Version=10
 @EndOfDesignText@
 ' Web API Utility
-' Version 3.04
+' Version 3.05
 Sub Process_Globals
-	Private const CONTENT_TYPE_HTML As String = "text/html"
-	Private const CONTENT_TYPE_JSON As String = "application/json"
+	Private Const CONTENT_TYPE_HTML As String = "text/html"
+	Private Const CONTENT_TYPE_JSON As String = "application/json"
+	'Private Const CONTENT_TYPE_XML As String = "application/xml"
 	Type HttpResponseContent (ResponseBody As String)
 	Type HttpResponseMessage (ResponseCode As Int, ResponseString As String, ResponseData As List, ResponseObject As Map, ResponseMessage As String, ResponseError As Object, ResponseType As String, ContentType As String, SimpleResponse As SimpleResponse)
 	Type SimpleResponse (Enable As Boolean, Format As String, DataKey As String)
@@ -202,6 +203,29 @@ Public Sub RequestData (Request As ServletRequest) As Map
 	Dim str As String = BytesToString(buffer, 0, buffer.Length, "UTF-8")
 	data = str.As(JSON).ToMap
 	Return data
+End Sub
+
+Public Sub RequestDataXml (Request As ServletRequest) As Map
+	Dim data As Map
+	Dim inp As InputStream = Request.InputStream
+	If inp.BytesAvailable <= 0 Then
+		Return data
+	End If
+	Dim buffer() As Byte = Bit.InputStreamToBytes(inp)
+	Dim str As String = BytesToString(buffer, 0, buffer.Length, "UTF-8")
+	str = LinearizeXML(str)
+	
+	Dim xm As Xml2Map
+	xm.Initialize
+	xm.StripNamespaces = True
+	data = xm.Parse(str)
+	Return data
+End Sub
+
+' Remove comments, line breaks, tabs and spaces
+Public Sub LinearizeXML (Text As String) As String
+	Text = Regex.Replace("<!--[\s\S]*?-->", Text, "")
+	Return Regex.Replace("\s+", Text, " ").Trim
 End Sub
 
 Public Sub RequestMultiPart (Request As ServletRequest, Folder As String, MaxSize As Long) As Part
