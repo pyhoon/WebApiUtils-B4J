@@ -1,8 +1,7 @@
 
 Public Sub Initialize
 	HRM.Initialize
-	HRM.SimpleResponse = Main.Config.SimpleResponse
-	DB.Initialize(Main.DBOpen, Main.DBEngine)
+	HRM.VerboseMode = Main.conf.VerboseMode
 End Sub
 $end$
 Sub Handle (req As ServletRequest, resp As ServletResponse)
@@ -74,7 +73,7 @@ Private Sub ReturnMethodNotAllow
 End Sub
 
 Private Sub Get$EndPoints$
-	' #Desc = Read all $EndPoints$
+	DB.Initialize(Main.DBType, Main.DBOpen)
 	DB.Table = "$TableName$"
 	DB.Query
 	HRM.ResponseCode = 200
@@ -84,8 +83,7 @@ Private Sub Get$EndPoints$
 End Sub
 
 Private Sub Get$EndPoint$ById (Id As Int)
-	' #Desc = Read one $EndPoint$ by id
-	' #Elements = [":id"]
+	DB.Initialize(Main.DBType, Main.DBOpen)
 	DB.Table = "$TableName$"
 	DB.Find(Id)
 	If DB.Found Then
@@ -100,8 +98,6 @@ Private Sub Get$EndPoint$ById (Id As Int)
 End Sub
 
 Private Sub Post$EndPoint$
-	' #Desc = Add a new $EndPoint$
-	' #Body = {<br>&nbsp;"name": "$EndPoint$_name"<br>}
 	Dim data As Map = WebApiUtils.RequestData(Request)
 	If Not(data.IsInitialized) Then
 		HRM.ResponseCode = 400
@@ -122,6 +118,7 @@ Private Sub Post$EndPoint$
 	Next
 	
 	' Check conflict $EndPoint$ name
+	DB.Initialize(Main.DBType, Main.DBOpen)
 	DB.Table = "$TableName$"
 	DB.Where = Array("$EndPoint$_name = ?")
 	DB.Parameters = Array As String(data.Get("$EndPoint$_name"))
@@ -149,9 +146,6 @@ Private Sub Post$EndPoint$
 End Sub
 
 Private Sub Put$EndPoint$ById (Id As Int)
-	' #Desc = Update $EndPoint$ by id
-	' #Body = {<br>&nbsp;"name": "$EndPoint$_name"<br>}
-	' #Elements = [":id"]
 	Dim data As Map = WebApiUtils.RequestData(Request)
 	If Not(data.IsInitialized) Then
 		HRM.ResponseCode = 400
@@ -169,6 +163,7 @@ Private Sub Put$EndPoint$ById (Id As Int)
 	End If
 	
 	' Check conflict $EndPoint$ name
+	DB.Initialize(Main.DBType, Main.DBOpen)
 	DB.Table = "$TableName$"
 	DB.Where = Array("$EndPoint$_name = ?", "id <> ?")
 	DB.Parameters = Array As String(data.Get("$EndPoint$_name"), Id)
@@ -206,8 +201,7 @@ Private Sub Put$EndPoint$ById (Id As Int)
 End Sub
 
 Private Sub Delete$EndPoint$ById (Id As Int)
-	' #Desc = Delete $EndPoint$ by id
-	' #Elements = [":id"]
+	DB.Initialize(Main.DBType, Main.DBOpen)
 	DB.Table = "$TableName$"
 	DB.Find(Id)
 	If DB.Found = False Then

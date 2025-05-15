@@ -5,14 +5,12 @@ Type=StaticCode
 Version=10
 @EndOfDesignText@
 ' Web API Utility
-' Version 3.05
+' Version 4.00
 Sub Process_Globals
 	Private Const CONTENT_TYPE_HTML As String = "text/html"
 	Private Const CONTENT_TYPE_JSON As String = "application/json"
-	'Private Const CONTENT_TYPE_XML As String = "application/xml"
 	Type HttpResponseContent (ResponseBody As String)
-	Type HttpResponseMessage (ResponseCode As Int, ResponseString As String, ResponseData As List, ResponseObject As Map, ResponseMessage As String, ResponseError As Object, ResponseType As String, ContentType As String, SimpleResponse As SimpleResponse)
-	Type SimpleResponse (Enable As Boolean, Format As String, DataKey As String)
+	Type HttpResponseMessage (ResponseCode As Int, ResponseString As String, ResponseData As List, ResponseObject As Map, ResponseMessage As String, ResponseError As Object, ResponseType As String, ContentType As String, VerboseMode As Boolean)
 End Sub
 
 Public Sub CheckMaxElements (Elements() As String, Max_Elements As Int) As Boolean
@@ -144,14 +142,6 @@ Public Sub AssetFileExist (FileName As String) As Boolean
 	Return File.Exists(File.Combine(File.DirApp, "www"), FileName)
 End Sub
 
-Public Sub Map2Json (M As Map) As String
-	Return M.As(JSON).ToString
-End Sub
-
-Public Sub List2Json (L As List) As String
-	Return L.As(JSON).ToString
-End Sub
-
 Public Sub Object2Json (O As Object) As String
 	Return O.As(JSON).ToString
 End Sub
@@ -247,12 +237,10 @@ End Sub
 
 Public Sub RequestMultipartList (Request As ServletRequest, Folder As String, MaxSize As Long) As List
 	Dim config As JavaObject
-	'config.InitializeNewInstance("javax.servlet.MultipartConfigElement", Array(Folder, MaxSize, MaxSize, 81920))
 	config.InitializeNewInstance("jakarta.servlet.MultipartConfigElement", Array(Folder, MaxSize, MaxSize, 81920))
 	Dim f As JavaObject
 	f.InitializeNewInstance("java.io.File", Array(Folder))
 	Dim parser As JavaObject
-	'parser.InitializeNewInstance("org.eclipse.jetty.util.MultiPartInputStreamParser", Array(Request.InputStream, Request.ContentType, config, f))
 	parser.InitializeNewInstance("org.eclipse.jetty.server.MultiPartFormInputStream", Array(Request.InputStream, Request.ContentType, config, f))
 	Dim parts As JavaObject = parser.RunMethod("getParts", Null)
 	Dim result() As Object = parts.RunMethod("toArray", Null)
@@ -264,7 +252,7 @@ Public Sub RequestMultipartData (Request As ServletRequest, Folder As String, Ma
 		Dim data As Map = Request.GetMultipartData(Folder, MaxSize)
 		For Each key As String In data.Keys
 			Dim part As Part = data.Get(key)
-			Dim name As String = part.SubmittedFilename 'data.Get("fn")
+			Dim name As String = part.SubmittedFilename
 			Dim temp As String = File.GetName(part.TempFile)
 			If key.StartsWith("post-") Then
 				If File.Exists(Folder, name) Then File.Delete(Folder, name)
@@ -454,43 +442,28 @@ Public Sub ReturnErrorExecuteQuery (mess As HttpResponseMessage, resp As Servlet
 	ReturnHttpResponse(mess, resp)
 End Sub
 
-' Remember to add the following code when initialize a Controller <code>
+' Remember to add the following code when initialize a Handler <code>
 ' HRM.Initialize
-' HRM.SimpleResponse = Main.SimpleResponse</code>
+' HRM.VerboseMode = Main.conf.VerboseMode</code>
 Public Sub ReturnHttpResponse (mess As HttpResponseMessage, resp As ServletResponse)
 	' ==============================
-	' SimpleResponse.Enable = False
+	' VerboseMode = True
 	' ==============================
 	' {
 	'  "m": "Success",
 	'  "e": Null,
 	'  "s": "ok",
-	'  "r": [ { "connect": "true" } ]
+	'  "r": { "connect": "true" }
 	'  "a": 200
 	' }
 	' =============================
-	' SimpleResponse.Enable = True
+	' VerboseMode = False
 	' =============================
-	' Format: Auto
-	' {
-	'  "connect": "true"
-	' }
+	' Array
+	' [ {"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"} ]
 	'
-	' Format = List
-	' [
-	'  {
-	'   "connect": "true"
-	'  }
-	' ]
-	'
-	' Format = Map
-	' {
-	'  "data": [
-	'    {
-	'     "connect": "true"
-	'    }
-	'  ]
-	' }
+	' Object
+	' { "connect": "true" }
 	If mess.ResponseCode >= 200 And mess.ResponseCode < 300 Then ' SUCCESS
 		If mess.ResponseType = "" Then mess.ResponseType = "SUCCESS"
 		If mess.ResponseString = "" Then mess.ResponseString = "ok"
@@ -500,94 +473,43 @@ Public Sub ReturnHttpResponse (mess As HttpResponseMessage, resp As ServletRespo
 		If mess.ResponseCode = 0 Then mess.ResponseCode = 400
 		If mess.ResponseType = "" Then mess.ResponseType = "ERROR"
 		If mess.ResponseString = "" Then mess.ResponseString = "error"
-		'If mess.ResponseMessage = "" Then mess.ResponseMessage = "Bad Request"
-		'mess.ResponseMessage = "" 'Null
 		If mess.ResponseError.As(String).StartsWith("java.lang.Object") Then
 			mess.ResponseError = "Bad Request"
 			If mess.ResponseCode = 404 Then mess.ResponseError = "Not Found"
 			If mess.ResponseCode = 405 Then mess.ResponseError = "Method Not Allowed"
 			If mess.ResponseCode = 422 Then mess.ResponseError = "Unprocessable Entity"
-			'If mess.ResponseError = "" Then mess.ResponseError = "Bad Request"
 		End If
 	End If
 	If mess.ContentType = "" Then mess.ContentType = CONTENT_TYPE_JSON
 	resp.ContentType = mess.ContentType
 	
-	If mess.SimpleResponse.Enable Then
-		resp.Status = mess.ResponseCode
-	Else
+	If mess.VerboseMode Then
 		' Override Status Code
 		If mess.ResponseCode < 200 Or mess.ResponseCode > 299 Then
 			resp.Status = 200
 		Else
 			resp.Status = mess.ResponseCode
 		End If
-	End If
-
-	If mess.SimpleResponse.Enable Then
-		Select mess.SimpleResponse.Format
-			Case "List"
-				' force List format
-				If mess.ResponseData.IsInitialized = False Then
-					' Initialize an empty list
-					mess.ResponseData.Initialize
-					If mess.ResponseObject.IsInitialized Then
-						' Add object to List
-						If mess.ResponseObject.Size > 0 Then mess.ResponseData.Add(mess.ResponseObject)
-					Else
-						mess.ResponseObject.Initialize
-					End If
-				End If
-				resp.Write(mess.ResponseData.As(JSON).ToString)
-			Case "Map"
-				' force Map format with "data" as key
-				If mess.ResponseObject.IsInitialized = False Then
-					' Initialize an empty map
-					mess.ResponseObject.Initialize
-					If mess.ResponseData.IsInitialized = False Then
-						' Initialize an empty list
-						mess.ResponseData.Initialize
-					End If
-					' Add object to Map
-					If mess.SimpleResponse.DataKey = Null Or mess.SimpleResponse.DataKey = "" Then
-						mess.ResponseObject.Put("data", mess.ResponseData)
-					Else
-						mess.ResponseObject.Put(mess.SimpleResponse.DataKey, mess.ResponseData)
-					End If
-				End If
-				resp.Write(mess.ResponseObject.As(JSON).ToString)
-			Case Else ' "Auto" or other value
-				' Depends on which object is initialized
-				If mess.ResponseObject.IsInitialized Then
-					resp.Write(mess.ResponseObject.As(JSON).ToString)
-				Else If mess.ResponseData.IsInitialized Then
-					resp.Write(mess.ResponseData.As(JSON).ToString)
-				Else
-					' Default to an initialized List
-					'mess.ResponseData.Initialize
-					'resp.Write(mess.ResponseData.As(JSON).ToString)
-					' or
-					' Default to an initialized Map
-					mess.ResponseObject.Initialize
-					Select mess.ResponseType.ToUpperCase
-						Case "SUCCESS"
-							mess.ResponseObject.Put("message", mess.ResponseMessage)
-						Case "ERROR", "FAILED"
-							mess.ResponseObject.Put("error", mess.ResponseError)
-					End Select
-					resp.Write(mess.ResponseObject.As(JSON).ToString)
-				End If
-		End Select
-	Else
-		If Not(mess.ResponseData.IsInitialized) Then
+		Dim Map1 As Map = CreateMap("s": mess.ResponseString, "a": mess.ResponseCode, "m": mess.ResponseMessage, "e": mess.ResponseError)
+		If mess.ResponseData.IsInitialized Then
+			Map1.Put("r", mess.ResponseData)
+		Else If mess.ResponseObject.IsInitialized Then
+			Map1.Put("r", mess.ResponseObject)
+		Else
+			'Map1.Put("r", "")
 			mess.ResponseData.Initialize
-			If mess.ResponseObject.IsInitialized Then
-				' Do not add an empty map
-				If mess.ResponseObject.Size > 0 Then mess.ResponseData.Add(mess.ResponseObject)
-			End If
+			Map1.Put("r", mess.ResponseData)
 		End If
-		Dim Map1 As Map = CreateMap("s": mess.ResponseString, "a": mess.ResponseCode, "r": mess.ResponseData, "m": mess.ResponseMessage, "e": mess.ResponseError)
-		resp.Write(Map2Json(Map1))
+		resp.Write(Map1.As(JSON).ToString)
+	Else
+		resp.Status = mess.ResponseCode
+		If mess.ResponseData.IsInitialized Then
+			resp.Write(mess.ResponseData.As(JSON).ToString)
+		Else If mess.ResponseObject.IsInitialized Then
+			resp.Write(mess.ResponseObject.As(JSON).ToString)
+		Else
+			resp.Write(mess.ResponseMessage)
+		End If
 	End If
 End Sub
 
@@ -655,50 +577,6 @@ Public Sub GUID As String
 	Return sb.ToString
 End Sub
 
-' It is not recommended to use this method
-Public Sub Slugify (str As String) As String
-	str = str.ToLowerCase.Trim
-	'str = Regex.Replace("/[^\w\s-]/g", str, "")
-	'str = Regex.Replace("/[\s_-]+/g", str, "-")
-	'str = Regex.Replace("/^-+|-+$/g", str, "")
-	str = str.Replace($"~"$, "")
-	str = str.Replace($"`"$, "")
-	str = str.Replace($"!"$, "")
-	str = str.Replace($"@"$, "")
-	str = str.Replace($"#"$, "")
-	str = str.Replace($"$"$, "")
-	str = str.Replace($"%"$, "")
-	str = str.Replace($"^"$, "")
-	str = str.Replace($"&"$, "")
-	str = str.Replace($"*"$, "")
-	str = str.Replace($"("$, "")
-	str = str.Replace($")"$, "")
-	str = str.Replace($"-"$, "")
-	str = str.Replace($"+"$, "")
-	str = str.Replace($"_"$, "")
-	str = str.Replace($"="$, "")
-	str = str.Replace($"{"$, "")
-	str = str.Replace($"}"$, "")
-	str = str.Replace($"["$, "")
-	str = str.Replace($"]"$, "")
-	str = str.Replace($"|"$, "")
-	str = str.Replace($"\"$, "")
-	str = str.Replace($":"$, "")
-	str = str.Replace($";"$, "")
-	str = str.Replace($"""$, "")
-	str = str.Replace($"'"$, "")
-	str = str.Replace($"<"$, "")
-	str = str.Replace($">"$, "")
-	str = str.Replace($","$, "")
-	str = str.Replace($"."$, "")
-	str = str.Replace($"?"$, "")
-	str = str.Replace($"/"$, "")
-	str = str.Replace(CRLF, "")
-	str = str.Replace(TAB, "")
-	str = str.Replace(" ", "-")
-	Return str
-End Sub
-
 Public Sub ProperCase (Word As String) As String
 	If Word.Length = 0 Then Return ""
 	If Word.Length = 1 Then Return Word.ToUpperCase
@@ -708,7 +586,7 @@ End Sub
 ' ===================================================================
 ' Taken from WebUtils
 ' ===================================================================
-Public Sub ReplaceMap(Base As String, Replacements As Map) As String
+Public Sub ReplaceMap (Base As String, Replacements As Map) As String
 	Dim pattern As StringBuilder
 	pattern.Initialize
 	For Each k As String In Replacements.Keys
