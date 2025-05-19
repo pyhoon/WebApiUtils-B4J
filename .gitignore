@@ -10,6 +10,7 @@ CategoriesWebHandler.bas
 FindApiHandler.bas
 IndexWebHandler.bas
 ProductsApiHandler.bas
+UsersApiHandler.bas
 
 # ignore ALL files in these directories
 AutoBackups/
