@@ -23,7 +23,6 @@ Public Sub Initialize
 	HRM.Initialize
 	HRM.VerboseMode = Main.conf.VerboseMode
 	HRM.ContentType = WebApiUtils.CONTENT_TYPE_XML
-	'HRM.SimpleResponse = Main.conf.SimpleResponse
 End Sub
 
 Sub Handle (req As ServletRequest, resp As ServletResponse)

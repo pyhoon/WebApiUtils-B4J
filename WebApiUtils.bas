@@ -5,7 +5,7 @@ Type=StaticCode
 Version=10
 @EndOfDesignText@
 ' Web API Utility
-' Version 4.10
+' Version 4.11
 Sub Process_Globals
 	Public Const CONTENT_TYPE_HTML As String = "text/html"
 	Public Const CONTENT_TYPE_JSON As String = "application/json"
@@ -548,17 +548,21 @@ Private Sub ReturnHttpResponse2 (mess As HttpResponseMessage, resp As ServletRes
 	' =============================
 	' Array:
 	' <content>
-	'   <id>1</id>
-	'   <name>Alice</name>
-	' </content>
-	' <content>
-	'   <id>2</id>
-	'   <name>Bob</name>
+	'   <result>
+	'     <id>1</id>
+	'     <name>Alice</name>
+	'   </result>
+	'   <result>
+	'     <id>2</id>
+	'     <name>Bob</name>
+	'   </result>
 	' </content>
 	'
 	' Object:
 	' <content>
-	'   <connect>true</connect>
+	'   <result>
+	'     <connect>true</connect>
+	'   </result>
 	' </content>
 	Dim Content As String
 	If mess.ResponseCode >= 200 And mess.ResponseCode < 300 Then ' SUCCESS
