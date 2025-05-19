@@ -5,12 +5,13 @@ Type=StaticCode
 Version=10
 @EndOfDesignText@
 ' Web API Utility
-' Version 4.00
+' Version 4.10
 Sub Process_Globals
-	Private Const CONTENT_TYPE_HTML As String = "text/html"
-	Private Const CONTENT_TYPE_JSON As String = "application/json"
+	Public Const CONTENT_TYPE_HTML As String = "text/html"
+	Public Const CONTENT_TYPE_JSON As String = "application/json"
+	Public Const CONTENT_TYPE_XML As String = "application/xml"
 	Type HttpResponseContent (ResponseBody As String)
-	Type HttpResponseMessage (ResponseCode As Int, ResponseString As String, ResponseData As List, ResponseObject As Map, ResponseMessage As String, ResponseError As Object, ResponseType As String, ContentType As String, VerboseMode As Boolean)
+	Type HttpResponseMessage (ResponseCode As Int, ResponseString As String, ResponseData As List, ResponseObject As Map, ResponseMessage As String, ResponseError As Object, ResponseType As String, ContentType As String, XmlRoot As String, XmlElement As String, VerboseMode As Boolean)
 End Sub
 
 Public Sub CheckMaxElements (Elements() As String, Max_Elements As Int) As Boolean
@@ -442,9 +443,11 @@ Public Sub ReturnErrorExecuteQuery (mess As HttpResponseMessage, resp As Servlet
 	ReturnHttpResponse(mess, resp)
 End Sub
 
-' Remember to add the following code when initialize a Handler <code>
+' To initialize: <code>
 ' HRM.Initialize
 ' HRM.VerboseMode = Main.conf.VerboseMode</code>
+' For XML format:<code>
+' HRM.ContentType = WebApiUtils.CONTENT_TYPE_XML</code>
 Public Sub ReturnHttpResponse (mess As HttpResponseMessage, resp As ServletResponse)
 	' ==============================
 	' VerboseMode = True
@@ -464,6 +467,13 @@ Public Sub ReturnHttpResponse (mess As HttpResponseMessage, resp As ServletRespo
 	'
 	' Object
 	' { "connect": "true" }
+	
+	If mess.ContentType = CONTENT_TYPE_XML Then
+		ReturnHttpResponse2(mess, resp)
+		Return
+	End If
+	
+	Dim Content As String
 	If mess.ResponseCode >= 200 And mess.ResponseCode < 300 Then ' SUCCESS
 		If mess.ResponseType = "" Then mess.ResponseType = "SUCCESS"
 		If mess.ResponseString = "" Then mess.ResponseString = "ok"
@@ -482,7 +492,7 @@ Public Sub ReturnHttpResponse (mess As HttpResponseMessage, resp As ServletRespo
 	End If
 	If mess.ContentType = "" Then mess.ContentType = CONTENT_TYPE_JSON
 	resp.ContentType = mess.ContentType
-	
+
 	If mess.VerboseMode Then
 		' Override Status Code
 		If mess.ResponseCode < 200 Or mess.ResponseCode > 299 Then
@@ -500,17 +510,123 @@ Public Sub ReturnHttpResponse (mess As HttpResponseMessage, resp As ServletRespo
 			mess.ResponseData.Initialize
 			Map1.Put("r", mess.ResponseData)
 		End If
-		resp.Write(Map1.As(JSON).ToString)
+		Content = Map1.As(JSON).ToString
 	Else
 		resp.Status = mess.ResponseCode
 		If mess.ResponseData.IsInitialized Then
-			resp.Write(mess.ResponseData.As(JSON).ToString)
+			Content = mess.ResponseData.As(JSON).ToString
 		Else If mess.ResponseObject.IsInitialized Then
-			resp.Write(mess.ResponseObject.As(JSON).ToString)
+			Content = mess.ResponseObject.As(JSON).ToString
 		Else
-			resp.Write(mess.ResponseMessage)
+			Content = mess.ResponseMessage
 		End If
 	End If
+	'Log(Content)
+	resp.Write(Content)
+End Sub
+
+' Return XML format response
+' Remember to add the following code when initialize a Handler
+' <code>
+' HRM.Initialize
+' HRM.ContentType = WebApiUtils.CONTENT_TYPE_XML</code>
+Private Sub ReturnHttpResponse2 (mess As HttpResponseMessage, resp As ServletResponse)
+	' ==============================
+	' VerboseMode = True
+	' ==============================
+	' <content>
+	'   <message>Success</message>
+	'   <error>Null</error>
+	'   <status>ok</status>
+	'   <result>
+	'     <connect>true</connect>
+	'   </result>
+	'   <code>200</code>
+	' </content>
+	' =============================
+	' VerboseMode = False
+	' =============================
+	' Array:
+	' <content>
+	'   <id>1</id>
+	'   <name>Alice</name>
+	' </content>
+	' <content>
+	'   <id>2</id>
+	'   <name>Bob</name>
+	' </content>
+	'
+	' Object:
+	' <content>
+	'   <connect>true</connect>
+	' </content>
+	Dim Content As String
+	If mess.ResponseCode >= 200 And mess.ResponseCode < 300 Then ' SUCCESS
+		If mess.ResponseType = "" Then mess.ResponseType = "SUCCESS"
+		If mess.ResponseString = "" Then mess.ResponseString = "ok"
+		If mess.ResponseMessage = "" Then mess.ResponseMessage = "Success"
+		mess.ResponseError = Null
+	Else ' ERROR
+		If mess.ResponseCode = 0 Then mess.ResponseCode = 400
+		If mess.ResponseType = "" Then mess.ResponseType = "ERROR"
+		If mess.ResponseString = "" Then mess.ResponseString = "error"
+		If mess.ResponseError.As(String).StartsWith("java.lang.Object") Then
+			mess.ResponseError = "Bad Request"
+			If mess.ResponseCode = 404 Then mess.ResponseError = "Not Found"
+			If mess.ResponseCode = 405 Then mess.ResponseError = "Method Not Allowed"
+			If mess.ResponseCode = 422 Then mess.ResponseError = "Unprocessable Entity"
+		End If
+	End If
+	If mess.ContentType = "" Then mess.ContentType = CONTENT_TYPE_JSON
+	resp.ContentType = mess.ContentType
+	If mess.XmlRoot = "" Then mess.XmlRoot = "content"
+	If mess.XmlElement = "" Then mess.XmlElement = "result"
+	
+	If mess.VerboseMode Then
+		' Override Status Code
+		If mess.ResponseCode < 200 Or mess.ResponseCode > 299 Then
+			resp.Status = 200
+		Else
+			resp.Status = mess.ResponseCode
+		End If
+		Dim Map1 As Map = CreateMap("status": mess.ResponseString, "code": mess.ResponseCode, "message": mess.ResponseMessage, "error": mess.ResponseError)
+		If mess.ResponseData.IsInitialized Then
+			Map1.Put(mess.XmlElement, mess.ResponseData)
+		Else If mess.ResponseObject.IsInitialized Then
+			Map1.Put(mess.XmlElement, mess.ResponseObject)
+		Else
+			mess.ResponseData.Initialize
+			Map1.Put(mess.XmlElement, mess.ResponseData)
+		End If
+		Dim m2x As Map2Xml
+		m2x.Initialize
+		Content = m2x.MapToXml(CreateMap(mess.XmlRoot: Map1))
+	Else
+		resp.Status = mess.ResponseCode
+		If mess.ResponseData.IsInitialized Then
+			Dim Map1 As Map = CreateMap(mess.XmlElement: mess.ResponseData)
+			Dim m2x As Map2Xml
+			m2x.Initialize
+			If mess.XmlRoot <> "" Then
+				Content = m2x.MapToXml(CreateMap(mess.XmlRoot: Map1))
+			Else
+				Content = m2x.MapToXml(Map1)
+			End If
+		Else If mess.ResponseObject.IsInitialized Then
+			Dim Map1 As Map = CreateMap(mess.XmlElement: mess.ResponseObject)
+			Dim m2x As Map2Xml
+			m2x.Initialize
+			If mess.XmlRoot <> "" Then
+				Content = m2x.MapToXml(CreateMap(mess.XmlRoot: Map1))
+			Else
+				Content = m2x.MapToXml(Map1)
+			End If
+		Else
+			Content = mess.ResponseMessage
+		End If
+	End If
+	'Log(Content)
+	resp.Write(Content)
 End Sub
 
 Public Sub ReturnHtml (str As String, resp As ServletResponse)

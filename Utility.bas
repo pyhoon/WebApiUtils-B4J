@@ -5,7 +5,7 @@ Type=StaticCode
 Version=10.2
 @EndOfDesignText@
 'Utility code module
-'Version 3.10
+'Version 3.60
 Sub Process_Globals
 	
 End Sub
@@ -59,9 +59,10 @@ Public Sub CurrentTimeStampAddMinute (Value As Int) As String
 	End Select
 End Sub
 
-Private Sub ReturnSuccessScript (Verbose As Boolean, ExpectAccessToken As Boolean) As String
-	If Verbose Then
-		Return $"success: function (data) {
+Private Sub ReturnSuccessScript (Verbose As Boolean, JSON As Boolean, ExpectAccessToken As Boolean) As String
+	If JSON Then
+		If Verbose Then
+			Return $"success: function (data) {
 					if (data.s == "ok" || data.s == "success") {
 						var content = JSON.stringify(data.r, undefined, 2)
 						$("#alert" + id).fadeOut("fast", function () {
@@ -90,8 +91,8 @@ Private Sub ReturnSuccessScript (Verbose As Boolean, ExpectAccessToken As Boolea
 						})
 					}
 				},"$
-	Else
-		Return $"success: function (data, textStatus, xhr) {
+		Else
+			Return $"success: function (data, textStatus, xhr) {
 					var content = JSON.stringify(data, undefined, 2)
 					$("#alert" + id).fadeOut("fast", function () {
 						$("#response" + id).val(content)
@@ -108,10 +109,68 @@ Private Sub ReturnSuccessScript (Verbose As Boolean, ExpectAccessToken As Boolea
 						}
 					}"$, "")}
 				},"$
+		End If
+	Else
+		If Verbose Then
+			Return $"success: function (data, textStatus, xhr) {
+					var status = $(data).find("status").text()
+					var code = $(data).find("code").text()
+					var error = $(data).find("error").text()
+					var message = $(data).find("message").text()
+					var result = $(data).find("result")
+					if (status == "ok" || status == "success") {
+						$("#alert" + id).fadeOut("fast", function () {
+							$("#response" + id).val(xhr.responseText)
+							$("#alert" + id).html(code + " " + message)
+							$("#alert" + id).removeClass("alert-danger")
+							$("#alert" + id).addClass("alert-success")
+							$("#alert" + id).fadeIn()
+						})${IIf(ExpectAccessToken, $"
+						// Access Token specific
+						var access_token = $(result).find("token").text()
+						if (access_token.length > 0) {
+							localStorage.setItem("access_token", access_token)
+							console.log("access token stored!")							
+						}
+						else {
+							console.log("access token not found")	
+						}"$, "")}
+					}
+					else {
+						$("#alert" + id).fadeOut("fast", function () {
+							$("#response" + id).val(xhr.responseText)
+							$("#alert" + id).html(code + " " + error)
+							$("#alert" + id).removeClass("alert-success")
+							$("#alert" + id).addClass("alert-danger")
+							$("#alert" + id).fadeIn()
+						})
+					}
+				},"$
+		Else
+			Return $"success: function (data, textStatus, xhr) {
+					$("#alert" + id).fadeOut("fast", function () {
+						$("#response" + id).val(xhr.responseText)
+						$("#alert" + id).html(xhr.status + " " + textStatus)
+						$("#alert" + id).removeClass("alert-danger")
+						$("#alert" + id).addClass("alert-success")
+						$("#alert" + id).fadeIn()
+					})${IIf(ExpectAccessToken, $"
+					// Access Token specific
+					var result = $(data).find("result")
+					var access_token = $(result).find("token").text()
+					if (access_token.length > 0) {
+						localStorage.setItem("access_token", access_token)
+						console.log("access token stored!")
+					}
+					else {
+						console.log("access token not found")
+					}"$, "")}
+				},"$
+		End If
 	End If
 End Sub
 
-Public Sub GenerateJSFileForHelp (DirName As String, FileName As String, Verbose As Boolean)
+Public Sub GenerateJSFileForHelp (DirName As String, FileName As String, Verbose As Boolean, JSON As Boolean)
 	Dim script1 As String = $"// Button click event for all verbs
 $(".get, .post, .put, .delete").click(function (e) {
 	e.preventDefault()
@@ -128,7 +187,8 @@ function setOptions(id) {
 			return {
 				type: "GET",
 				headers: headers,
-				${ReturnSuccessScript(Verbose, False)}
+				dataType: "${IIf(JSON, "json", "xml")}",
+				${ReturnSuccessScript(Verbose, JSON, False)}
 				error: function (xhr, textStatus, errorThrown) {
 					var content = xhr.responseText
 					$("#alert" + id).fadeOut("fast", function () {
@@ -145,11 +205,11 @@ function setOptions(id) {
 			return {
 				type: "POST",
 				data: $("#body" + id).val(),
-				dataType: "json",
+				dataType: "${IIf(JSON, "json", "xml")}",
 				headers: headers,
-				${ReturnSuccessScript(Verbose, True)}
+				${ReturnSuccessScript(Verbose, JSON, True)}
 				error: function (xhr, textStatus, thrownError) {
-					var content = xhr.responseText
+					var content = xhr.responseText			
 					$("#alert" + id).fadeOut("fast", function () {
 						$("#response" + id).val(content)
 						$("#alert" + id).html(xhr.status + " " + thrownError)
@@ -164,9 +224,9 @@ function setOptions(id) {
 			return {
 				type: "PUT",
 				data: $("#body" + id).val(),
-				dataType: "json",
+				dataType: "${IIf(JSON, "json", "xml")}",
 				headers: headers,
-				${ReturnSuccessScript(Verbose, False)}
+				${ReturnSuccessScript(Verbose, JSON, False)}
 				error: function (xhr, textStatus, thrownError) {
 					var content = xhr.responseText
 					$("#alert" + id).fadeOut("fast", function () {
@@ -182,8 +242,9 @@ function setOptions(id) {
 		case element.hasClass("delete"):
 			return {
 				type: "DELETE",
+				dataType: "${IIf(JSON, "json", "xml")}",
 				headers: headers,
-				${ReturnSuccessScript(Verbose, False)}
+				${ReturnSuccessScript(Verbose, JSON, False)}
 				error: function (xhr, textStatus, thrownError) {
 					var content = xhr.responseText
 					$("#alert" + id).fadeOut("fast", function () {
