@@ -181,10 +181,15 @@ Public Sub RequestCookie (req As ServletRequest) As Map
 	Return M
 End Sub
 
+' Same as RequestDataJson
 ' Tip about POST requests: if you want to get a URL parameter (req.GetParameter)
 ' then do it only after reading the payload, otherwise the payload will be searched
 ' for the parameter and will be lost.
 Public Sub RequestData (Request As ServletRequest) As Map
+	Return RequestDataJson(Request)
+End Sub
+
+Public Sub RequestDataJson (Request As ServletRequest) As Map
 	Dim data As Map
 	Dim inp As InputStream = Request.InputStream
 	If inp.BytesAvailable <= 0 Then
