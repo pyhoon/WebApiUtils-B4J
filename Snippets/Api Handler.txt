@@ -101,6 +101,7 @@ Private Sub Post$EndPoint$
 	Dim data As Map
 	If HRM.ContentType = WebApiUtils.CONTENT_TYPE_XML Then
 		data = WebApiUtils.RequestDataXml(Request)
+		data = data.Get("root")
 	Else
 		data = WebApiUtils.RequestDataJson(Request)
 	End If
@@ -154,6 +155,7 @@ Private Sub Put$EndPoint$ById (Id As Int)
 	Dim data As Map
 	If HRM.ContentType = WebApiUtils.CONTENT_TYPE_XML Then
 		data = WebApiUtils.RequestDataXml(Request)
+		data = data.Get("root")
 	Else
 		data = WebApiUtils.RequestDataJson(Request)
 	End If

@@ -181,6 +181,7 @@ Public Sub RequestCookie (req As ServletRequest) As Map
 	Return M
 End Sub
 
+' Same as RequestDataJson
 ' Tip about POST requests: if you want to get a URL parameter (req.GetParameter)
 ' then do it only after reading the payload, otherwise the payload will be searched
 ' for the parameter and will be lost.
