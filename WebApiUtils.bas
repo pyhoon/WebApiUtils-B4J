@@ -5,7 +5,7 @@ Type=StaticCode
 Version=10
 @EndOfDesignText@
 ' Web API Utility
-' Version 4.11
+' Version 4.20
 Sub Process_Globals
 	Public Const CONTENT_TYPE_HTML As String = "text/html"
 	Public Const CONTENT_TYPE_JSON As String = "application/json"
@@ -181,7 +181,6 @@ Public Sub RequestCookie (req As ServletRequest) As Map
 	Return M
 End Sub
 
-' Same as RequestDataJson
 ' Tip about POST requests: if you want to get a URL parameter (req.GetParameter)
 ' then do it only after reading the payload, otherwise the payload will be searched
 ' for the parameter and will be lost.

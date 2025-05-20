@@ -98,7 +98,12 @@ Private Sub Get$EndPoint$ById (Id As Int)
 End Sub
 
 Private Sub Post$EndPoint$
-	Dim data As Map = WebApiUtils.RequestData(Request)
+	Dim data As Map
+	If HRM.ContentType = WebApiUtils.CONTENT_TYPE_XML Then
+		data = WebApiUtils.RequestDataXml(Request)
+	Else
+		data = WebApiUtils.RequestDataJson(Request)
+	End If
 	If Not(data.IsInitialized) Then
 		HRM.ResponseCode = 400
 		HRM.ResponseError = "Invalid json object"
@@ -146,7 +151,12 @@ Private Sub Post$EndPoint$
 End Sub
 
 Private Sub Put$EndPoint$ById (Id As Int)
-	Dim data As Map = WebApiUtils.RequestData(Request)
+	Dim data As Map
+	If HRM.ContentType = WebApiUtils.CONTENT_TYPE_XML Then
+		data = WebApiUtils.RequestDataXml(Request)
+	Else
+		data = WebApiUtils.RequestDataJson(Request)
+	End If
 	If Not(data.IsInitialized) Then
 		HRM.ResponseCode = 400
 		HRM.ResponseError = "Invalid json object"
