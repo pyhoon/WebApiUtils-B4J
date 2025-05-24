@@ -5,21 +5,13 @@ Type=StaticCode
 Version=10
 @EndOfDesignText@
 ' Web API Utility
-' Version 4.30
+' Version 4.20
 Sub Process_Globals
 	Public Const CONTENT_TYPE_HTML As String = "text/html"
 	Public Const CONTENT_TYPE_JSON As String = "application/json"
 	Public Const CONTENT_TYPE_XML As String = "application/xml"
-	Public Const CONTENT_TYPE_PDF As String = "application/pdf"
-	Public Const CONTENT_TYPE_PNG As String = "image/png"
-	Public Const RESPONSE_ELEMENT_MESSAGE As String = "m"
-	Public Const RESPONSE_ELEMENT_CODE As String 	= "a"
-	Public Const RESPONSE_ELEMENT_STATUS As String 	= "s"
-	Public Const RESPONSE_ELEMENT_TYPE As String 	= "t"
-	Public Const RESPONSE_ELEMENT_ERROR As String 	= "e"
-	Public Const RESPONSE_ELEMENT_RESULT As String 	= "r"
 	Type HttpResponseContent (ResponseBody As String)
-	Type HttpResponseMessage (ResponseMessage As String, ResponseCode As Int, ResponseStatus As String, ResponseType As String, ResponseError As Object, ResponseData As List, ResponseObject As Map, ResponseBody As Object, ContentType As String, XmlRoot As String, VerboseMode As Boolean, OrderedKeys As Boolean, ResponseKeys As List, KeysAlias As List)
+	Type HttpResponseMessage (ResponseCode As Int, ResponseString As String, ResponseData As List, ResponseObject As Map, ResponseMessage As String, ResponseError As Object, ResponseType As String, ContentType As String, XmlRoot As String, XmlElement As String, VerboseMode As Boolean)
 End Sub
 
 Public Sub CheckMaxElements (Elements() As String, Max_Elements As Int) As Boolean
@@ -372,46 +364,48 @@ Public Sub ReturnLocation (Location As String, resp As ServletResponse) ' Code =
 End Sub
 
 Public Sub ReturnConnect (mess As HttpResponseMessage, resp As ServletResponse)
+	Dim Data As List
+	Data.Initialize
 	mess.ResponseCode = 200
 	mess.ResponseObject = CreateMap("connect": True)
 	ReturnHttpResponse(mess, resp)
 End Sub
 
-'Public Sub ReturnConnect2 (mess As HttpResponseMessage, resp As ServletResponse)
-'	Dim Data As List
-'	Data.Initialize
-'	Data.Add(CreateMap("connect": True))
-'	mess.ResponseCode = 200
-'	mess.ResponseData = Data
-'	ReturnHttpResponse(mess, resp)
-'End Sub
+Public Sub ReturnConnect2 (mess As HttpResponseMessage, resp As ServletResponse)
+	Dim Data As List
+	Data.Initialize
+	Data.Add(CreateMap("connect": True))
+	mess.ResponseCode = 200
+	mess.ResponseData = Data
+	ReturnHttpResponse(mess, resp)
+End Sub
 
 Public Sub ReturnError (mess As HttpResponseMessage, resp As ServletResponse, Code As Int, Error As String)
-	'If Code = 0 Then Code = 400
+	If Code = 0 Then Code = 400
 	If Error = "" Then Error = "Bad Request"
 	mess.ResponseCode = Code
 	mess.ResponseError = Error
-	mess.ResponseStatus = "error"
+	mess.ResponseString = "error"
 	ReturnHttpResponse(mess, resp)
 End Sub
 
 Public Sub ReturnSuccess (mess As HttpResponseMessage, resp As ServletResponse, Code As Int, Data As Map)
-	'If Data.IsInitialized = False Then Data.Initialize
-	'mess.ResponseObject = Data
 	If Code = 0 Then Code = 200
+	If Data.IsInitialized = False Then Data.Initialize
 	mess.ResponseCode = Code
-	mess.ResponseStatus = "ok"
+	mess.ResponseObject = Data
+	mess.ResponseString = "ok"
 	ReturnHttpResponse(mess, resp)
 End Sub
 
-'Public Sub ReturnSuccess2 (mess As HttpResponseMessage, resp As ServletResponse, Code As Int, Data As List)
-'	'If Data.IsInitialized = False Then Data.Initialize
-'	'mess.ResponseData = Data
-'	If Code = 0 Then Code = 200
-'	mess.ResponseCode = Code
-'	mess.ResponseStatus = "ok"
-'	ReturnHttpResponse(mess, resp)
-'End Sub
+Public Sub ReturnSuccess2 (mess As HttpResponseMessage, resp As ServletResponse, Code As Int, Data As List)
+	If Code = 0 Then Code = 200
+	If Data.IsInitialized = False Then Data.Initialize
+	mess.ResponseCode = Code
+	mess.ResponseData = Data
+	mess.ResponseString = "ok"
+	ReturnHttpResponse(mess, resp)
+End Sub
 
 Public Sub ReturnBadRequest (mess As HttpResponseMessage, resp As ServletResponse)
 	mess.ResponseCode = 400
@@ -454,728 +448,204 @@ Public Sub ReturnErrorExecuteQuery (mess As HttpResponseMessage, resp As Servlet
 	ReturnHttpResponse(mess, resp)
 End Sub
 
-'Public Sub GenerateVerboseJSON (mess As HttpResponseMessage, L As List, LeftSpaces As String, Identation As String) As String
-'	'Dim keys As List
-'	'keys.Initialize2(Array As String("s", "a", "r"))
-'	If mess.ResponseKeys.IsInitialized = False Then
-'		mess.ResponseKeys.Initialize
-'	End If
-'	If mess.ResponseKeys.Size = 0 Then
-'		mess.ResponseKeys.Add("s")
-'		mess.ResponseKeys.Add("a")
-'		mess.ResponseKeys.Add("m")
-'		mess.ResponseKeys.Add("e")
-'		mess.ResponseKeys.Add("r")
-'		'mess.ResponseKeys.Add("t")
-'	End If
-'	Dim resmap As Map = CreateMap("r": L, "__order": mess.ResponseKeys)
-'	Return ProcessOrderedJsonFromMap(resmap, "", "  ")
-'End Sub
-
-Public Sub ProcessOrderedJsonFromList (L As List, LeftSpaces As String, Identation As String) As String
-	Dim SB As StringBuilder
-	SB.Initialize
-	SB.Append("[")
-	Dim First As Boolean = True
-	For Each value As Object In L
-		If First = False Then
-			SB.Append(",")
-		Else
-			First = False
-		End If
-		SB.Append(CRLF)
-		Select True
-			Case value Is List
-				SB.Append(ProcessOrderedJsonFromList(value, LeftSpaces, Identation))
-			Case value Is Map
-				SB.Append(ProcessOrderedJsonFromMap(value, LeftSpaces & Identation, Identation))
-			Case value Is String
-				SB.Append(LeftSpaces & QUOTE & value & QUOTE)
-			Case Else
-				SB.Append(LeftSpaces & value)
-		End Select
-	Next
-	SB.Append(CRLF & LeftSpaces & "]")
-	Return SB.ToString
-End Sub
-
-Public Sub ProcessOrderedJsonFromMap (M As Map, LeftSpaces As String, Identation As String) As String
-	Dim SB As StringBuilder
-	SB.Initialize
-	SB.Append(LeftSpaces & "{")
-	Dim order As List = M.Get("__order")
-	Dim alias As List = M.Get("__alias")
-	Dim First As Boolean = True
-	Dim i As Int
-	
-	For Each key As String In order
-		If First = False Then
-			SB.Append(",")
-		Else
-			First = False
-		End If
-		SB.Append(CRLF)
-		Dim value As Object = m.Get(key)
-		If key <> "__order" And key <> "__alias" Then
-			'For i = 0 To order.Size - 1
-				If alias.IsInitialized And alias.Size > i Then
-					key = alias.Get(i)
-				End If
-			'Next
-			Select True
-				Case value Is List
-					SB.Append(LeftSpaces & Identation & QUOTE & key & QUOTE & ": " & ProcessOrderedJsonFromList(value, LeftSpaces & Identation, Identation))
-				Case value Is Map
-					SB.Append(LeftSpaces & Identation & QUOTE & key & QUOTE & ": " & ProcessOrderedJsonFromMap(value, LeftSpaces & Identation & Identation, Identation))
-				Case value Is String
-					SB.Append(LeftSpaces & Identation & QUOTE & key & QUOTE & ": " & QUOTE & value & QUOTE)
-				Case Else
-					SB.Append(LeftSpaces & Identation & QUOTE & key & QUOTE & ": " & value)
-			End Select
-		End If
-		i = i + 1
-	Next
-	SB.Append(CRLF & LeftSpaces & "}")
-	Return SB.ToString
-End Sub
-
-
 ' To initialize: <code>
 ' HRM.Initialize
 ' HRM.VerboseMode = Main.conf.VerboseMode</code>
-' ---------------------------------------------------------------
-' <em>Output:</em> 
-' {
-'   "a": 200
-'   "s": "ok",
-'   "m": "Success",
-'   "e": null,
-'   "r": {
-'     "connect": true
-'   }
-' }
+' For XML format:<code>
+' HRM.ContentType = WebApiUtils.CONTENT_TYPE_XML</code>
 Public Sub ReturnHttpResponse (mess As HttpResponseMessage, resp As ServletResponse)
+	' ==============================
+	' VerboseMode = True
+	' ==============================
+	' {
+	'  "m": "Success",
+	'  "e": Null,
+	'  "s": "ok",
+	'  "r": { "connect": "true" }
+	'  "a": 200
+	' }
+	' =============================
+	' VerboseMode = False
+	' =============================
+	' Array
+	' [ {"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"} ]
+	'
+	' Object
+	' { "connect": "true" }
+	
 	If mess.ContentType = CONTENT_TYPE_XML Then
 		ReturnHttpResponse2(mess, resp)
 		Return
-		'Else
-		'	If mess.ContentType = "" Then mess.ContentType = CONTENT_TYPE_JSON
-		'	resp.ContentType = mess.ContentType
 	End If
+	
+	Dim Content As String
+	If mess.ResponseCode >= 200 And mess.ResponseCode < 300 Then ' SUCCESS
+		If mess.ResponseType = "" Then mess.ResponseType = "SUCCESS"
+		If mess.ResponseString = "" Then mess.ResponseString = "ok"
+		If mess.ResponseMessage = "" Then mess.ResponseMessage = "Success"
+		mess.ResponseError = Null
+	Else ' ERROR
+		If mess.ResponseCode = 0 Then mess.ResponseCode = 400
+		If mess.ResponseType = "" Then mess.ResponseType = "ERROR"
+		If mess.ResponseString = "" Then mess.ResponseString = "error"
+		If mess.ResponseError.As(String).StartsWith("java.lang.Object") Then
+			mess.ResponseError = "Bad Request"
+			If mess.ResponseCode = 404 Then mess.ResponseError = "Not Found"
+			If mess.ResponseCode = 405 Then mess.ResponseError = "Method Not Allowed"
+			If mess.ResponseCode = 422 Then mess.ResponseError = "Unprocessable Entity"
+		End If
+	End If
+	If mess.ContentType = "" Then mess.ContentType = CONTENT_TYPE_JSON
+	resp.ContentType = mess.ContentType
+
 	If mess.VerboseMode Then
-		If mess.ResponseCode >= 200 And mess.ResponseCode < 300 Then ' SUCCESS
-			If mess.ResponseType = "" Then mess.ResponseType = "SUCCESS"
-			If mess.ResponseStatus = "" Then mess.ResponseStatus = "ok"
-			If mess.ResponseMessage = "" Then mess.ResponseMessage = "Success"
-			mess.ResponseError = Null
-		Else ' ERROR
-			If mess.ResponseCode = 0 Then mess.ResponseCode = 400
-			If mess.ResponseType = "" Then mess.ResponseType = "ERROR"
-			If mess.ResponseStatus = "" Then mess.ResponseStatus = "error"
-			If GetType(mess.ResponseError) = "java.lang.Object" Then
-				mess.ResponseError = "Bad Request"
-				If mess.ResponseCode = 404 Then mess.ResponseError = "Not Found"
-				If mess.ResponseCode = 405 Then mess.ResponseError = "Method Not Allowed"
-				If mess.ResponseCode = 422 Then mess.ResponseError = "Unprocessable Entity"
-				If mess.ResponseCode = 429 Then mess.ResponseError = "Too Many Requests"
-				If mess.ResponseCode = 500 Then mess.ResponseError = "Internal Server Error"
-			End If
-		End If
-		' Custom Keys
-		If mess.ResponseKeys.IsInitialized = False Then
-			mess.ResponseKeys.Initialize
-		End If
-		If mess.ResponseKeys.Size = 0 Then
-			mess.ResponseKeys.Add("s")
-			mess.ResponseKeys.Add("a")
-			mess.ResponseKeys.Add("m")
-			mess.ResponseKeys.Add("e")
-			mess.ResponseKeys.Add("r")
-			'mess.ResponseKeys.Add("t")
-		End If
-		Dim ResponseElements As Map
-		ResponseElements.Initialize
-		For Each Key As String In mess.ResponseKeys
-			Select Key
-				Case RESPONSE_ELEMENT_MESSAGE
-					ResponseElements.Put(RESPONSE_ELEMENT_MESSAGE, mess.ResponseMessage)
-				Case RESPONSE_ELEMENT_CODE
-					ResponseElements.Put(RESPONSE_ELEMENT_CODE, mess.ResponseCode)
-				Case RESPONSE_ELEMENT_STATUS
-					ResponseElements.Put(RESPONSE_ELEMENT_STATUS, mess.ResponseStatus)
-				Case RESPONSE_ELEMENT_TYPE
-					ResponseElements.Put(RESPONSE_ELEMENT_TYPE, mess.ResponseType)
-				Case RESPONSE_ELEMENT_ERROR
-					ResponseElements.Put(RESPONSE_ELEMENT_ERROR, mess.ResponseError)
-				Case RESPONSE_ELEMENT_RESULT
-					If mess.ResponseData.IsInitialized Then
-						ResponseElements.Put(RESPONSE_ELEMENT_RESULT, mess.ResponseData)
-					Else If mess.ResponseObject.IsInitialized Then
-						ResponseElements.Put(RESPONSE_ELEMENT_RESULT, mess.ResponseObject)
-						'Else If GetType(mess.ResponseBody) = "java.lang.String" Then
-					Else If mess.ResponseBody Is String Then
-						ResponseElements.Put(RESPONSE_ELEMENT_RESULT, mess.ResponseBody)
-					Else
-						'mess.ResponseObject.Initialize
-						'ResponseElements.Put(RESPONSE_ELEMENT_RESULT, mess.ResponseObject)
-						'mess.ResponseData.Initialize
-						'ResponseElements.Put(RESPONSE_ELEMENT_RESULT, mess.ResponseData)
-						ResponseElements.Put(RESPONSE_ELEMENT_RESULT, Null)
-					End If
-			End Select
-		Next
 		' Override Status Code
 		If mess.ResponseCode < 200 Or mess.ResponseCode > 299 Then
 			resp.Status = 200
 		Else
 			resp.Status = mess.ResponseCode
 		End If
-		
-		Dim Content As String
-		If mess.OrderedKeys Then
-'			Dim SB As StringBuilder
-'			SB.Initialize
-'			SB.Append("{")
-'			For i = 0 To mess.ResponseKeys.Size - 1
-'				Dim eKey As String = mess.ResponseKeys.Get(i)
-'				Dim eValue As Object = ResponseElements.Get(eKey)
-'				If mess.KeysAlias.IsInitialized And mess.KeysAlias.Size > i Then
-'					eKey = mess.KeysAlias.Get(i)
-'				End If
-'				If i > 0 Then
-'					SB.Append(",")
-'				End If
-'				SB.Append(CRLF)
-'				SB.Append("  ") ' 2 spaces
-'				SB.Append(QUOTE)
-'				SB.Append(eKey)
-'				SB.Append(QUOTE)
-'				SB.Append(": ")
-'				Select True
-'					Case eValue Is List
-'						If eValue.As(List).Size = 0 Then
-'							SB.Append(eValue)
-'						Else
-'							Dim gen As JSONGenerator
-'							gen.Initialize2(eValue)
-'							Dim json As String = gen.ToPrettyString(2)
-'							json = json.SubString2(json.IndexOf(CRLF)+1, json.LastIndexOf("]"))
-'							SB.Append("[")
-'							For Each line As String In Regex.Split(CRLF, json)
-'								SB.Append(CRLF).Append("  ").Append(line)
-'							Next
-'							SB.Append(CRLF).Append("  ]")
-'						End If
-'					Case eValue Is Map
-'						If eValue.As(Map).Size = 0 Then
-'							SB.Append(eValue)
-'						Else
-'							Dim gen As JSONGenerator
-'							gen.Initialize(eValue)
-'							Dim json As String = gen.ToPrettyString(2)
-'							'Log(json)
-'							json = json.SubString2(json.IndexOf(CRLF)+1, json.LastIndexOf("}"))
-'							SB.Append("{")
-'							For Each line As String In Regex.Split(CRLF, json)
-'								SB.Append(CRLF).Append("  ").Append(line)
-'							Next
-'							SB.Append(CRLF).Append("  }")
-'						End If
-'					Case eValue Is String
-'						SB.Append(QUOTE & eValue & QUOTE)
-'					Case Else
-'						SB.Append(eValue)
-'				End Select
-'			Next
-'			SB.Append(CRLF)
-'			SB.Append("}")
-'			Content = SB.ToString
-			'Dim resmap As Map = CreateMap("r": L, "__order": mess.ResponseKeys)
-			If mess.ResponseKeys.IsInitialized Then ResponseElements.Put("__order", mess.ResponseKeys)
-			If mess.KeysAlias.IsInitialized Then ResponseElements.Put("__alias", mess.KeysAlias)
-			'ResponseElements.Put("__order", mess.KeysAlias)
-			Content = ProcessOrderedJsonFromMap(ResponseElements, "", "  ")
-		Else ' order not preserved
-'			If GetType(ResponseElements.Get(RESPONSE_ELEMENT_ERROR)) = "java.lang.Object" Then ResponseElements.Put(RESPONSE_ELEMENT_ERROR, Null)
-			
-			Content = ResponseElements.As(JSON).ToString
-'			Dim DB As MiniORM
-'			DB.Initialize("", Null)
-'			Dim keys As List
-'			keys.Initialize2(Array As String("s", "a", "r"))
-'		Dim resmap As Map = CreateMap("a": 200, "s": "ok", "r": mess.ResponseBody, "__order": keys)
-'			'Content = DB.GenerateResults2JSON(DB.Results2, "       ", "  ")
-'		Content = ProcessOrderedJsonFromMap(resmap, "", "  ")
+		Dim Map1 As Map = CreateMap("s": mess.ResponseString, "a": mess.ResponseCode, "m": mess.ResponseMessage, "e": mess.ResponseError)
+		If mess.ResponseData.IsInitialized Then
+			Map1.Put("r", mess.ResponseData)
+		Else If mess.ResponseObject.IsInitialized Then
+			Map1.Put("r", mess.ResponseObject)
+		Else
+			'Map1.Put("r", "")
+			mess.ResponseData.Initialize
+			Map1.Put("r", mess.ResponseData)
 		End If
-	Else ' VerboseMode = False
+		Content = Map1.As(JSON).ToString
+	Else
 		resp.Status = mess.ResponseCode
 		If mess.ResponseData.IsInitialized Then
 			Content = mess.ResponseData.As(JSON).ToString
 		Else If mess.ResponseObject.IsInitialized Then
 			Content = mess.ResponseObject.As(JSON).ToString
-		Else If mess.ResponseBody Is String Then
-			Content = mess.ResponseBody
 		Else
-			Content = Null
+			Content = mess.ResponseMessage
 		End If
 	End If
-	Log(Content)
+	'Log(Content)
 	resp.Write(Content)
-	'ReturnContent(Content, CONTENT_TYPE_JSON, resp)
 End Sub
 
 ' Return XML format response
-' <em>To initialize:</em> <code>
+' Remember to add the following code when initialize a Handler
+' <code>
 ' HRM.Initialize
 ' HRM.ContentType = WebApiUtils.CONTENT_TYPE_XML</code>
-' ---------------------------------------------------------------
-' <em>Output:</em>
-' &lt;content&gt;
-'   &lt;message&gt;Success&lt;/message&gt;
-'   &lt;error&gt;Null&lt;/error&gt;
-'   &lt;status&gt;ok&lt;/status&gt;
-'   &lt;result&gt;
-'     &lt;connect&gt;true&lt;connect&gt;
-'   &lt;/result&gt;
-'   &lt;code&gt;200&lt;code&gt;
-' &lt;/content&gt;
 Private Sub ReturnHttpResponse2 (mess As HttpResponseMessage, resp As ServletResponse)
-	'If mess.ContentType = "" Then mess.ContentType = CONTENT_TYPE_XML
-	'resp.ContentType = mess.ContentType
-	If mess.XmlRoot = "" Then mess.XmlRoot = "root"
-	'If mess.XmlElement = "" Then mess.XmlElement = "result"
+	' ==============================
+	' VerboseMode = True
+	' ==============================
+	' <content>
+	'   <message>Success</message>
+	'   <error>Null</error>
+	'   <status>ok</status>
+	'   <result>
+	'     <connect>true</connect>
+	'   </result>
+	'   <code>200</code>
+	' </content>
+	' =============================
+	' VerboseMode = False
+	' =============================
+	' Array:
+	' <content>
+	'   <result>
+	'     <id>1</id>
+	'     <name>Alice</name>
+	'   </result>
+	'   <result>
+	'     <id>2</id>
+	'     <name>Bob</name>
+	'   </result>
+	' </content>
+	'
+	' Object:
+	' <content>
+	'   <result>
+	'     <connect>true</connect>
+	'   </result>
+	' </content>
+	Dim Content As String
+	If mess.ResponseCode >= 200 And mess.ResponseCode < 300 Then ' SUCCESS
+		If mess.ResponseType = "" Then mess.ResponseType = "SUCCESS"
+		If mess.ResponseString = "" Then mess.ResponseString = "ok"
+		If mess.ResponseMessage = "" Then mess.ResponseMessage = "Success"
+		mess.ResponseError = Null
+	Else ' ERROR
+		If mess.ResponseCode = 0 Then mess.ResponseCode = 400
+		If mess.ResponseType = "" Then mess.ResponseType = "ERROR"
+		If mess.ResponseString = "" Then mess.ResponseString = "error"
+		If mess.ResponseError.As(String).StartsWith("java.lang.Object") Then
+			mess.ResponseError = "Bad Request"
+			If mess.ResponseCode = 404 Then mess.ResponseError = "Not Found"
+			If mess.ResponseCode = 405 Then mess.ResponseError = "Method Not Allowed"
+			If mess.ResponseCode = 422 Then mess.ResponseError = "Unprocessable Entity"
+		End If
+	End If
+	If mess.ContentType = "" Then mess.ContentType = CONTENT_TYPE_JSON
+	resp.ContentType = mess.ContentType
+	If mess.XmlRoot = "" Then mess.XmlRoot = "content"
+	If mess.XmlElement = "" Then mess.XmlElement = "result"
 	
-	Dim ResponseElements As Map
-	ResponseElements.Initialize
 	If mess.VerboseMode Then
-		If mess.ResponseCode >= 200 And mess.ResponseCode < 300 Then ' SUCCESS
-			If mess.ResponseType = "" Then mess.ResponseType = "SUCCESS"
-			If mess.ResponseStatus = "" Then mess.ResponseStatus = "ok"
-			If mess.ResponseMessage = "" Then mess.ResponseMessage = "Success"
-			mess.ResponseError = Null
-		Else ' ERROR
-			If mess.ResponseCode = 0 Then mess.ResponseCode = 400
-			If mess.ResponseType = "" Then mess.ResponseType = "ERROR"
-			If mess.ResponseStatus = "" Then mess.ResponseStatus = "error"
-			If GetType(mess.ResponseError) = "java.lang.Object" Then
-				mess.ResponseError = "Bad Request"
-				If mess.ResponseCode = 404 Then mess.ResponseError = "Not Found"
-				If mess.ResponseCode = 405 Then mess.ResponseError = "Method Not Allowed"
-				If mess.ResponseCode = 422 Then mess.ResponseError = "Unprocessable Entity"
-				If mess.ResponseCode = 429 Then mess.ResponseError = "Too Many Requests"
-				If mess.ResponseCode = 500 Then mess.ResponseError = "Internal Server Error"
-			End If
-		End If
-		' Custom Keys
-		If mess.ResponseKeys.IsInitialized = False Then
-			mess.ResponseKeys.Initialize
-		End If
-		If mess.ResponseKeys.Size = 0 Then
-			mess.ResponseKeys.Add("s")
-			mess.ResponseKeys.Add("a")
-			mess.ResponseKeys.Add("m")
-			mess.ResponseKeys.Add("e")
-			mess.ResponseKeys.Add("r")
-			'mess.ResponseKeys.Add("t")
-			mess.KeysAlias.Initialize
-			mess.KeysAlias.Add("status")
-			mess.KeysAlias.Add("code")
-			mess.KeysAlias.Add("message")
-			mess.KeysAlias.Add("error")
-			mess.KeysAlias.Add("result")
-			mess.KeysAlias.Add("type")
-		End If
-		'Dim ResponseElements As Map
-		'ResponseElements.Initialize
-		For Each Key As String In mess.ResponseKeys
-			Select Key
-				Case RESPONSE_ELEMENT_MESSAGE
-					ResponseElements.Put(RESPONSE_ELEMENT_MESSAGE, mess.ResponseMessage)
-				Case RESPONSE_ELEMENT_CODE
-					ResponseElements.Put(RESPONSE_ELEMENT_CODE, mess.ResponseCode)
-				Case RESPONSE_ELEMENT_STATUS
-					ResponseElements.Put(RESPONSE_ELEMENT_STATUS, mess.ResponseStatus)
-				Case RESPONSE_ELEMENT_TYPE
-					ResponseElements.Put(RESPONSE_ELEMENT_TYPE, mess.ResponseType)
-				Case RESPONSE_ELEMENT_ERROR
-					'If GetType(mess.ResponseError) = "java.lang.String" Then
-					ResponseElements.Put(RESPONSE_ELEMENT_ERROR, mess.ResponseError)
-					'Else
-					'	ResponseElements.Put(RESPONSE_ELEMENT_ERROR, Null)
-					'End If
-				Case RESPONSE_ELEMENT_RESULT
-					If mess.ResponseData.IsInitialized Then
-						ResponseElements.Put(RESPONSE_ELEMENT_RESULT, mess.ResponseData)
-					Else If mess.ResponseObject.IsInitialized Then
-						ResponseElements.Put(RESPONSE_ELEMENT_RESULT, mess.ResponseObject)
-					Else If mess.ResponseBody Is String Then
-						ResponseElements.Put(RESPONSE_ELEMENT_RESULT, mess.ResponseBody)
-					Else
-						'mess.ResponseObject.Initialize
-						'ResponseElements.Put(RESPONSE_ELEMENT_RESULT, mess.ResponseObject)
-						'mess.ResponseData.Initialize
-						'ResponseElements.Put(RESPONSE_ELEMENT_RESULT, mess.ResponseData)
-						ResponseElements.Put(RESPONSE_ELEMENT_RESULT, Null)
-					End If
-			End Select
-		Next
 		' Override Status Code
 		If mess.ResponseCode < 200 Or mess.ResponseCode > 299 Then
 			resp.Status = 200
 		Else
 			resp.Status = mess.ResponseCode
 		End If
-
-		Dim Content As String
-		If mess.OrderedKeys Then
-			Dim SB As StringBuilder
-			SB.Initialize
-			SB.Append($"<${mess.XmlRoot}>"$)
-			For i = 0 To mess.ResponseKeys.Size - 1
-				Dim eKey As String = mess.ResponseKeys.Get(i)
-				Dim eValue As Object = ResponseElements.Get(eKey)
-				If mess.KeysAlias.IsInitialized And mess.KeysAlias.Size > 0 Then
-					eKey = mess.KeysAlias.Get(i)
-				End If
-				If mess.ResponseKeys.Get(i) = RESPONSE_ELEMENT_RESULT Then
-					Select True
-						Case eValue Is List
-							If eValue.As(List).Size = 0 Then
-								SB.Append(CRLF)
-								SB.Append("  ")
-								SB.Append($"<${eKey}/>"$)
-							Else
-								Dim List1 As List = eValue
-								For m = 0 To List1.Size - 1
-									Dim Map1 As Map = List1.Get(m)
-									SB.Append(CRLF)
-									SB.Append("  ")
-									SB.Append($"<${eKey}>"$)
-									For Each Key1 As String In Map1.keys
-										SB.Append(CRLF)
-										SB.Append("  ") ' 2 spaces
-										SB.Append("  ")
-										SB.Append($"<${Key1}>${Map1.Get(Key1)}</${Key1}>"$)
-									Next
-									SB.Append(CRLF)
-									SB.Append("  ")
-									SB.Append($"</${eKey}>"$)
-								Next
-							End If
-						Case eValue Is Map
-							'Dim m2x As Map2Xml
-							'm2x.Initialize
-							'SB.Append(m2x.MapToXml(CreateMap(eKey: eValue)))
-							If eValue.As(Map).Size = 0 Then
-								SB.Append(CRLF)
-								SB.Append("  ")
-								SB.Append($"<${eKey}/>"$)
-							Else
-								SB.Append(CRLF)
-								SB.Append("  ")
-								SB.Append($"<${eKey}>"$)
-								Dim Map1 As Map = eValue
-								For Each Key1 As String In Map1.Keys
-									'Log(Key1) 'category
-									Dim Child1 As Object = Map1.Get(Key1)
-									Select True
-										Case Child1 Is List
-											Dim List1 As List = Child1
-											For Each Child2 As Object In List1
-												'Log(Child2)
-												SB.Append(CRLF)
-												SB.Append("  ")
-												SB.Append("  ")
-												SB.Append($"<${Key1}>"$) 'category
-												Select True
-													Case Child2 Is List
-														Dim List2 As List = Child2
-														For Each Child3 As Object In List2
-															Log(Child3)
-														Next
-													Case Child2 Is Map
-														Dim Map2 As Map = Child2
-														'For Each Grand2Child As Object In Map2.Values
-														'	Log(Grand2Child)
-														'Next
-														For Each Key2 As String In Map2.Keys
-															'Log(Key2) 'products
-															Dim Child3 As Object = Map2.Get(Key2)
-															Select True
-																Case Child3 Is List
-																	Dim List3 As List = Child3
-																	If List3.Size = 0 Then
-																		SB.Append(CRLF)
-																		SB.Append("  ") ' 2 spaces
-																		SB.Append("  ") ' 2 spaces
-																		SB.Append("  ") ' 2 spaces
-																		SB.Append($"<${Key2}/>"$)
-																	Else
-																	
-																		For Each Child3 As Object In List3
-																			Log(Child3)
-																			SB.Append(CRLF)
-																			SB.Append("  ") ' 2 spaces
-																			SB.Append("  ") ' 2 spaces
-																			SB.Append("  ") ' 2 spaces
-																			SB.Append($"<${Key2}>"$)
-																			'SB.Append($"${Map2.Get(Key2)}"$)
-																			SB.Append($"${Child3}"$)
-																			SB.Append(CRLF)
-																			SB.Append("  ") ' 2 spaces
-																			SB.Append("  ") ' 2 spaces
-																			SB.Append("  ") ' 2 spaces
-																			SB.Append($"</${Key2}>"$)
-																		Next
-																	End If
-																Case Child3 Is Map
-																	Dim Map3 As Map = Child3
-																	SB.Append(CRLF)
-																	SB.Append("  ") ' 2 spaces
-																	SB.Append("  ") ' 2 spaces
-																	SB.Append("  ") ' 2 spaces
-																	SB.Append($"<${Key2}>"$)
-																	' todo: Check size of children
-																	'Log(Map3.Size)
-																	For Each Key3 As String In Map3.Keys
-																		'Log(Key3) 'product
-																		Dim Child4 As Object = Map3.Get(Key3)
-																		Select True
-																			Case Child4 Is List
-																				'Log(Child4)
-																				Dim List4 As List = Child4
-																				If List4.Size = 0 Then
-																					SB.Append(CRLF)
-																					SB.Append("  ") ' 2 spaces
-																					SB.Append("  ") ' 2 spaces
-																					SB.Append("  ") ' 2 spaces
-																					SB.Append("  ") ' 2 spaces
-																					SB.Append($"<${Key3}/>"$)
-																				Else
-																					'SB.Append($"<${Key3}>"$)
-																					For Each Child5 As Object In List4
-																						'Log(Child4)
-																						'SB.Append($"<${Key3}>"$)
-																						'SB.Append($"${Child4}"$)
-																						Select True
-																							Case Child5 Is List
-																								Dim List5 As List = Child5
-																								If List5.Size = 0 Then
-																									'SB.Append($"${Child5}"$)
-																									SB.Append(CRLF)
-																									SB.Append("  ") ' 2 spaces
-																									SB.Append("  ") ' 2 spaces
-																									SB.Append("  ") ' 2 spaces
-																									SB.Append("  ") ' 2 spaces
-																									SB.Append($"<${Key3}/>"$)
-																								Else
-																									For Each Child5 As Object In List4
-																										SB.Append(CRLF)
-																										SB.Append("  ") ' 2 spaces
-																										SB.Append("  ") ' 2 spaces
-																										SB.Append("  ") ' 2 spaces
-																										SB.Append("  ") ' 2 spaces
-																										SB.Append($"<${Key3}>"$)
-																										SB.Append($"${Child5}"$)
-																										SB.Append($"</${Key3}>"$)
-																									Next
-																								End If
-																							Case Child5 Is Map
-																								SB.Append(CRLF)
-																								SB.Append("  ") ' 2 spaces
-																								SB.Append("  ") ' 2 spaces
-																								SB.Append("  ") ' 2 spaces
-																								SB.Append("  ") ' 2 spaces
-																								SB.Append($"<${Key3}>"$) 'product
-																								Dim Map5 As Map = Child5
-																								For Each Key5 As String In Map5.Keys
-																									SB.Append(CRLF)
-																									SB.Append("  ") ' 2 spaces
-																									SB.Append("  ") ' 2 spaces
-																									SB.Append("  ") ' 2 spaces
-																									SB.Append("  ") ' 2 spaces
-																									SB.Append("  ") ' 2 spaces
-																									SB.Append("  ") ' 2 spaces
-																									SB.Append($"<${Key5}>"$) 'id, name
-																									SB.Append($"${Map5.Get(Key5)}"$)
-																									SB.Append($"</${Key5}>"$)
-																								Next
-																								SB.Append(CRLF)
-																								SB.Append("  ") ' 2 spaces
-																								SB.Append("  ") ' 2 spaces
-																								SB.Append("  ") ' 2 spaces
-																								SB.Append("  ") ' 2 spaces
-																								SB.Append($"</${Key3}>"$)
-																							Case Else
-																								SB.Append(CRLF)
-																								SB.Append("  ") ' 2 spaces
-																								SB.Append("  ") ' 2 spaces
-																								SB.Append("  ") ' 2 spaces
-																								SB.Append("  ") ' 2 spaces
-																								SB.Append("  ") ' 2 spaces
-																								'SB.Append("  ") ' 2 spaces
-																								SB.Append($"${Child5}"$)
-																						End Select
-																						
-																					Next
-																				End If
-																			Case Child4 Is Map
-																				'Log(Child4)
-																				Dim Map4 As Map = Child4
-																				For Each Key4 As String In Map4.Keys
-																					SB.Append(CRLF)
-																					SB.Append("  ") ' 2 spaces
-																					SB.Append("  ") ' 2 spaces
-																					SB.Append("  ") ' 2 spaces
-																					SB.Append("  ") ' 2 spaces
-																					SB.Append("  ") ' 2 spaces
-																					SB.Append($"<${Key4}>"$)
-																					SB.Append($"${Map4.Get(Key4)}"$)
-																					SB.Append($"</${Key4}>"$)
-																				Next
-																			Case Else
-																				'Log(Child4)
-																				'SB.Append($"<${Key3}>"$)
-																				SB.Append($"${Child4}"$)
-																				'SB.Append($"</${Key3}>"$)
-																		End Select
-																	Next
-																	SB.Append(CRLF)
-																	SB.Append("  ") ' 2 spaces
-																	SB.Append("  ") ' 2 spaces
-																	SB.Append("  ") ' 2 spaces
-																	SB.Append($"</${Key2}>"$)
-																	
-																Case Else
-																	SB.Append(CRLF)
-																	SB.Append("  ") ' 2 spaces
-																	SB.Append("  ") ' 2 spaces
-																	SB.Append("  ") ' 2 spaces
-																	SB.Append($"<${Key2}>"$)
-																	'SB.Append($"${Map2.Get(Key2)}"$)
-																	SB.Append($"${Child3}"$)
-																	SB.Append($"</${Key2}>"$)
-															End Select
-														Next
-													Case Else
-														'For Each Grand2Child As Object In GrandChild
-														'	Log(Grand2Child)
-														'Next
-														Log(Child2)
-												End Select
-												SB.Append(CRLF)
-												SB.Append("  ")
-												SB.Append("  ")
-												SB.Append($"</${Key1}>"$)
-											Next
-										Case Child1 Is Map
-											Log(Child1)
-											SB.Append(CRLF)
-											SB.Append("  ")
-											SB.Append("  ")
-											SB.Append($"<${Key1}>"$)
-											
-											'
-											
-											SB.Append(CRLF)
-											SB.Append("  ")
-											SB.Append("  ")
-											SB.Append($"</${Key1}>"$)
-										Case Else
-											'Log(GetType(Child1))
-											'Log(Child1)
-											SB.Append(CRLF)
-											SB.Append("  ")
-											SB.Append("  ")
-											SB.Append($"<${Key1}>"$)
-											SB.Append($"<${Child1}>"$)
-											SB.Append($"</${Key1}>"$)
-									End Select
-
-								Next
-								SB.Append(CRLF)
-								SB.Append("  ")
-								SB.Append($"</${eKey}>"$)
-							End If
-						Case Else
-							SB.Append(CRLF)
-							SB.Append("  ") ' 2 spaces
-							SB.Append($"<${eKey}>${eValue}</${eKey}>"$)
-					End Select
-				Else
-					SB.Append(CRLF)
-					SB.Append("  ") ' 2 spaces
-					SB.Append($"<${eKey}>${eValue}</${eKey}>"$)
-				End If
-			Next
-			SB.Append(CRLF)
-			SB.Append($"</${mess.XmlRoot}>"$)
-			Content = SB.ToString
-		Else ' order not preserved
-			'Log(GetType(ResponseElements.Get(RESPONSE_ELEMENT_ERROR)))
-			'If GetType(ResponseElements.Get(RESPONSE_ELEMENT_ERROR)) = "java.lang.Object" Then ResponseElements.Put(RESPONSE_ELEMENT_ERROR, Null)
-			Dim Map1 As Map
-			Map1.Initialize
-			For i = 0 To mess.ResponseKeys.Size - 1
-				Dim eKey As String = mess.ResponseKeys.Get(i)
-				Dim eValue As Object = ResponseElements.Get(eKey)
-				If mess.KeysAlias.IsInitialized And mess.KeysAlias.Size > i Then
-					eKey = mess.KeysAlias.Get(i)
-				End If
-				Map1.Put(eKey, eValue)
-			Next
-			Dim m2x As Map2Xml
-			m2x.Initialize
-			Content = m2x.MapToXml(CreateMap(mess.XmlRoot: Map1))
-		End If
-	Else ' VerboseMode = False
-		resp.Status = mess.ResponseCode
+		Dim Map1 As Map = CreateMap("status": mess.ResponseString, "code": mess.ResponseCode, "message": mess.ResponseMessage, "error": mess.ResponseError)
 		If mess.ResponseData.IsInitialized Then
-			ResponseElements.Put(RESPONSE_ELEMENT_RESULT, mess.ResponseData)
+			Map1.Put(mess.XmlElement, mess.ResponseData)
 		Else If mess.ResponseObject.IsInitialized Then
-			ResponseElements.Put(RESPONSE_ELEMENT_RESULT, mess.ResponseObject)
-		Else If mess.ResponseBody Is String Then
-			ResponseElements.Put(RESPONSE_ELEMENT_RESULT, mess.ResponseBody)
+			Map1.Put(mess.XmlElement, mess.ResponseObject)
 		Else
-			'mess.ResponseObject.Initialize
-			'ResponseElements.Put(RESPONSE_ELEMENT_RESULT, mess.ResponseObject)
-			'mess.ResponseData.Initialize
-			'ResponseElements.Put(RESPONSE_ELEMENT_RESULT, mess.ResponseData)
-			ResponseElements.Put(RESPONSE_ELEMENT_RESULT, Null)
+			mess.ResponseData.Initialize
+			Map1.Put(mess.XmlElement, mess.ResponseData)
 		End If
-		
-		Dim eKey As String = "result"
-		If mess.KeysAlias.IsInitialized And mess.KeysAlias.Size > 0 Then
-			eKey = mess.KeysAlias.Get(0)
-		End If
-		Dim eValue As Object = ResponseElements.Get(RESPONSE_ELEMENT_RESULT)
-		Dim Map1 As Map
-		Map1.Initialize
-		Map1.Put(eKey, eValue)
 		Dim m2x As Map2Xml
 		m2x.Initialize
 		Content = m2x.MapToXml(CreateMap(mess.XmlRoot: Map1))
+	Else
+		resp.Status = mess.ResponseCode
+		If mess.ResponseData.IsInitialized Then
+			Dim Map1 As Map = CreateMap(mess.XmlElement: mess.ResponseData)
+			Dim m2x As Map2Xml
+			m2x.Initialize
+			If mess.XmlRoot <> "" Then
+				Content = m2x.MapToXml(CreateMap(mess.XmlRoot: Map1))
+			Else
+				Content = m2x.MapToXml(Map1)
+			End If
+		Else If mess.ResponseObject.IsInitialized Then
+			Dim Map1 As Map = CreateMap(mess.XmlElement: mess.ResponseObject)
+			Dim m2x As Map2Xml
+			m2x.Initialize
+			If mess.XmlRoot <> "" Then
+				Content = m2x.MapToXml(CreateMap(mess.XmlRoot: Map1))
+			Else
+				Content = m2x.MapToXml(Map1)
+			End If
+		Else
+			Content = mess.ResponseMessage
+		End If
 	End If
 	'Log(Content)
-	'resp.Write(Content)
-	ReturnContent(Content, CONTENT_TYPE_XML, resp)
-End Sub
-
-Public Sub ReturnContent (Content As Object, ContentType As String, resp As ServletResponse)
-	resp.ContentType = ContentType
 	resp.Write(Content)
 End Sub
 
 Public Sub ReturnHtml (str As String, resp As ServletResponse)
-	'resp.ContentType = CONTENT_TYPE_HTML
-	'resp.Write(str)
-	ReturnContent(str, CONTENT_TYPE_HTML, resp)
+	resp.ContentType = CONTENT_TYPE_HTML
+	resp.Write(str)
 End Sub
 
 Public Sub ReturnHtmlBody (cont As HttpResponseContent, resp As ServletResponse)
-	'resp.ContentType = CONTENT_TYPE_HTML
-	'resp.Write(cont.ResponseBody)
-	ReturnContent(cont.ResponseBody, CONTENT_TYPE_HTML, resp)
+	resp.ContentType = CONTENT_TYPE_HTML
+	resp.Write(cont.ResponseBody)
 End Sub
 
 Public Sub ReturnHtmlPageNotFound (resp As ServletResponse)
@@ -1191,27 +661,6 @@ End Sub
 Public Sub ReturnHtmlMethodNotAllowed (resp As ServletResponse)
 	Dim str As String = $"<h1>405 Method Not Allowed</h1>"$
 	ReturnHtml(str, resp)
-End Sub
-
-Public Sub ReturnOutputStream (ins As InputStream, resp As ServletResponse)
-	File.Copy2(ins, resp.OutputStream)
-	resp.OutputStream.Close
-End Sub
-
-' resp.ContentType = "application/pdf"
-' resp.SetHeader("Content-Disposition", "inline;filename=temp.pdf")
-Public Sub ReturnFileInline (ins As InputStream, filename As String, resp As ServletResponse)
-	If filename = "" Then filename = "file"
-	resp.SetHeader("Content-Disposition", "inline;filename=" & filename)
-	ReturnOutputStream(ins, resp)
-End Sub
-
-' resp.ContentType = "application/pdf"
-' resp.SetHeader("Content-Disposition", "attachment;filename=temp.pdf")
-Public Sub ReturnFileAttachment (ins As InputStream, filename As String, resp As ServletResponse)
-	If filename = "" Then filename = "file"
-	resp.SetHeader("Content-Disposition", "inline;filename=" & filename)
-	ReturnOutputStream(ins, resp)
 End Sub
 
 ' // Source: http://www.b4x.com/android/forum/threads/validate-a-correctly-formatted-email-address.39803/
