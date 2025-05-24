@@ -2,6 +2,7 @@
 *.b4j.meta
 *.b4j
 *.zip
+Utility.bas
 CorsFilter.bas
 HttpsFilter.bas
 HelpHandler.bas
