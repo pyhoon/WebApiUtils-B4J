@@ -5,7 +5,7 @@ Type=StaticCode
 Version=10
 @EndOfDesignText@
 ' Web API Utility
-' Version 4.30
+' Version 4.40
 Sub Process_Globals
 	Public Const CONTENT_TYPE_HTML As String = "text/html"
 	Public Const CONTENT_TYPE_JSON As String = "application/json"
@@ -19,7 +19,7 @@ Sub Process_Globals
 	Public Const RESPONSE_ELEMENT_ERROR As String 	= "e"
 	Public Const RESPONSE_ELEMENT_RESULT As String 	= "r"
 	Type HttpResponseContent (ResponseBody As String)
-	Type HttpResponseMessage (ResponseMessage As String, ResponseCode As Int, ResponseStatus As String, ResponseType As String, ResponseError As Object, ResponseData As List, ResponseObject As Map, ResponseBody As Object, ContentType As String, XmlRoot As String, VerboseMode As Boolean, OrderedKeys As Boolean, ResponseKeys As List, KeysAlias As List)
+	Type HttpResponseMessage (ResponseMessage As String, ResponseCode As Int, ResponseStatus As String, ResponseType As String, ResponseError As Object, ResponseData As List, ResponseObject As Map, ResponseBody As Object, ContentType As String, XmlRoot As String, VerboseMode As Boolean, OrderedKeys As Boolean, ResponseKeys As List, ResponseKeysAlias As List)
 End Sub
 
 Public Sub CheckMaxElements (Elements() As String, Max_Elements As Int) As Boolean
@@ -692,7 +692,7 @@ Public Sub ReturnHttpResponse (mess As HttpResponseMessage, resp As ServletRespo
 '			Content = SB.ToString
 			'Dim resmap As Map = CreateMap("r": L, "__order": mess.ResponseKeys)
 			If mess.ResponseKeys.IsInitialized Then ResponseElements.Put("__order", mess.ResponseKeys)
-			If mess.KeysAlias.IsInitialized Then ResponseElements.Put("__alias", mess.KeysAlias)
+			If mess.ResponseKeysAlias.IsInitialized Then ResponseElements.Put("__alias", mess.ResponseKeysAlias)
 			'ResponseElements.Put("__order", mess.KeysAlias)
 			Content = ProcessOrderedJsonFromMap(ResponseElements, "", "  ")
 		Else ' order not preserved
@@ -709,19 +709,33 @@ Public Sub ReturnHttpResponse (mess As HttpResponseMessage, resp As ServletRespo
 		End If
 	Else ' VerboseMode = False
 		resp.Status = mess.ResponseCode
-		If mess.ResponseData.IsInitialized Then
-			Content = mess.ResponseData.As(JSON).ToString
-		Else If mess.ResponseObject.IsInitialized Then
-			Content = mess.ResponseObject.As(JSON).ToString
-		Else If mess.ResponseBody Is String Then
-			Content = mess.ResponseBody
+		
+		Dim Content As String
+		If mess.OrderedKeys Then
+			If mess.ResponseData.IsInitialized Then
+				Content = ProcessOrderedJsonFromList(mess.ResponseData, "", "  ")
+			Else If mess.ResponseObject.IsInitialized Then
+				Content = ProcessOrderedJsonFromMap(mess.ResponseObject, "", "  ")
+			Else If mess.ResponseBody Is String Then
+				Content = mess.ResponseBody
+			Else
+				Content = Null
+			End If
 		Else
-			Content = Null
+			If mess.ResponseData.IsInitialized Then
+				Content = mess.ResponseData.As(JSON).ToString
+			Else If mess.ResponseObject.IsInitialized Then
+				Content = mess.ResponseObject.As(JSON).ToString
+			Else If mess.ResponseBody Is String Then
+				Content = mess.ResponseBody
+			Else
+				Content = Null
+			End If
 		End If
 	End If
-	Log(Content)
-	resp.Write(Content)
-	'ReturnContent(Content, CONTENT_TYPE_JSON, resp)
+	'Log(Content)
+	'resp.Write(Content)
+	ReturnContent(Content, CONTENT_TYPE_JSON, resp)
 End Sub
 
 ' Return XML format response
@@ -777,13 +791,13 @@ Private Sub ReturnHttpResponse2 (mess As HttpResponseMessage, resp As ServletRes
 			mess.ResponseKeys.Add("e")
 			mess.ResponseKeys.Add("r")
 			'mess.ResponseKeys.Add("t")
-			mess.KeysAlias.Initialize
-			mess.KeysAlias.Add("status")
-			mess.KeysAlias.Add("code")
-			mess.KeysAlias.Add("message")
-			mess.KeysAlias.Add("error")
-			mess.KeysAlias.Add("result")
-			mess.KeysAlias.Add("type")
+			mess.ResponseKeysAlias.Initialize
+			mess.ResponseKeysAlias.Add("status")
+			mess.ResponseKeysAlias.Add("code")
+			mess.ResponseKeysAlias.Add("message")
+			mess.ResponseKeysAlias.Add("error")
+			mess.ResponseKeysAlias.Add("result")
+			mess.ResponseKeysAlias.Add("type")
 		End If
 		'Dim ResponseElements As Map
 		'ResponseElements.Initialize
@@ -834,8 +848,8 @@ Private Sub ReturnHttpResponse2 (mess As HttpResponseMessage, resp As ServletRes
 			For i = 0 To mess.ResponseKeys.Size - 1
 				Dim eKey As String = mess.ResponseKeys.Get(i)
 				Dim eValue As Object = ResponseElements.Get(eKey)
-				If mess.KeysAlias.IsInitialized And mess.KeysAlias.Size > 0 Then
-					eKey = mess.KeysAlias.Get(i)
+				If mess.ResponseKeysAlias.IsInitialized And mess.ResponseKeysAlias.Size > 0 Then
+					eKey = mess.ResponseKeysAlias.Get(i)
 				End If
 				If mess.ResponseKeys.Get(i) = RESPONSE_ELEMENT_RESULT Then
 					Select True
@@ -1119,8 +1133,8 @@ Private Sub ReturnHttpResponse2 (mess As HttpResponseMessage, resp As ServletRes
 			For i = 0 To mess.ResponseKeys.Size - 1
 				Dim eKey As String = mess.ResponseKeys.Get(i)
 				Dim eValue As Object = ResponseElements.Get(eKey)
-				If mess.KeysAlias.IsInitialized And mess.KeysAlias.Size > i Then
-					eKey = mess.KeysAlias.Get(i)
+				If mess.ResponseKeysAlias.IsInitialized And mess.ResponseKeysAlias.Size > i Then
+					eKey = mess.ResponseKeysAlias.Get(i)
 				End If
 				Map1.Put(eKey, eValue)
 			Next
@@ -1145,8 +1159,8 @@ Private Sub ReturnHttpResponse2 (mess As HttpResponseMessage, resp As ServletRes
 		End If
 		
 		Dim eKey As String = "result"
-		If mess.KeysAlias.IsInitialized And mess.KeysAlias.Size > 0 Then
-			eKey = mess.KeysAlias.Get(0)
+		If mess.ResponseKeysAlias.IsInitialized And mess.ResponseKeysAlias.Size > 0 Then
+			eKey = mess.ResponseKeysAlias.Get(0)
 		End If
 		Dim eValue As Object = ResponseElements.Get(RESPONSE_ELEMENT_RESULT)
 		Dim Map1 As Map
