@@ -5,7 +5,7 @@ Type=StaticCode
 Version=10
 @EndOfDesignText@
 ' Web API Utility
-' Version 4.41
+' Version 4.40
 Sub Process_Globals
 	Public Const CONTENT_TYPE_HTML As String = "text/html"
 	Public Const CONTENT_TYPE_JSON As String = "application/json"
@@ -189,12 +189,24 @@ Public Sub RequestCookie (req As ServletRequest) As Map
 	Return M
 End Sub
 
-' Same as RequestDataJson
+' Same as RequestDataJson (for backward compatibility)
+' Next version may point to RequestDataText
 ' Tip about POST requests: if you want to get a URL parameter (req.GetParameter)
 ' then do it only after reading the payload, otherwise the payload will be searched
 ' for the parameter and will be lost.
 Public Sub RequestData (Request As ServletRequest) As Map
 	Return RequestDataJson(Request)
+End Sub
+
+Public Sub RequestDataText (Request As ServletRequest) As String
+	Dim str As String
+	Dim inp As InputStream = Request.InputStream
+	If inp.BytesAvailable <= 0 Then
+		Return Null
+	End If
+	Dim buffer() As Byte = Bit.InputStreamToBytes(inp)
+	str = BytesToString(buffer, 0, buffer.Length, "UTF8")
+	Return str
 End Sub
 
 Public Sub RequestDataJson (Request As ServletRequest) As Map
@@ -204,7 +216,7 @@ Public Sub RequestDataJson (Request As ServletRequest) As Map
 		Return data
 	End If
 	Dim buffer() As Byte = Bit.InputStreamToBytes(inp)
-	Dim str As String = BytesToString(buffer, 0, buffer.Length, "UTF-8")
+	Dim str As String = BytesToString(buffer, 0, buffer.Length, "UTF8")
 	data = str.As(JSON).ToMap
 	Return data
 End Sub
@@ -216,7 +228,7 @@ Public Sub RequestDataXml (Request As ServletRequest) As Map
 		Return data
 	End If
 	Dim buffer() As Byte = Bit.InputStreamToBytes(inp)
-	Dim str As String = BytesToString(buffer, 0, buffer.Length, "UTF-8")
+	Dim str As String = BytesToString(buffer, 0, buffer.Length, "UTF8")
 	str = LinearizeXML(str)
 	
 	Dim xm As Xml2Map
@@ -297,7 +309,7 @@ Public Sub RequestBasicAuth (Auths As List) As Map
 			Dim b64 As String = auth.SubString("Basic ".Length)
 			Dim su As StringUtils
 			Dim ab() As Byte = su.DecodeBase64(b64)
-			Dim str As String = BytesToString(ab, 0, ab.Length, "utf8")
+			Dim str As String = BytesToString(ab, 0, ab.Length, "UTF8")
 			Dim UsernameAndPassword() As String = Regex.Split(":", str)
 			If UsernameAndPassword.Length = 2 Then
 				client.Put("CLIENT_ID", UsernameAndPassword(0))
@@ -719,7 +731,9 @@ Public Sub ReturnHttpResponse (mess As HttpResponseMessage, resp As ServletRespo
 			Else If mess.ResponseBody Is String Then
 				Content = mess.ResponseBody
 			Else
-				Content = Null
+				'Content = Null
+				mess.ResponseObject = CreateMap("error": mess.ResponseError)
+				Content = mess.ResponseObject.As(JSON).ToString
 			End If
 		Else
 			If mess.ResponseData.IsInitialized Then
@@ -729,7 +743,9 @@ Public Sub ReturnHttpResponse (mess As HttpResponseMessage, resp As ServletRespo
 			Else If mess.ResponseBody Is String Then
 				Content = mess.ResponseBody
 			Else
-				Content = Null
+				'Content = Null
+				mess.ResponseObject = CreateMap("error": mess.ResponseError)
+				Content = mess.ResponseObject.As(JSON).ToString
 			End If
 		End If
 	End If
