@@ -5,7 +5,7 @@ Type=StaticCode
 Version=10
 @EndOfDesignText@
 ' Web API Utility
-' Version 4.40
+' Version 4.41
 Sub Process_Globals
 	Public Const CONTENT_TYPE_HTML As String = "text/html"
 	Public Const CONTENT_TYPE_JSON As String = "application/json"
@@ -454,7 +454,7 @@ Public Sub ReturnErrorExecuteQuery (mess As HttpResponseMessage, resp As Servlet
 	ReturnHttpResponse(mess, resp)
 End Sub
 
-'Public Sub GenerateVerboseJSON (mess As HttpResponseMessage, L As List, LeftSpaces As String, Identation As String) As String
+'Public Sub GenerateVerboseJSON (mess As HttpResponseMessage, L As List, LeftSpaces As String, Indentation As String) As String
 '	'Dim keys As List
 '	'keys.Initialize2(Array As String("s", "a", "r"))
 '	If mess.ResponseKeys.IsInitialized = False Then
@@ -472,7 +472,7 @@ End Sub
 '	Return ProcessOrderedJsonFromMap(resmap, "", "  ")
 'End Sub
 
-Public Sub ProcessOrderedJsonFromList (L As List, LeftSpaces As String, Identation As String) As String
+Public Sub ProcessOrderedJsonFromList (L As List, LeftSpaces As String, Indentation As String) As String
 	Dim SB As StringBuilder
 	SB.Initialize
 	SB.Append("[")
@@ -486,9 +486,9 @@ Public Sub ProcessOrderedJsonFromList (L As List, LeftSpaces As String, Identati
 		SB.Append(CRLF)
 		Select True
 			Case value Is List
-				SB.Append(ProcessOrderedJsonFromList(value, LeftSpaces, Identation))
+				SB.Append(ProcessOrderedJsonFromList(value, LeftSpaces, Indentation))
 			Case value Is Map
-				SB.Append(ProcessOrderedJsonFromMap(value, LeftSpaces & Identation, Identation))
+				SB.Append(ProcessOrderedJsonFromMap(value, LeftSpaces & Indentation, Indentation))
 			Case value Is String
 				SB.Append(LeftSpaces & QUOTE & value & QUOTE)
 			Case Else
@@ -499,7 +499,7 @@ Public Sub ProcessOrderedJsonFromList (L As List, LeftSpaces As String, Identati
 	Return SB.ToString
 End Sub
 
-Public Sub ProcessOrderedJsonFromMap (M As Map, LeftSpaces As String, Identation As String) As String
+Public Sub ProcessOrderedJsonFromMap (M As Map, LeftSpaces As String, Indentation As String) As String
 	Dim SB As StringBuilder
 	SB.Initialize
 	SB.Append(LeftSpaces & "{")
@@ -524,13 +524,13 @@ Public Sub ProcessOrderedJsonFromMap (M As Map, LeftSpaces As String, Identation
 			'Next
 			Select True
 				Case value Is List
-					SB.Append(LeftSpaces & Identation & QUOTE & key & QUOTE & ": " & ProcessOrderedJsonFromList(value, LeftSpaces & Identation, Identation))
+					SB.Append(LeftSpaces & Indentation & QUOTE & key & QUOTE & ": " & ProcessOrderedJsonFromList(value, LeftSpaces & Indentation, Indentation))
 				Case value Is Map
-					SB.Append(LeftSpaces & Identation & QUOTE & key & QUOTE & ": " & ProcessOrderedJsonFromMap(value, LeftSpaces & Identation & Identation, Identation))
+					SB.Append(LeftSpaces & Indentation & QUOTE & key & QUOTE & ": " & ProcessOrderedJsonFromMap(value, LeftSpaces & Indentation & Indentation, Indentation))
 				Case value Is String
-					SB.Append(LeftSpaces & Identation & QUOTE & key & QUOTE & ": " & QUOTE & value & QUOTE)
+					SB.Append(LeftSpaces & Indentation & QUOTE & key & QUOTE & ": " & QUOTE & value & QUOTE)
 				Case Else
-					SB.Append(LeftSpaces & Identation & QUOTE & key & QUOTE & ": " & value)
+					SB.Append(LeftSpaces & Indentation & QUOTE & key & QUOTE & ": " & value)
 			End Select
 		End If
 		i = i + 1
