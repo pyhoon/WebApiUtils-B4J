@@ -1,4 +1,4 @@
 # WebApiUtils
-Version: 4.50
+Version: 4.60
 
-For use in Web API Server 4
+For use in Pakai framework
