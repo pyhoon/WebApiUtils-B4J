@@ -1,4 +1,4 @@
 Author=Aeric
-Version=4.60
+Version=4.70
 B4J.DependsOn=JavaObject, jServer, Json, jStringUtils, Xml2Map
 Supported Platforms=B4J

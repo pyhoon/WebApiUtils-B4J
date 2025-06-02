@@ -5,7 +5,7 @@ Type=StaticCode
 Version=10
 @EndOfDesignText@
 ' Web API Utility
-' Version 4.60
+' Version 4.70
 Sub Process_Globals
 	Public Const CONTENT_TYPE_HTML As String = "text/html"
 	Public Const CONTENT_TYPE_JSON As String = "application/json"
@@ -475,7 +475,7 @@ Public Sub ReturnErrorExecuteQuery (mess As HttpResponseMessage, resp As Servlet
 	ReturnHttpResponse(mess, resp)
 End Sub
 
-Public Sub ProcessOrderedJsonFromList (L As List, LeftSpaces As String, Indentation As String) As String
+Public Sub ProcessOrderedJsonFromList (L As List, Indent As String, Indentation As String) As String
 	Dim SB As StringBuilder
 	SB.Initialize
 	SB.Append("[")
@@ -489,23 +489,23 @@ Public Sub ProcessOrderedJsonFromList (L As List, LeftSpaces As String, Indentat
 		SB.Append(CRLF)
 		Select True
 			Case value Is List
-				SB.Append(ProcessOrderedJsonFromList(value, LeftSpaces, Indentation))
+				SB.Append(ProcessOrderedJsonFromList(value, Indent, Indentation))
 			Case value Is Map
-				SB.Append(ProcessOrderedJsonFromMap(value, LeftSpaces & Indentation, Indentation))
+				SB.Append(ProcessOrderedJsonFromMap(value, Indent & Indentation, Indentation))
 			Case value Is String
-				SB.Append(LeftSpaces & QUOTE & value & QUOTE)
+				SB.Append(Indent & QUOTE & value & QUOTE)
 			Case Else
-				SB.Append(LeftSpaces & value)
+				SB.Append(Indent & value)
 		End Select
 	Next
-	SB.Append(CRLF & LeftSpaces & "]")
+	SB.Append(CRLF & Indent & "]")
 	Return SB.ToString
 End Sub
 
-Public Sub ProcessOrderedJsonFromMap (M As Map, LeftSpaces As String, Indentation As String) As String
+Public Sub ProcessOrderedJsonFromMap (M As Map, Indent As String, Indentation As String) As String
 	Dim SB As StringBuilder
 	SB.Initialize
-	SB.Append(LeftSpaces & "{")
+	SB.Append(Indent & "{")
 	Dim order As List = M.Get("__order")
 	Dim First As Boolean = True
 	For Each key As String In order
@@ -519,65 +519,53 @@ Public Sub ProcessOrderedJsonFromMap (M As Map, LeftSpaces As String, Indentatio
 		If key <> "__order" Then
 			Select True
 				Case value Is List
-					SB.Append(LeftSpaces & Indentation & QUOTE & key & QUOTE & ": " & ProcessOrderedJsonFromList(value, LeftSpaces & Indentation, Indentation))
+					SB.Append(Indent & Indentation & QUOTE & key & QUOTE & ": " & ProcessOrderedJsonFromList(value, Indent & Indentation, Indentation))
 				Case value Is Map
-					SB.Append(LeftSpaces & Indentation & QUOTE & key & QUOTE & ": " & ProcessOrderedJsonFromMap(value, LeftSpaces & Indentation & Indentation, Indentation))
+					SB.Append(Indent & Indentation & QUOTE & key & QUOTE & ": " & ProcessOrderedJsonFromMap(value, Indent & Indentation & Indentation, Indentation))
 				Case value Is String
-					SB.Append(LeftSpaces & Indentation & QUOTE & key & QUOTE & ": " & QUOTE & value & QUOTE)
+					SB.Append(Indent & Indentation & QUOTE & key & QUOTE & ": " & QUOTE & value & QUOTE)
 				Case Else
-					SB.Append(LeftSpaces & Indentation & QUOTE & key & QUOTE & ": " & value)
+					SB.Append(Indent & Indentation & QUOTE & key & QUOTE & ": " & value)
 			End Select
 		End If
 	Next
-	SB.Append(CRLF & LeftSpaces & "}")
+	SB.Append(CRLF & Indent & "}")
 	Return SB.ToString
 End Sub
 
 Public Sub ProcessOrderedXmlFromList (Tag As String, L As List, Indent As String, Indentation As String) As String
 	Dim SB As StringBuilder
 	SB.Initialize
-	For Each item As Object In L
+	Dim First As Boolean = True
+	For Each value As Object In L
 		Dim child As String
 		Select True
-			Case item Is Map
-				child = CRLF & ProcessOrderedXmlFromMap(item, Indent & Indentation, Indentation) & CRLF & Indent
-			Case item Is List
-				child = ProcessOrderedXmlFromList(Tag, item, Indent & Indentation, Indentation)
-			Case item Is String
-				child = EscapeXml(item)
+			Case value Is Map
+				child = CRLF & Indent & Indentation & ProcessOrderedXmlFromMap(Tag, value, Indent & Indentation, Indentation) & CRLF & Indent
+			Case value Is List
+				child = CRLF & Indentation & ProcessOrderedXmlFromList(Tag, value, Indent & Indentation, Indentation) & CRLF '& Indent
+			Case value Is String
+				child = EscapeXml(value)
 			Case Else
-				child = item
+				child = value
 		End Select
-		SB.Append(CRLF).Append(Indent).Append("<").Append(Tag).Append(">")
+		If First Then
+			First = False
+		Else
+			SB.Append(CRLF)
+		End If
+		SB.Append(Indent).Append("<").Append(Tag).Append(">")
 		SB.Append(child)
-		SB.Append("</").Append(Tag).Append(">")'.Append(CRLF)
+		SB.Append("</").Append(Tag).Append(">")
 	Next
 	Return SB.ToString
 End Sub
 
-Public Sub ProcessOrderedXmlFromMap (M As Map, Indent As String, Indentation As String) As String
+Public Sub ProcessOrderedXmlFromMap (Tag As String, M As Map, Indent As String, Indentation As String) As String
 	Dim SB As StringBuilder
 	SB.Initialize
-	Dim order As List
-	order.Initialize
-	If M.ContainsKey("__order") Then order = M.Get("__order")
-	If order.Size = 0 Then
-		For Each key As String In M.Keys
-			Dim value As Object = M.Get(key)
-			Dim child As String
-			Select True
-				Case value Is Map
-					child = CRLF & ProcessOrderedXmlFromMap(value, Indent & Indentation, Indentation) & CRLF & Indent
-				Case value Is List
-					child = ProcessOrderedXmlFromList(key, value, Indent & Indentation, Indentation)
-				Case value Is String
-					child = EscapeXml(value)
-				Case Else
-					child = value
-			End Select
-			SB.Append(child)
-		Next
-	Else
+	If M.ContainsKey("__order") Then
+		Dim order As List = M.Get("__order")
 		Dim First As Boolean = True
 		For Each key As String In order
 			If key = "__order" Then Continue
@@ -585,9 +573,9 @@ Public Sub ProcessOrderedXmlFromMap (M As Map, Indent As String, Indentation As 
 			Dim child As String
 			Select True
 				Case value Is Map
-					child = ProcessOrderedXmlFromMap(value, Indent & Indentation, Indentation) & CRLF & Indent
+					child = CRLF & Indent & Indentation & ProcessOrderedXmlFromMap(Tag, value, Indent & Indentation, Indentation) & CRLF & Indent
 				Case value Is List
-					child = ProcessOrderedXmlFromList(key, value, Indent & Indentation, Indentation)
+					child = CRLF & ProcessOrderedXmlFromList(Tag, value, Indent & Indentation, Indentation) & CRLF & Indent
 				Case value Is String
 					child = EscapeXml(value)
 				Case Else
@@ -598,12 +586,39 @@ Public Sub ProcessOrderedXmlFromMap (M As Map, Indent As String, Indentation As 
 			Else
 				SB.Append(CRLF)
 			End If
+			SB.Append(Indent)
+			SB.Append("<").Append(key).Append(">")
+			SB.Append(child)
+			SB.Append("</").Append(key).Append(">")
+		Next
+	Else
+		For Each key As String In M.Keys
+			If key = "__order" Then Continue
+			Dim value As Object = M.Get(key)
+			Dim child As String
+			Select True
+				Case value Is Map
+					Dim M2 As Map = value
+					If M2.ContainsKey("__order") Then
+						child = CRLF & Indent & Indentation & ProcessOrderedXmlFromMap(Tag, M2, Indent & Indentation, Indentation) & CRLF & Indent & Indentation
+					Else
+						Dim m2x As Map2Xml
+						m2x.Initialize
+						child = m2x.MapToXml(M2)
+					End If
+				Case value Is List
+					child = CRLF & Indent & Indentation & ProcessOrderedXmlFromList(key, value, Indent & Indentation, Indentation) & CRLF & Indent & Indentation
+				Case value Is String
+					child = EscapeXml(value)
+				Case Else
+					child = value
+			End Select
 			SB.Append(Indent).Append("<").Append(key).Append(">")
 			SB.Append(child)
 			SB.Append("</").Append(key).Append(">")
 		Next
 	End If
-	Return SB.ToString
+	Return SB.ToString.Trim
 End Sub
 
 ' To initialize: <code>
@@ -622,10 +637,8 @@ End Sub
 ' }
 Public Sub ReturnHttpResponse (mess As HttpResponseMessage, resp As ServletResponse)
 	If mess.XmlRoot = "" Then mess.XmlRoot = "root"
-	'If mess.XmlElement = "" Then mess.XmlElement = "item"
 	If mess.ContentType = "" Then mess.ContentType = CONTENT_TYPE_JSON
 	If mess.PayloadType = "" Then mess.PayloadType = "json"
-	'resp.ContentType = mess.ContentType
 	If mess.ResponseCode >= 200 And mess.ResponseCode < 300 Then ' SUCCESS
 		If mess.ResponseType = "" Then mess.ResponseType = "SUCCESS"
 		If mess.ResponseStatus = "" Then mess.ResponseStatus = "ok"
@@ -644,6 +657,8 @@ Public Sub ReturnHttpResponse (mess As HttpResponseMessage, resp As ServletRespo
 			If mess.ResponseCode = 500 Then mess.ResponseError = "Internal Server Error"
 		End If
 	End If
+	Dim SB As StringBuilder
+	SB.Initialize
 	If mess.VerboseMode Then
 		' Custom Keys
 		If mess.ResponseKeys.IsInitialized = False Then
@@ -673,29 +688,13 @@ Public Sub ReturnHttpResponse (mess As HttpResponseMessage, resp As ServletRespo
 					ResponseElements.Put(RESPONSE_ELEMENT_ERROR, mess.ResponseError)
 				Case RESPONSE_ELEMENT_RESULT
 					If mess.ResponseData.IsInitialized Then
-						If mess.ContentType = CONTENT_TYPE_XML And mess.XmlElement <> "" Then
-							ResponseElements.Put(RESPONSE_ELEMENT_RESULT, CreateMap(mess.XmlElement: mess.ResponseData))
-						Else
-							ResponseElements.Put(RESPONSE_ELEMENT_RESULT, mess.ResponseData)
-						End If
+						ResponseElements.Put(RESPONSE_ELEMENT_RESULT, mess.ResponseData)
 					Else If mess.ResponseObject.IsInitialized Then
-						If mess.ContentType = CONTENT_TYPE_XML And mess.XmlElement <> "" Then
-							ResponseElements.Put(RESPONSE_ELEMENT_RESULT, CreateMap(mess.XmlElement: mess.ResponseObject))
-						Else
-							ResponseElements.Put(RESPONSE_ELEMENT_RESULT, mess.ResponseObject)
-						End If
+						ResponseElements.Put(RESPONSE_ELEMENT_RESULT, mess.ResponseObject)
 					Else If mess.ResponseBody Is String Then
-						If mess.ContentType = CONTENT_TYPE_XML And mess.XmlElement <> "" Then
-							ResponseElements.Put(RESPONSE_ELEMENT_RESULT, CreateMap(mess.XmlElement: mess.ResponseBody))
-						Else
-							ResponseElements.Put(RESPONSE_ELEMENT_RESULT, mess.ResponseBody)
-						End If
+						ResponseElements.Put(RESPONSE_ELEMENT_RESULT, mess.ResponseBody)
 					Else
-						If mess.ContentType = CONTENT_TYPE_XML And mess.XmlElement <> "" Then
-							ResponseElements.Put(RESPONSE_ELEMENT_RESULT, CreateMap(mess.XmlElement: Null))
-						Else
-							ResponseElements.Put(RESPONSE_ELEMENT_RESULT, Null)
-						End If
+						ResponseElements.Put(RESPONSE_ELEMENT_RESULT, Null)
 					End If
 			End Select
 		Next
@@ -705,7 +704,7 @@ Public Sub ReturnHttpResponse (mess As HttpResponseMessage, resp As ServletRespo
 		Else
 			resp.Status = mess.ResponseCode
 		End If
-
+		
 		If mess.ResponseKeysAlias.IsInitialized Then
 			Dim ResponseElementsVerbose As Map
 			ResponseElementsVerbose.Initialize
@@ -720,100 +719,99 @@ Public Sub ReturnHttpResponse (mess As HttpResponseMessage, resp As ServletRespo
 			ResponseElementsVerbose = ResponseElements
 			If mess.OrderedKeys Then ResponseElementsVerbose.Put("__order", mess.ResponseKeys)
 		End If
-		
-		Dim Content As String
 		If mess.OrderedKeys Then
 			Select mess.ContentType
 				Case CONTENT_TYPE_XML
-					Content = $"<${mess.XmlRoot}>"$
-					Content = Content & CRLF & ProcessOrderedXmlFromMap(ResponseElementsVerbose, "  ", "  ")
-					Content= Content & CRLF & $"</${mess.XmlRoot}>"$
+					SB.Append($"<${mess.XmlRoot}>"$)
+					SB.Append(CRLF).Append("  ").Append(ProcessOrderedXmlFromMap(mess.XmlElement, ResponseElementsVerbose, "  ", "  "))
+					SB.Append(CRLF).Append($"</${mess.XmlRoot}>"$)
 				Case CONTENT_TYPE_JSON
-					Content = ProcessOrderedJsonFromMap(ResponseElementsVerbose, "", "  ")
+					SB.Append(ProcessOrderedJsonFromMap(ResponseElementsVerbose, "", "  "))
 			End Select
 		Else
 			' order not preserved
 			Select mess.ContentType
 				Case CONTENT_TYPE_XML
+					mess.ResponseObject = CreateMap(mess.XmlRoot: ResponseElementsVerbose)
 					Dim m2x As Map2Xml
 					m2x.Initialize
-					Content = m2x.MapToXml(CreateMap(mess.XmlRoot: ResponseElementsVerbose))
+					SB.Append(m2x.MapToXml(mess.ResponseObject))
 				Case CONTENT_TYPE_JSON
-					Content = ResponseElementsVerbose.As(JSON).ToString
+					SB.Append(ResponseElementsVerbose.As(JSON).ToString)
 			End Select
 		End If
 	Else ' VerboseMode = False
 		resp.Status = mess.ResponseCode
-		Dim Content As String
 		If mess.OrderedKeys Then
-			If mess.ResponseData.IsInitialized Then
-				Select mess.ContentType
-					Case CONTENT_TYPE_XML
-						Content = $"<${mess.XmlRoot}>"$
-						Content = Content & ProcessOrderedXmlFromList(mess.XmlElement, mess.ResponseData, "  ", "  ")
-						Content= Content & CRLF & $"</${mess.XmlRoot}>"$
-					Case CONTENT_TYPE_JSON
-						Content = ProcessOrderedJsonFromList(mess.ResponseData, "", "  ")
-				End Select
-			Else If mess.ResponseObject.IsInitialized Then
-				Select mess.ContentType
-					Case CONTENT_TYPE_XML
-						Content = $"<${mess.XmlRoot}>"$
-						Content = Content & CRLF & ProcessOrderedXmlFromMap(mess.ResponseObject, "  ", "  ")
-						Content= Content & CRLF & $"</${mess.XmlRoot}>"$
-					Case CONTENT_TYPE_JSON
-						Content = ProcessOrderedJsonFromMap(mess.ResponseObject, "", "  ")
-				End Select
-			Else If mess.ResponseBody Is String Then
-				Content = mess.ResponseBody
-			Else
-				Select mess.ContentType
-					Case CONTENT_TYPE_XML
+			Select True
+				Case mess.ResponseObject.IsInitialized
+					If mess.ContentType = CONTENT_TYPE_XML Then
+						SB.Append($"<${mess.XmlRoot}>"$)
+						SB.Append(CRLF).Append("  ").Append(ProcessOrderedXmlFromMap(mess.XmlElement, mess.ResponseObject, "  ", "  "))
+						SB.Append(CRLF).Append($"</${mess.XmlRoot}>"$)
+					Else
+						SB.Append(ProcessOrderedJsonFromMap(mess.ResponseObject, "", "  "))
+					End If
+				Case mess.ResponseData.IsInitialized
+					If mess.ContentType = CONTENT_TYPE_XML Then
+						If mess.XmlElement = "" Then mess.XmlElement = "item"
+						SB.Append($"<${mess.XmlRoot}>"$)
+						SB.Append(CRLF).Append(ProcessOrderedXmlFromList(mess.XmlElement, mess.ResponseData, "  ", "  "))
+						SB.Append(CRLF).Append($"</${mess.XmlRoot}>"$)
+					Else
+						SB.Append(ProcessOrderedJsonFromList(mess.ResponseData, "", "  "))
+					End If
+				Case mess.ResponseBody Is String
+					SB.Append(mess.ResponseBody)
+				Case Else
+					If mess.ContentType = CONTENT_TYPE_XML Then
 						mess.ResponseObject = CreateMap("error": mess.ResponseError)
-						Content = $"<${mess.XmlRoot}>"$
-						Content = Content & CRLF & $"  <error>${mess.ResponseError}</error>"$
-						Content= Content & CRLF & $"</${mess.XmlRoot}>"$
-					Case CONTENT_TYPE_JSON
+						SB.Append($"<${mess.XmlRoot}>"$)
+						SB.Append(CRLF).Append("  ").Append($"<error>${mess.ResponseError}</error>"$)
+						SB.Append(CRLF).Append($"</${mess.XmlRoot}>"$)
+					Else
 						mess.ResponseObject = CreateMap("error": mess.ResponseError)
-						Content = mess.ResponseObject.As(JSON).ToString
-				End Select
-			End If
+						SB.Append(mess.ResponseObject.As(JSON).ToString)
+					End If
+			End Select
 		Else
-			If mess.ResponseData.IsInitialized Then
-				Select mess.ContentType
-					Case CONTENT_TYPE_XML
+			Select True
+				Case mess.ResponseObject.IsInitialized
+					If mess.ContentType = CONTENT_TYPE_XML Then
+						If mess.XmlElement = "" Then mess.XmlElement = "item"
+						mess.ResponseObject = CreateMap(mess.XmlRoot: CreateMap(mess.XmlElement: mess.ResponseObject))
 						Dim m2x As Map2Xml
 						m2x.Initialize
-						Content = m2x.MapToXml(CreateMap(mess.XmlRoot: CreateMap(mess.XmlElement: mess.ResponseData)))
-					Case CONTENT_TYPE_JSON
-						Content = mess.ResponseData.As(JSON).ToString
-				End Select
-			Else If mess.ResponseObject.IsInitialized Then
-				Select mess.ContentType
-					Case CONTENT_TYPE_XML
+						SB.Append(m2x.MapToXml(mess.ResponseObject))
+					Else
+						SB.Append(mess.ResponseObject.As(JSON).ToString)
+					End If
+				Case mess.ResponseData.IsInitialized
+					If mess.ContentType = CONTENT_TYPE_XML Then
+						If mess.XmlElement = "" Then mess.XmlElement = "item"
+						mess.ResponseObject = CreateMap(mess.XmlRoot: CreateMap(mess.XmlElement: mess.ResponseData))
 						Dim m2x As Map2Xml
 						m2x.Initialize
-						Content = m2x.MapToXml(CreateMap(mess.XmlRoot: CreateMap(mess.XmlElement: mess.ResponseObject)))
-					Case CONTENT_TYPE_JSON
-						Content = mess.ResponseObject.As(JSON).ToString
-				End Select
-			Else If mess.ResponseBody Is String Then
-				Content = mess.ResponseBody
-			Else
-				Select mess.ContentType
-					Case CONTENT_TYPE_XML
+						SB.Append(m2x.MapToXml(mess.ResponseObject))
+					Else
+						SB.Append(mess.ResponseData.As(JSON).ToString)
+					End If
+				Case mess.ResponseBody Is String
+					SB.Append(mess.ResponseBody)
+				Case Else
+					If mess.ContentType = CONTENT_TYPE_XML Then
 						mess.ResponseObject = CreateMap("error": mess.ResponseError)
-						Content = $"<${mess.XmlRoot}>"$
-						Content = Content & CRLF & $"  <error>${mess.ResponseError}</error>"$
-						Content= Content & CRLF & $"</${mess.XmlRoot}>"$
-					Case CONTENT_TYPE_JSON
+						SB.Append($"<${mess.XmlRoot}>"$)
+						SB.Append(CRLF).Append("  ").Append($"<error>${mess.ResponseError}</error>"$)
+						SB.Append(CRLF).Append($"</${mess.XmlRoot}>"$)
+					Else
 						mess.ResponseObject = CreateMap("error": mess.ResponseError)
-						Content = mess.ResponseObject.As(JSON).ToString
-				End Select
-			End If
+						SB.Append(mess.ResponseObject.As(JSON).ToString)
+					End If
+			End Select
 		End If
 	End If
-	ReturnContent(Content.Trim, mess.ContentType, resp)
+	ReturnContent(SB.ToString.Trim, mess.ContentType, resp)
 End Sub
 
 Public Sub ReturnContent (Content As Object, ContentType As String, resp As ServletResponse)
