@@ -503,6 +503,7 @@ Public Sub ProcessOrderedJsonFromList (L As List, Indent As String, Indentation 
 End Sub
 
 Public Sub ProcessOrderedJsonFromMap (M As Map, Indent As String, Indentation As String) As String
+	If M.ContainsKey("__order") = False Then Return M.As(JSON).ToString
 	Dim SB As StringBuilder
 	SB.Initialize
 	SB.Append(Indent & "{")
