@@ -1,0 +1,26 @@
+# ignore files
+#*.b4j.meta
+#*.b4j
+*.zip
+# libs.json
+# Utility.bas
+# CorsFilter.bas
+# HttpsFilter.bas
+# HelpHandler.bas
+# CategoriesApiHandler.bas
+# CategoriesWebHandler.bas
+# FindApiHandler.bas
+# IndexWebHandler.bas
+# ProductsApiHandler.bas
+# UsersApiHandler.bas
+
+# ignore ALL files in these directories
+AutoBackups/
+Objects/b4xlibs/
+Objects/bin/
+Objects/logs/
+Objects/shell/
+Objects/src/
+Objects/www/assets/scripts
+# Objects/
+# Files/
