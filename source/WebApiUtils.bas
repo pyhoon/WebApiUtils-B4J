@@ -5,7 +5,7 @@ Type=StaticCode
 Version=10
 @EndOfDesignText@
 ' Web API Utility
-' Version 4.80
+' Version 5.00
 Sub Process_Globals
 	Public Const CONTENT_TYPE_HTML As String = "text/html"
 	Public Const CONTENT_TYPE_JSON As String = "application/json"
@@ -179,8 +179,8 @@ Public Sub FileNameByCurrentDateTime As String
 End Sub
 
 ' Read Request Cookie As Map
-Public Sub RequestCookie (req As ServletRequest) As Map
-	Dim Munchies() As Cookie = req.GetCookies
+Public Sub RequestCookie (Request As ServletRequest) As Map
+	Dim Munchies() As Cookie = Request.GetCookies
 	Dim M As Map
 	M.Initialize
 	For Each bite As Cookie In Munchies
@@ -284,9 +284,9 @@ End Sub
 
 Public Sub RequestMultipartData (Request As ServletRequest, Folder As String, MaxSize As Long) As Map
 	Try
-		Dim data As Map = Request.GetMultipartData(Folder, MaxSize)
-		For Each key As String In data.Keys
-			Dim part As Part = data.Get(key)
+		Dim Data As Map = Request.GetMultipartData(Folder, MaxSize)
+		For Each key As String In Data.Keys
+			Dim part As Part = Data.Get(key)
 			Dim name As String = part.SubmittedFilename
 			Dim temp As String = File.GetName(part.TempFile)
 			If key.StartsWith("post-") Then
@@ -300,63 +300,63 @@ Public Sub RequestMultipartData (Request As ServletRequest, Folder As String, Ma
 				Dim ins As InputStream = File.OpenInput(Folder, temp)
 				Dim buffer() As Byte = Bit.InputStreamToBytes(ins)
 				Dim str As String = BytesToString(buffer, 0, buffer.Length, "UTF-8")
-				data = str.As(JSON).ToMap
+				Data = str.As(JSON).ToMap
 			End If
 			If File.Exists(Folder, name) Then File.Delete(Folder, temp) ' Delete temp file if new file generated
 		Next
 	Catch
 		LogError(LastException.Message)
 	End Try
-	Return data
+	Return Data
 End Sub
 
 Public Sub RequestBasicAuth (Auths As List) As Map
-	Dim client As Map = CreateMap("CLIENT_ID": "", "CLIENT_SECRET": "")
+	Dim Client As Map = CreateMap("CLIENT_ID": "", "CLIENT_SECRET": "")
 	If Auths.Size > 0 Then
-		Dim auth As String = Auths.Get(0)
-		If auth.StartsWith("Basic") Then
-			Dim b64 As String = auth.SubString("Basic ".Length)
+		Dim Auth As String = Auths.Get(0)
+		If Auth.StartsWith("Basic") Then
+			Dim b64 As String = Auth.SubString("Basic ".Length)
 			Dim su As StringUtils
 			Dim ab() As Byte = su.DecodeBase64(b64)
 			Dim str As String = BytesToString(ab, 0, ab.Length, "UTF8")
 			Dim UsernameAndPassword() As String = Regex.Split(":", str)
 			If UsernameAndPassword.Length = 2 Then
-				client.Put("CLIENT_ID", UsernameAndPassword(0))
-				client.Put("CLIENT_SECRET", UsernameAndPassword(1))
+				Client.Put("CLIENT_ID", UsernameAndPassword(0))
+				Client.Put("CLIENT_SECRET", UsernameAndPassword(1))
 			End If
 		End If
 	End If
-	Return client
+	Return Client
 End Sub
 
-Public Sub EncodeBase64 (data() As Byte) As String
-	Dim su As StringUtils
-	Return su.EncodeBase64(data)
+Public Sub EncodeBase64 (Data() As Byte) As String
+	Dim SU As StringUtils
+	Return SU.EncodeBase64(Data)
 End Sub
 
-Public Sub DecodeBase64 (str As String) As Byte()
-	Dim su As StringUtils
-	Return su.DecodeBase64(str)
+Public Sub DecodeBase64 (Str As String) As Byte()
+	Dim SU As StringUtils
+	Return SU.DecodeBase64(Str)
 End Sub
 
-Public Sub EncodeURL (str As String) As String
-	Dim su As StringUtils
-	Return su.EncodeUrl(str, "UTF8")
+Public Sub EncodeURL (Str As String) As String
+	Dim SU As StringUtils
+	Return SU.EncodeUrl(Str, "UTF8")
 End Sub
 
-Public Sub DecodeURL (str As String) As String
-	Dim su As StringUtils
-	Return su.DecodeUrl(str, "UTF8")
+Public Sub DecodeURL (Str As String) As String
+	Dim SU As StringUtils
+	Return SU.DecodeUrl(Str, "UTF8")
 End Sub
 
 ' Get Access Token from Header
-Public Sub RequestAccessToken (req As ServletRequest) As String
-	Dim token As String
-	Dim auths As List = req.GetHeaders("Authorization")
-	If auths.Size > 0 Then
-		token = auths.Get(0)
+Public Sub RequestAccessToken (Request As ServletRequest) As String
+	Dim Token As String
+	Dim Auths As List = Request.GetHeaders("Authorization")
+	If Auths.Size > 0 Then
+		Token = Auths.Get(0)
 	End If
-	Return token
+	Return Token
 End Sub
 
 Public Sub RequestBearerToken (req As ServletRequest) As String
@@ -379,100 +379,90 @@ Public Sub RequestApiKey (req As ServletRequest) As String
 End Sub
 
 ' max_age = number of seconds the cookie is valid, 0 to expire immediately
-Public Sub ReturnCookie (key As String, value As String, max_age As Int, http_only As Boolean, resp As ServletResponse)
+Public Sub ReturnCookie (Key As String, Value As String, MaxAge As Int, HttpOnly As Boolean, Response As ServletResponse)
 	Dim session_cookie As Cookie
-	session_cookie.Initialize(key, value)
-	session_cookie.HttpOnly = http_only
-	session_cookie.MaxAge = max_age
-	'resp.SetHeader(key, session_cookie.Value & "; SameSite=Lax")
-	resp.AddCookie(session_cookie)
+	session_cookie.Initialize(Key, Value)
+	session_cookie.MaxAge = MaxAge
+	session_cookie.HttpOnly = HttpOnly
+	Response.AddCookie(session_cookie)
 End Sub
 
-Public Sub ReturnLocation (Location As String, resp As ServletResponse) ' Code = 302
-	resp.SendRedirect(Location)
+Public Sub ReturnCookie2 (Key As String, Value As String, Path As String, SameSite As String, MaxAge As Int, HttpOnly As Boolean, Secure As Boolean, Response As ServletResponse)
+	Dim CookieBuilder As StringBuilder
+	CookieBuilder.Initialize
+	CookieBuilder.Append(Key).Append("=").Append(Value).Append(";")
+	If Path.Length > 0 Then CookieBuilder.Append(" Path=").Append(Path).Append(";")
+	If SameSite.Length > 0 Then CookieBuilder.Append(" SameSite=").Append(SameSite).Append(";")	
+	If HttpOnly Then CookieBuilder.Append(" HttpOnly;")
+	If Secure Then CookieBuilder.Append(" Secure;")
+	CookieBuilder.Append(" Max-Age=").Append(MaxAge)
+	Response.SetHeader("Set-Cookie", CookieBuilder.ToString)
 End Sub
 
-Public Sub ReturnConnect (mess As HttpResponseMessage, resp As ServletResponse)
-	mess.ResponseCode = 200
-	mess.ResponseObject = CreateMap("connect": True)
-	ReturnHttpResponse(mess, resp)
+Public Sub ReturnLocation (Location As String, Response As ServletResponse) ' Code = 302
+	Response.SendRedirect(Location)
 End Sub
 
-'Public Sub ReturnConnect2 (mess As HttpResponseMessage, resp As ServletResponse)
-'	Dim Data As List
-'	Data.Initialize
-'	Data.Add(CreateMap("connect": True))
-'	mess.ResponseCode = 200
-'	mess.ResponseData = Data
-'	ReturnHttpResponse(mess, resp)
-'End Sub
+Public Sub ReturnConnect (Message As HttpResponseMessage, Response As ServletResponse)
+	Message.ResponseCode = 200
+	Message.ResponseObject = CreateMap("connect": True)
+	ReturnHttpResponse(Message, Response)
+End Sub
 
-Public Sub ReturnError (mess As HttpResponseMessage, resp As ServletResponse, Code As Int, Error As String)
-	'If Code = 0 Then Code = 400
+Public Sub ReturnError (Message As HttpResponseMessage, Response As ServletResponse, Code As Int, Error As String)
 	If Error = "" Then Error = "Bad Request"
-	mess.ResponseCode = Code
-	mess.ResponseError = Error
-	mess.ResponseStatus = "error"
-	ReturnHttpResponse(mess, resp)
+	Message.ResponseCode = Code
+	Message.ResponseError = Error
+	Message.ResponseStatus = "error"
+	ReturnHttpResponse(Message, Response)
 End Sub
 
-Public Sub ReturnSuccess (mess As HttpResponseMessage, resp As ServletResponse, Code As Int, Data As Map)
-	'If Data.IsInitialized = False Then Data.Initialize
-	'mess.ResponseObject = Data
+Public Sub ReturnSuccess (Message As HttpResponseMessage, Response As ServletResponse, Code As Int, Data As Map)
 	If Code = 0 Then Code = 200
-	mess.ResponseCode = Code
-	mess.ResponseStatus = "ok"
-	ReturnHttpResponse(mess, resp)
+	Message.ResponseCode = Code
+	Message.ResponseStatus = "ok"
+	ReturnHttpResponse(Message, Response)
 End Sub
 
-'Public Sub ReturnSuccess2 (mess As HttpResponseMessage, resp As ServletResponse, Code As Int, Data As List)
-'	'If Data.IsInitialized = False Then Data.Initialize
-'	'mess.ResponseData = Data
-'	If Code = 0 Then Code = 200
-'	mess.ResponseCode = Code
-'	mess.ResponseStatus = "ok"
-'	ReturnHttpResponse(mess, resp)
-'End Sub
-
-Public Sub ReturnBadRequest (mess As HttpResponseMessage, resp As ServletResponse)
-	mess.ResponseCode = 400
-	ReturnHttpResponse(mess, resp)
+Public Sub ReturnBadRequest (Message As HttpResponseMessage, Response As ServletResponse)
+	Message.ResponseCode = 400
+	ReturnHttpResponse(Message, Response)
 End Sub
 
-Public Sub ReturnAuthorizationRequired (mess As HttpResponseMessage, resp As ServletResponse)
-	mess.ResponseCode = 401
-	mess.ResponseError = "Authentication required"
-	ReturnHttpResponse(mess, resp)
+Public Sub ReturnAuthorizationRequired (Message As HttpResponseMessage, Response As ServletResponse)
+	Message.ResponseCode = 401
+	Message.ResponseError = "Authentication required"
+	ReturnHttpResponse(Message, Response)
 End Sub
 
-Public Sub ReturnTokenExpired (mess As HttpResponseMessage, resp As ServletResponse)
-	mess.ResponseCode = 401
-	mess.ResponseError = "Token Expired"
-	ReturnHttpResponse(mess, resp)
+Public Sub ReturnTokenExpired (Message As HttpResponseMessage, Response As ServletResponse)
+	Message.ResponseCode = 401
+	Message.ResponseError = "Token Expired"
+	ReturnHttpResponse(Message, Response)
 End Sub
 
-Public Sub ReturnMethodNotAllow (mess As HttpResponseMessage, resp As ServletResponse)
-	mess.ResponseCode = 405
-	mess.ResponseError = "Method Not Allowed"
-	ReturnHttpResponse(mess, resp)
+Public Sub ReturnMethodNotAllow (Message As HttpResponseMessage, Response As ServletResponse)
+	Message.ResponseCode = 405
+	Message.ResponseError = "Method Not Allowed"
+	ReturnHttpResponse(Message, Response)
 End Sub
 
-Public Sub ReturnErrorUnprocessableEntity (mess As HttpResponseMessage, resp As ServletResponse)
-	mess.ResponseCode = 422
-	mess.ResponseError = "Unprocessable Entity"
-	ReturnHttpResponse(mess, resp)
+Public Sub ReturnErrorUnprocessableEntity (Message As HttpResponseMessage, Response As ServletResponse)
+	Message.ResponseCode = 422
+	Message.ResponseError = "Unprocessable Entity"
+	ReturnHttpResponse(Message, Response)
 End Sub
 
-Public Sub ReturnErrorCredentialNotProvided (mess As HttpResponseMessage, resp As ServletResponse)
-	mess.ResponseCode = 400
-	mess.ResponseError = "Credential Not Provided"
-	ReturnHttpResponse(mess, resp)
+Public Sub ReturnErrorCredentialNotProvided (Message As HttpResponseMessage, Response As ServletResponse)
+	Message.ResponseCode = 400
+	Message.ResponseError = "Credential Not Provided"
+	ReturnHttpResponse(Message, Response)
 End Sub
 
-Public Sub ReturnErrorExecuteQuery (mess As HttpResponseMessage, resp As ServletResponse)
-	mess.ResponseCode = 422
-	mess.ResponseError = "Execute Query"
-	ReturnHttpResponse(mess, resp)
+Public Sub ReturnErrorExecuteQuery (Message As HttpResponseMessage, Response As ServletResponse)
+	Message.ResponseCode = 422
+	Message.ResponseError = "Execute Query"
+	ReturnHttpResponse(Message, Response)
 End Sub
 
 Public Sub ProcessOrderedJsonFromList (L As List, Indent As String, Indentation As String) As String
@@ -636,232 +626,232 @@ End Sub
 '     "connect": true
 '   }
 ' }
-Public Sub ReturnHttpResponse (mess As HttpResponseMessage, resp As ServletResponse)
-	If mess.XmlRoot = "" Then mess.XmlRoot = "root"
-	If mess.ContentType = "" Then mess.ContentType = CONTENT_TYPE_JSON
-	If mess.PayloadType = "" Then mess.PayloadType = "json"
-	If mess.ResponseCode >= 200 And mess.ResponseCode < 300 Then ' SUCCESS
-		If mess.ResponseType = "" Then mess.ResponseType = "SUCCESS"
-		If mess.ResponseStatus = "" Then mess.ResponseStatus = "ok"
-		If mess.ResponseMessage = "" Then mess.ResponseMessage = "Success"
-		mess.ResponseError = Null
+Public Sub ReturnHttpResponse (Message As HttpResponseMessage, Response As ServletResponse)
+	If Message.XmlRoot = "" Then Message.XmlRoot = "root"
+	If Message.ContentType = "" Then Message.ContentType = CONTENT_TYPE_JSON
+	If Message.PayloadType = "" Then Message.PayloadType = "json"
+	If Message.ResponseCode >= 200 And Message.ResponseCode < 300 Then ' SUCCESS
+		If Message.ResponseType = "" Then Message.ResponseType = "SUCCESS"
+		If Message.ResponseStatus = "" Then Message.ResponseStatus = "ok"
+		If Message.ResponseMessage = "" Then Message.ResponseMessage = "Success"
+		Message.ResponseError = Null
 	Else ' ERROR
-		If mess.ResponseCode = 0 Then mess.ResponseCode = 400
-		If mess.ResponseType = "" Then mess.ResponseType = "ERROR"
-		If mess.ResponseStatus = "" Then mess.ResponseStatus = "error"
-		If GetType(mess.ResponseError) = "java.lang.Object" Then
-			mess.ResponseError = "Bad Request"
-			If mess.ResponseCode = 404 Then mess.ResponseError = "Not Found"
-			If mess.ResponseCode = 405 Then mess.ResponseError = "Method Not Allowed"
-			If mess.ResponseCode = 422 Then mess.ResponseError = "Unprocessable Entity"
-			If mess.ResponseCode = 429 Then mess.ResponseError = "Too Many Requests"
-			If mess.ResponseCode = 500 Then mess.ResponseError = "Internal Server Error"
+		If Message.ResponseCode = 0 Then Message.ResponseCode = 400
+		If Message.ResponseType = "" Then Message.ResponseType = "ERROR"
+		If Message.ResponseStatus = "" Then Message.ResponseStatus = "error"
+		If GetType(Message.ResponseError) = "java.lang.Object" Then
+			Message.ResponseError = "Bad Request"
+			If Message.ResponseCode = 404 Then Message.ResponseError = "Not Found"
+			If Message.ResponseCode = 405 Then Message.ResponseError = "Method Not Allowed"
+			If Message.ResponseCode = 422 Then Message.ResponseError = "Unprocessable Entity"
+			If Message.ResponseCode = 429 Then Message.ResponseError = "Too Many Requests"
+			If Message.ResponseCode = 500 Then Message.ResponseError = "Internal Server Error"
 		End If
 	End If
 	Dim SB As StringBuilder
 	SB.Initialize
-	If mess.VerboseMode Then
+	If Message.VerboseMode Then
 		' Custom Keys
-		If mess.ResponseKeys.IsInitialized = False Then
-			mess.ResponseKeys.Initialize
+		If Message.ResponseKeys.IsInitialized = False Then
+			Message.ResponseKeys.Initialize
 		End If
-		If mess.ResponseKeys.Size = 0 Then
-			mess.ResponseKeys.Add("s")
-			mess.ResponseKeys.Add("a")
-			mess.ResponseKeys.Add("m")
-			mess.ResponseKeys.Add("e")
-			mess.ResponseKeys.Add("r")
-			'mess.ResponseKeys.Add("t")
+		If Message.ResponseKeys.Size = 0 Then
+			Message.ResponseKeys.Add("s")
+			Message.ResponseKeys.Add("a")
+			Message.ResponseKeys.Add("m")
+			Message.ResponseKeys.Add("e")
+			Message.ResponseKeys.Add("r")
+			'Message.ResponseKeys.Add("t")
 		End If
 		Dim ResponseElements As Map
 		ResponseElements.Initialize
-		For Each Key As String In mess.ResponseKeys
+		For Each Key As String In Message.ResponseKeys
 			Select Key
 				Case RESPONSE_ELEMENT_MESSAGE
-					ResponseElements.Put(RESPONSE_ELEMENT_MESSAGE, mess.ResponseMessage)
+					ResponseElements.Put(RESPONSE_ELEMENT_MESSAGE, Message.ResponseMessage)
 				Case RESPONSE_ELEMENT_CODE
-					ResponseElements.Put(RESPONSE_ELEMENT_CODE, mess.ResponseCode)
+					ResponseElements.Put(RESPONSE_ELEMENT_CODE, Message.ResponseCode)
 				Case RESPONSE_ELEMENT_STATUS
-					ResponseElements.Put(RESPONSE_ELEMENT_STATUS, mess.ResponseStatus)
+					ResponseElements.Put(RESPONSE_ELEMENT_STATUS, Message.ResponseStatus)
 				Case RESPONSE_ELEMENT_TYPE
-					ResponseElements.Put(RESPONSE_ELEMENT_TYPE, mess.ResponseType)
+					ResponseElements.Put(RESPONSE_ELEMENT_TYPE, Message.ResponseType)
 				Case RESPONSE_ELEMENT_ERROR
-					ResponseElements.Put(RESPONSE_ELEMENT_ERROR, mess.ResponseError)
+					ResponseElements.Put(RESPONSE_ELEMENT_ERROR, Message.ResponseError)
 				Case RESPONSE_ELEMENT_RESULT
-					If mess.ResponseData.IsInitialized Then
-						ResponseElements.Put(RESPONSE_ELEMENT_RESULT, mess.ResponseData)
-					Else If mess.ResponseObject.IsInitialized Then
-						ResponseElements.Put(RESPONSE_ELEMENT_RESULT, mess.ResponseObject)
-					Else If mess.ResponseBody Is String Then
-						ResponseElements.Put(RESPONSE_ELEMENT_RESULT, mess.ResponseBody)
+					If Message.ResponseData.IsInitialized Then
+						ResponseElements.Put(RESPONSE_ELEMENT_RESULT, Message.ResponseData)
+					Else If Message.ResponseObject.IsInitialized Then
+						ResponseElements.Put(RESPONSE_ELEMENT_RESULT, Message.ResponseObject)
+					Else If Message.ResponseBody Is String Then
+						ResponseElements.Put(RESPONSE_ELEMENT_RESULT, Message.ResponseBody)
 					Else
 						ResponseElements.Put(RESPONSE_ELEMENT_RESULT, Null)
 					End If
 			End Select
 		Next
 		' Override Status Code
-		If mess.ResponseCode < 200 Or mess.ResponseCode > 299 Then
-			resp.Status = 200
+		If Message.ResponseCode < 200 Or Message.ResponseCode > 299 Then
+			Response.Status = 200
 		Else
-			resp.Status = mess.ResponseCode
+			Response.Status = Message.ResponseCode
 		End If
 		
-		If mess.ResponseKeysAlias.IsInitialized Then
+		If Message.ResponseKeysAlias.IsInitialized Then
 			Dim ResponseElementsVerbose As Map
 			ResponseElementsVerbose.Initialize
-			For i = 0 To mess.ResponseKeysAlias.Size - 1
-				Dim oldKey As String = mess.ResponseKeys.Get(i)
+			For i = 0 To Message.ResponseKeysAlias.Size - 1
+				Dim oldKey As String = Message.ResponseKeys.Get(i)
 				Dim Value As Object = ResponseElements.Get(oldKey)
-				Dim newKey As String = mess.ResponseKeysAlias.Get(i)
+				Dim newKey As String = Message.ResponseKeysAlias.Get(i)
 				ResponseElementsVerbose.Put(newKey, Value)
 			Next
-			If mess.OrderedKeys Then ResponseElementsVerbose.Put("__order", mess.ResponseKeysAlias)
+			If Message.OrderedKeys Then ResponseElementsVerbose.Put("__order", Message.ResponseKeysAlias)
 		Else
 			ResponseElementsVerbose = ResponseElements
-			If mess.OrderedKeys Then ResponseElementsVerbose.Put("__order", mess.ResponseKeys)
+			If Message.OrderedKeys Then ResponseElementsVerbose.Put("__order", Message.ResponseKeys)
 		End If
-		If mess.OrderedKeys Then
-			Select mess.ContentType
+		If Message.OrderedKeys Then
+			Select Message.ContentType
 				Case CONTENT_TYPE_XML
-					SB.Append($"<${mess.XmlRoot}>"$)
-					SB.Append(CRLF).Append("  ").Append(ProcessOrderedXmlFromMap(mess.XmlElement, ResponseElementsVerbose, "  ", "  "))
-					SB.Append(CRLF).Append($"</${mess.XmlRoot}>"$)
+					SB.Append($"<${Message.XmlRoot}>"$)
+					SB.Append(CRLF).Append("  ").Append(ProcessOrderedXmlFromMap(Message.XmlElement, ResponseElementsVerbose, "  ", "  "))
+					SB.Append(CRLF).Append($"</${Message.XmlRoot}>"$)
 				Case CONTENT_TYPE_JSON
 					SB.Append(ProcessOrderedJsonFromMap(ResponseElementsVerbose, "", "  "))
 			End Select
 		Else
 			' order not preserved
-			Select mess.ContentType
+			Select Message.ContentType
 				Case CONTENT_TYPE_XML
-					mess.ResponseObject = CreateMap(mess.XmlRoot: ResponseElementsVerbose)
+					Message.ResponseObject = CreateMap(Message.XmlRoot: ResponseElementsVerbose)
 					Dim m2x As Map2Xml
 					m2x.Initialize
-					SB.Append(m2x.MapToXml(mess.ResponseObject))
+					SB.Append(m2x.MapToXml(Message.ResponseObject))
 				Case CONTENT_TYPE_JSON
 					SB.Append(ResponseElementsVerbose.As(JSON).ToString)
 			End Select
 		End If
 	Else ' VerboseMode = False
-		resp.Status = mess.ResponseCode
-		If mess.OrderedKeys Then
+		Response.Status = Message.ResponseCode
+		If Message.OrderedKeys Then
 			Select True
-				Case mess.ResponseObject.IsInitialized
-					If mess.ContentType = CONTENT_TYPE_XML Then
-						SB.Append($"<${mess.XmlRoot}>"$)
-						SB.Append(CRLF).Append("  ").Append(ProcessOrderedXmlFromMap(mess.XmlElement, mess.ResponseObject, "  ", "  "))
-						SB.Append(CRLF).Append($"</${mess.XmlRoot}>"$)
+				Case Message.ResponseObject.IsInitialized
+					If Message.ContentType = CONTENT_TYPE_XML Then
+						SB.Append($"<${Message.XmlRoot}>"$)
+						SB.Append(CRLF).Append("  ").Append(ProcessOrderedXmlFromMap(Message.XmlElement, Message.ResponseObject, "  ", "  "))
+						SB.Append(CRLF).Append($"</${Message.XmlRoot}>"$)
 					Else
-						SB.Append(ProcessOrderedJsonFromMap(mess.ResponseObject, "", "  "))
+						SB.Append(ProcessOrderedJsonFromMap(Message.ResponseObject, "", "  "))
 					End If
-				Case mess.ResponseData.IsInitialized
-					If mess.ContentType = CONTENT_TYPE_XML Then
-						If mess.XmlElement = "" Then mess.XmlElement = "item"
-						SB.Append($"<${mess.XmlRoot}>"$)
-						SB.Append(CRLF).Append(ProcessOrderedXmlFromList(mess.XmlElement, mess.ResponseData, "  ", "  "))
-						SB.Append(CRLF).Append($"</${mess.XmlRoot}>"$)
+				Case Message.ResponseData.IsInitialized
+					If Message.ContentType = CONTENT_TYPE_XML Then
+						If Message.XmlElement = "" Then Message.XmlElement = "item"
+						SB.Append($"<${Message.XmlRoot}>"$)
+						SB.Append(CRLF).Append(ProcessOrderedXmlFromList(Message.XmlElement, Message.ResponseData, "  ", "  "))
+						SB.Append(CRLF).Append($"</${Message.XmlRoot}>"$)
 					Else
-						SB.Append(ProcessOrderedJsonFromList(mess.ResponseData, "", "  "))
+						SB.Append(ProcessOrderedJsonFromList(Message.ResponseData, "", "  "))
 					End If
-				Case mess.ResponseBody Is String
-					SB.Append(mess.ResponseBody)
+				Case Message.ResponseBody Is String
+					SB.Append(Message.ResponseBody)
 				Case Else
-					If mess.ContentType = CONTENT_TYPE_XML Then
-						mess.ResponseObject = CreateMap("error": mess.ResponseError)
-						SB.Append($"<${mess.XmlRoot}>"$)
-						SB.Append(CRLF).Append("  ").Append($"<error>${mess.ResponseError}</error>"$)
-						SB.Append(CRLF).Append($"</${mess.XmlRoot}>"$)
+					If Message.ContentType = CONTENT_TYPE_XML Then
+						Message.ResponseObject = CreateMap("error": Message.ResponseError)
+						SB.Append($"<${Message.XmlRoot}>"$)
+						SB.Append(CRLF).Append("  ").Append($"<error>${Message.ResponseError}</error>"$)
+						SB.Append(CRLF).Append($"</${Message.XmlRoot}>"$)
 					Else
-						mess.ResponseObject = CreateMap("error": mess.ResponseError)
-						SB.Append(mess.ResponseObject.As(JSON).ToString)
+						Message.ResponseObject = CreateMap("error": Message.ResponseError)
+						SB.Append(Message.ResponseObject.As(JSON).ToString)
 					End If
 			End Select
 		Else
 			Select True
-				Case mess.ResponseObject.IsInitialized
-					If mess.ContentType = CONTENT_TYPE_XML Then
-						If mess.XmlElement = "" Then mess.XmlElement = "item"
-						mess.ResponseObject = CreateMap(mess.XmlRoot: CreateMap(mess.XmlElement: mess.ResponseObject))
+				Case Message.ResponseObject.IsInitialized
+					If Message.ContentType = CONTENT_TYPE_XML Then
+						If Message.XmlElement = "" Then Message.XmlElement = "item"
+						Message.ResponseObject = CreateMap(Message.XmlRoot: CreateMap(Message.XmlElement: Message.ResponseObject))
 						Dim m2x As Map2Xml
 						m2x.Initialize
-						SB.Append(m2x.MapToXml(mess.ResponseObject))
+						SB.Append(m2x.MapToXml(Message.ResponseObject))
 					Else
-						SB.Append(mess.ResponseObject.As(JSON).ToString)
+						SB.Append(Message.ResponseObject.As(JSON).ToString)
 					End If
-				Case mess.ResponseData.IsInitialized
-					If mess.ContentType = CONTENT_TYPE_XML Then
-						If mess.XmlElement = "" Then mess.XmlElement = "item"
-						mess.ResponseObject = CreateMap(mess.XmlRoot: CreateMap(mess.XmlElement: mess.ResponseData))
+				Case Message.ResponseData.IsInitialized
+					If Message.ContentType = CONTENT_TYPE_XML Then
+						If Message.XmlElement = "" Then Message.XmlElement = "item"
+						Message.ResponseObject = CreateMap(Message.XmlRoot: CreateMap(Message.XmlElement: Message.ResponseData))
 						Dim m2x As Map2Xml
 						m2x.Initialize
-						SB.Append(m2x.MapToXml(mess.ResponseObject))
+						SB.Append(m2x.MapToXml(Message.ResponseObject))
 					Else
-						SB.Append(mess.ResponseData.As(JSON).ToString)
+						SB.Append(Message.ResponseData.As(JSON).ToString)
 					End If
-				Case mess.ResponseBody Is String
-					SB.Append(mess.ResponseBody)
+				Case Message.ResponseBody Is String
+					SB.Append(Message.ResponseBody)
 				Case Else
-					If mess.ContentType = CONTENT_TYPE_XML Then
-						mess.ResponseObject = CreateMap("error": mess.ResponseError)
-						SB.Append($"<${mess.XmlRoot}>"$)
-						SB.Append(CRLF).Append("  ").Append($"<error>${mess.ResponseError}</error>"$)
-						SB.Append(CRLF).Append($"</${mess.XmlRoot}>"$)
+					If Message.ContentType = CONTENT_TYPE_XML Then
+						Message.ResponseObject = CreateMap("error": Message.ResponseError)
+						SB.Append($"<${Message.XmlRoot}>"$)
+						SB.Append(CRLF).Append("  ").Append($"<error>${Message.ResponseError}</error>"$)
+						SB.Append(CRLF).Append($"</${Message.XmlRoot}>"$)
 					Else
-						mess.ResponseObject = CreateMap("error": mess.ResponseError)
-						SB.Append(mess.ResponseObject.As(JSON).ToString)
+						Message.ResponseObject = CreateMap("error": Message.ResponseError)
+						SB.Append(Message.ResponseObject.As(JSON).ToString)
 					End If
 			End Select
 		End If
 	End If
-	ReturnContent(SB.ToString.Trim, mess.ContentType, resp)
+	ReturnContent(SB.ToString.Trim, Message.ContentType, Response)
 End Sub
 
-Public Sub ReturnContent (Content As Object, ContentType As String, resp As ServletResponse)
-	resp.ContentType = ContentType
-	resp.Write(Content)
+Public Sub ReturnContent (Content As Object, ContentType As String, Response As ServletResponse)
+	Response.ContentType = ContentType
+	Response.Write(Content)
 End Sub
 
-Public Sub ReturnHtml (str As String, resp As ServletResponse)
-	ReturnContent(str, CONTENT_TYPE_HTML, resp)
+Public Sub ReturnHtml (Str As String, Response As ServletResponse)
+	ReturnContent(Str, CONTENT_TYPE_HTML, Response)
 End Sub
 
-Public Sub ReturnHtmlBody (cont As HttpResponseContent, resp As ServletResponse)
-	ReturnContent(cont.ResponseBody, CONTENT_TYPE_HTML, resp)
+Public Sub ReturnHtmlBody (Cont As HttpResponseContent, Response As ServletResponse)
+	ReturnContent(Cont.ResponseBody, CONTENT_TYPE_HTML, Response)
 End Sub
 
-Public Sub ReturnHtmlPageNotFound (resp As ServletResponse)
-	Dim str As String = $"<h1>404 Page Not Found</h1>"$
-	ReturnHtml(str, resp)
+Public Sub ReturnHtmlPageNotFound (Response As ServletResponse)
+	Dim Str As String = $"<h1>404 Page Not Found</h1>"$
+	ReturnHtml(Str, Response)
 End Sub
 
-Public Sub ReturnHtmlBadRequest (resp As ServletResponse)
-	Dim str As String = $"<h1>400 Bad Request</h1>"$
-	ReturnHtml(str, resp)
+Public Sub ReturnHtmlBadRequest (Response As ServletResponse)
+	Dim Str As String = $"<h1>400 Bad Request</h1>"$
+	ReturnHtml(Str, Response)
 End Sub
 
-Public Sub ReturnHtmlMethodNotAllowed (resp As ServletResponse)
-	Dim str As String = $"<h1>405 Method Not Allowed</h1>"$
-	ReturnHtml(str, resp)
+Public Sub ReturnHtmlMethodNotAllowed (Response As ServletResponse)
+	Dim Str As String = $"<h1>405 Method Not Allowed</h1>"$
+	ReturnHtml(Str, Response)
 End Sub
 
-Public Sub ReturnOutputStream (ins As InputStream, resp As ServletResponse)
-	File.Copy2(ins, resp.OutputStream)
-	resp.OutputStream.Close
+Public Sub ReturnOutputStream (Ins As InputStream, Response As ServletResponse)
+	File.Copy2(Ins, Response.OutputStream)
+	Response.OutputStream.Close
 End Sub
 
-' resp.ContentType = "application/pdf"
-' resp.SetHeader("Content-Disposition", "inline;filename=temp.pdf")
-Public Sub ReturnFileInline (ins As InputStream, filename As String, resp As ServletResponse)
-	If filename = "" Then filename = "file"
-	resp.SetHeader("Content-Disposition", "inline;filename=" & filename)
-	ReturnOutputStream(ins, resp)
+' Response.ContentType = "application/pdf"
+' Response.SetHeader("Content-Disposition", "inline;filename=temp.pdf")
+Public Sub ReturnFileInline (Ins As InputStream, FileName As String, Response As ServletResponse)
+	If FileName = "" Then FileName = "file"
+	Response.SetHeader("Content-Disposition", "inline;filename=" & FileName)
+	ReturnOutputStream(Ins, Response)
 End Sub
 
-' resp.ContentType = "application/pdf"
-' resp.SetHeader("Content-Disposition", "attachment;filename=temp.pdf")
-Public Sub ReturnFileAttachment (ins As InputStream, filename As String, resp As ServletResponse)
-	If filename = "" Then filename = "file"
-	resp.SetHeader("Content-Disposition", "inline;filename=" & filename)
-	ReturnOutputStream(ins, resp)
+' Response.ContentType = "application/pdf"
+' Response.SetHeader("Content-Disposition", "attachment;filename=temp.pdf")
+Public Sub ReturnFileAttachment (Ins As InputStream, FileName As String, Response As ServletResponse)
+	If FileName = "" Then FileName = "file"
+	Response.SetHeader("Content-Disposition", "inline;filename=" & FileName)
+	ReturnOutputStream(Ins, Response)
 End Sub
 
 ' // Source: http://www.b4x.com/android/forum/threads/validate-a-correctly-formatted-email-address.39803/
@@ -878,9 +868,9 @@ Public Sub Validate_Email (EmailAddress As String) As Boolean
 End Sub
 
 ' Check anti csrf-token variable sent from client in request header is same as variable stored in server session  
-Public Sub ValidateCsrfToken (session_name As String, header_name As String, req As ServletRequest) As Boolean
-	Dim headers As List = req.GetHeaders(header_name)
-	If req.GetSession.GetAttribute2(session_name, "").As(String).EqualsIgnoreCase(headers.Get(0)) Then
+Public Sub ValidateCsrfToken (SessionName As String, HeaderName As String, Request As ServletRequest) As Boolean
+	Dim headers As List = Request.GetHeaders(HeaderName)
+	If Request.GetSession.GetAttribute2(SessionName, "").As(String).EqualsIgnoreCase(headers.Get(0)) Then
 		'Log("matched")
 		Return True
 	Else
@@ -903,17 +893,17 @@ Public Sub ValidateContent (Text As String, Format As String) As Boolean
 End Sub
 
 Public Sub GUID As String
-	Dim sb As StringBuilder
-	sb.Initialize
+	Dim SB As StringBuilder
+	SB.Initialize
 	For Each stp As Int In Array(8, 4, 4, 4, 12)
-		If sb.Length > 0 Then sb.Append("-")
+		If SB.Length > 0 Then SB.Append("-")
 		For n = 1 To stp
 			Dim c As Int = Rnd(0, 16)
 			If c < 10 Then c = c + 48 Else c = c + 55
-			sb.Append(Chr(c))
+			SB.Append(Chr(c))
 		Next
 	Next
-	Return sb.ToString
+	Return SB.ToString
 End Sub
 
 Public Sub ProperCase (Word As String) As String
@@ -948,49 +938,49 @@ Public Sub ReplaceMap (Base As String, Replacements As Map) As String
 End Sub
 
 Public Sub EscapeHtml (Value As String) As String
-	Dim sb As StringBuilder
-	sb.Initialize
+	Dim SB As StringBuilder
+	SB.Initialize
 	For n = 0 To Value.Length - 1
 		Dim c As Char = Value.CharAt(n)
 		Select c
 			Case QUOTE
-				sb.Append("&quot;")
+				SB.Append("&quot;")
 			Case "'"
-				sb.Append("&#39;")
+				SB.Append("&#39;")
 			Case "<"
-				sb.Append("&lt;")
+				SB.Append("&lt;")
 			Case ">"
-				sb.Append("&gt;")
+				SB.Append("&gt;")
 			Case "&"
-				sb.Append("&amp;")
+				SB.Append("&amp;")
 			Case Else
-				sb.Append(c)
+				SB.Append(c)
 		End Select
 	Next
-	Return sb.ToString
+	Return SB.ToString
 End Sub
 ' ===================================================================
 
 ' Reference: https://www.b4x.com/android/forum/threads/escapexml-code-snippet.35720/
 Public Sub EscapeXml (Raw As String) As String
-	Dim sb As StringBuilder
-	sb.Initialize
+	Dim SB As StringBuilder
+	SB.Initialize
 	For i = 0 To Raw.Length - 1
 		Dim c As Char = Raw.CharAt(i)
 		Select c
 			Case QUOTE
-				sb.Append("&quot;")
+				SB.Append("&quot;")
 			Case "'"
-				sb.Append("&apos;")
+				SB.Append("&apos;")
 			Case "<"
-				sb.Append("&lt;")
+				SB.Append("&lt;")
 			Case ">"
-				sb.Append("&gt;")
+				SB.Append("&gt;")
 			Case "&"
-				sb.Append("&amp;")
+				SB.Append("&amp;")
 			Case Else
-				sb.Append(c)
+				SB.Append(c)
 		End Select
 	Next
-	Return sb.ToString
+	Return SB.ToString
 End Sub
