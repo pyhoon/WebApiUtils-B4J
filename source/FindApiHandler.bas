@@ -5,12 +5,14 @@ Type=Class
 Version=10.2
 @EndOfDesignText@
 'Api Handler class
-'Version 4.00
+'Version 5.10
 Sub Class_Globals
+	Private DB As MiniORM
+	Private App As EndsMeet
+	Private Api As ApiSettings	
 	Private Request As ServletRequest
 	Private Response As ServletResponse
 	Private HRM As HttpResponseMessage
-	Private DB As MiniORM
 	Private Method As String
 	Private Elements() As String
 	Private ElementId As Int
@@ -18,8 +20,11 @@ Sub Class_Globals
 End Sub
 
 Public Sub Initialize
+	App = Main.app
+	Api = App.api
 	HRM.Initialize
-	HRM.VerboseMode = Main.conf.VerboseMode
+	HRM.VerboseMode = Api.VerboseMode
+	DB.Initialize(Main.DBType, Null)
 End Sub
 
 Sub Handle (req As ServletRequest, resp As ServletResponse)
@@ -28,28 +33,30 @@ Sub Handle (req As ServletRequest, resp As ServletResponse)
 	Method = Request.Method.ToUpperCase
 	Dim FullElements() As String = WebApiUtils.GetUriElements(Request.RequestURI)
 	Elements = WebApiUtils.CropElements(FullElements, 3)
-	Select Method
-		Case "GET"
-			If ElementMatch("") Then
-				GetAllProducts
-				Return
-			End If
-			If ElementMatch("key/id") Then
-				If ElementKey = "products-by-category_id" Then
-					GetProductsByCategoryId(ElementId)
+	If ElementMatch("") Then
+		If App.MethodAvailable2(Method, "/api/find", Me) Then
+			Select Method
+				Case "GET"
+					GetAllProducts
 					Return
-				End If
-			End If
-		Case "POST"
-			If ElementMatch("") Then
-				SearchByKeywords
+				Case "POST"
+					SearchByKeywords
+					Return
+			End Select
+		End If
+		ReturnMethodNotAllow
+		Return
+	End If
+	If ElementMatch("key/id") Then
+		If App.MethodAvailable2(Method, "/api/find/products-by-category_id/*", Me) Then
+			If ElementKey = "products-by-category_id" Then
+				GetProductsByCategoryId(ElementId)
 				Return
 			End If
-		Case Else
-			Log("Unsupported method: " & Method)
-			ReturnMethodNotAllow
-			Return
-	End Select
+		End If
+		ReturnMethodNotAllow
+		Return
+	End If
 	ReturnBadRequest
 End Sub
 
@@ -92,7 +99,7 @@ End Sub
 
 Public Sub GetAllProducts
 	Log($"${Request.Method}: ${Request.RequestURI}"$)
-	DB.Initialize(Main.DBType, Main.DBOpen)
+	DB.SQL = Main.DBOpen
 	DB.Table = "tbl_products p"
 	' Construct results with new column name alias
 	DB.Select = Array("p.category_id catid", "c.category_name category", "p.id id", "p.product_code code", "p.product_name name", "p.product_price price")
@@ -100,14 +107,15 @@ Public Sub GetAllProducts
 	DB.OrderBy = CreateMap("p.id": "")
 	DB.Query
 	HRM.ResponseCode = 200
-	HRM.ResponseData = DB.Results
+	HRM.ResponseData = DB.Results2
+	HRM.OrderedKeys = True
 	DB.Close
 	ReturnApiResponse
 End Sub
 
 Public Sub GetProductsByCategoryId (id As Int)
 	Log($"${Request.Method}: ${Request.RequestURI}"$)
-	DB.Initialize(Main.DBType, Main.DBOpen)
+	DB.SQL = Main.DBOpen
 	DB.Table = "tbl_products p"
 	' Construct results with new column name alias
 	DB.Select = Array("p.category_id catid", "c.category_name category", "p.id id", "p.product_code code", "p.product_name name", "p.product_price price")
@@ -116,7 +124,8 @@ Public Sub GetProductsByCategoryId (id As Int)
 	DB.OrderBy = CreateMap("p.id": "")
 	DB.Query
 	HRM.ResponseCode = 200
-	HRM.ResponseData = DB.Results
+	HRM.ResponseData = DB.Results2
+	HRM.OrderedKeys = True
 	DB.Close
 	ReturnApiResponse
 End Sub
@@ -139,7 +148,7 @@ Public Sub SearchByKeywords
 		Return
 	End If
 	Dim SearchForText As String = data.Get("keyword")
-	DB.Initialize(Main.DBType, Main.DBOpen)
+	DB.SQL = Main.DBOpen
 	DB.Table = "tbl_products p"
 	' Construct results with new column name alias
 	DB.Select = Array("p.id id", "p.product_code code", "p.product_name AS name", "p.category_id catid", "c.category_name category", "p.product_price price")
@@ -151,7 +160,8 @@ Public Sub SearchByKeywords
 	DB.OrderBy = CreateMap("p.id": "")
 	DB.Query
 	HRM.ResponseCode = 200
-	HRM.ResponseData = DB.Results
+	HRM.ResponseData = DB.Results2
+	HRM.OrderedKeys = True
 	DB.Close
 	ReturnApiResponse
 End Sub

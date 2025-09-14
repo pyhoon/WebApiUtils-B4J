@@ -5,20 +5,26 @@ Type=Class
 Version=10.2
 @EndOfDesignText@
 'Api Handler class
-'Version 4.00
+'Version 5.10
 Sub Class_Globals
+	Private DB As MiniORM
+	Private App As EndsMeet
+	Private Api As ApiSettings
 	Private Request As ServletRequest
 	Private Response As ServletResponse
 	Private HRM As HttpResponseMessage
-	Private DB As MiniORM
 	Private Method As String
 	Private Elements() As String
 	Private ElementId As Int
 End Sub
 
 Public Sub Initialize
+	App = Main.app
+	Api = App.api
 	HRM.Initialize
-	HRM.VerboseMode = Main.conf.VerboseMode
+	HRM.VerboseMode = Api.VerboseMode
+	HRM.OrderedKeys = Api.OrderedKeys
+	DB.Initialize(Main.DBType, Null)
 End Sub
 
 Sub Handle (req As ServletRequest, resp As ServletResponse)
@@ -27,36 +33,36 @@ Sub Handle (req As ServletRequest, resp As ServletResponse)
 	Method = Request.Method.ToUpperCase
 	Dim FullElements() As String = WebApiUtils.GetUriElements(Request.RequestURI)
 	Elements = WebApiUtils.CropElements(FullElements, 3) ' 3 For Api handler
-	Select Method
-		Case "GET"
-			If ElementMatch("") Then
-				GetCategories
-				Return
-			End If
-			If ElementMatch("id") Then
-				GetCategoryById(ElementId)
-				Return
-			End If
-		Case "POST"
-			If ElementMatch("") Then
-				CreateNewCategory
-				Return
-			End If
-		Case "PUT"
-			If ElementMatch("id") Then
-				UpdateCategoryById(ElementId)
-				Return
-			End If
-		Case "DELETE"
-			If ElementMatch("id") Then
-				DeleteCategoryById(ElementId)
-				Return
-			End If
-		Case Else
-			Log("Unsupported method: " & Method)
-			ReturnMethodNotAllow
-			Return
-	End Select
+	If ElementMatch("") Then
+		If App.MethodAvailable2(Method, "/api/categories", Me) Then
+			Select Method
+				Case "GET"
+					GetCategories
+					Return
+				Case "POST"
+					CreateNewCategory
+					Return
+			End Select
+		End If
+		ReturnMethodNotAllow
+		Return
+	Else If ElementMatch("id") Then
+		If App.MethodAvailable2(Method, "/api/categories/*", Me) Then
+			Select Method
+				Case "GET"
+					GetCategoryById(ElementId)
+					Return
+				Case "PUT"
+					UpdateCategoryById(ElementId)
+					Return
+				Case "DELETE"
+					DeleteCategoryById(ElementId)
+					Return
+			End Select
+		End If
+		ReturnMethodNotAllow
+		Return
+	End If
 	ReturnBadRequest
 End Sub
 
@@ -91,18 +97,18 @@ End Sub
 
 Private Sub GetCategories
 	Log($"${Request.Method}: ${Request.RequestURI}"$)
-	DB.Initialize(Main.DBType, Main.DBOpen)
+	DB.SQL = Main.DBOpen
 	DB.Table = "tbl_categories"
 	DB.Query
 	HRM.ResponseCode = 200
-	HRM.ResponseData = DB.Results
+	HRM.ResponseData = DB.Results2
 	ReturnApiResponse
 	DB.Close
 End Sub
 
 Private Sub GetCategoryById (id As Int)
 	Log($"${Request.Method}: ${Request.RequestURI}"$)
-	DB.Initialize(Main.DBType, Main.DBOpen)
+	DB.SQL = Main.DBOpen
 	DB.Table = "tbl_categories"
 	DB.Find(id)
 	If DB.Found Then
@@ -137,10 +143,10 @@ Private Sub CreateNewCategory
 		End If
 	Next
 	' Check conflict category name
-	DB.Initialize(Main.DBType, Main.DBOpen)
+	DB.SQL = Main.DBOpen
 	DB.Table = "tbl_categories"
 	DB.Where = Array("category_name = ?")
-	DB.Parameters = Array As String(data.Get("category_name"))
+	DB.Parameters = Array(data.Get("category_name"))
 	DB.Query
 	If DB.Found Then
 		HRM.ResponseCode = 409
@@ -182,10 +188,10 @@ Private Sub UpdateCategoryById (id As Int)
 		Return
 	End If
 	' Check conflict category name
-	DB.Initialize(Main.DBType, Main.DBOpen)
+	DB.SQL = Main.DBOpen
 	DB.Table = "tbl_categories"
 	DB.Where = Array("category_name = ?", "id <> ?")
-	DB.Parameters = Array As String(data.Get("category_name"), id)
+	DB.Parameters = Array(data.Get("category_name"), id)
 	DB.Query
 	If DB.Found Then
 		HRM.ResponseCode = 409
@@ -221,7 +227,7 @@ End Sub
 
 Private Sub DeleteCategoryById (id As Int)
 	Log($"${Request.Method}: ${Request.RequestURI}"$)
-	DB.Initialize(Main.DBType, Main.DBOpen)
+	DB.SQL = Main.DBOpen
 	DB.Table = "tbl_categories"
 	' Find row by id
 	DB.Find(id)

@@ -1,0 +1,134 @@
+﻿AppType=StandardJava
+Build1=Default,b4j.webapi,SQLite,hu2_acceptall
+Build2=MariaDB,b4j.webapi,MariaDB,hu2_acceptall
+Build3=MySQL,b4j.webapi,MySQL,hu2_acceptall
+File1=category.html
+File2=config.example
+File3=help.html
+File4=icon.png
+File5=index.html
+File6=main.html
+File7=mariadb.example
+File8=mysql.example
+File9=sqlite.example
+FileGroup1=Default Group
+FileGroup2=Default Group
+FileGroup3=Default Group
+FileGroup4=Default Group
+FileGroup5=Default Group
+FileGroup6=Default Group
+FileGroup7=Default Group
+FileGroup8=Default Group
+FileGroup9=Default Group
+Group=App
+Library1=endsmeet
+Library2=jcore
+Library3=webapiutils
+Library4=miniormutils
+Module1=CategoriesApiHandler
+Module10=|absolute|C:\B4X\Development\WebApiUtils-B4J\source\WebApiUtils
+Module2=CategoriesWebHandler
+Module3=Database
+Module4=FindApiHandler
+Module5=HelpHandler
+Module6=HttpsFilter
+Module7=IndexWebHandler
+Module8=JavaScript
+Module9=ProductsApiHandler
+NumberOfFiles=9
+NumberOfLibraries=4
+NumberOfModules=10
+Version=10.3
+@EndOfDesignText@
+#Region Project Attributes
+' Product: WebApiUtils
+' Version: 5.10
+' License: MIT License
+' Developer: Poon Yip Hoon (Aeric)
+'#Macro: Title, Start, 	ide://goto?Module=Main&Sub=AppStart
+'#Macro: Title, Objects, ide://run?file=%WINDIR%\SysWOW64\explorer.exe&Args=%PROJECT%\Objects
+'#Macro: Title, AddLibs, ide://run?file=%JAVABIN%\java.exe&Args=-jar&Args=%ADDITIONAL%\..\B4X\libget-non-ui.jar&Args=%PROJECT%&Args=False
+'#Macro: Title, Backup,	ide://run?file=%JAVABIN%\jar.exe&WorkingDirectory=..&Args=-cMf&Args=%PROJECT_NAME%_yyyy-MM-dd_HHmm.zip&Args=Files&Args=Objects\www&Args=Objects\config.*&Args=Objects\LICENSE&Args=*.bas&Args=*.b4j&Args=libs.json
+'#Macro: Title, Publish, ide://run?file=%JAVABIN%\jar.exe&WorkingDirectory=../Objects&Args=-cMf&Args=Publish.zip&Args=www&Args=*.jar&Args=*.ini
+#CommandLineArgs:
+#MergeLibraries: True
+#If SQLite
+#AdditionalJar: sqlite-jdbc-3.7.2
+#Else If MySQL
+#AdditionalJar: mysql-connector-j-9.3.0
+#Else If MariaDB
+#AdditionalJar: mariadb-java-client-3.5.6
+#End If
+#End Region
+
+Sub Process_Globals
+	Public DB 					As Database
+	Public App 					As EndsMeet
+	Public Const COLOR_RED 		As Int = -65536
+	Public Const COLOR_BLUE 	As Int = -16776961
+	Public Const VERSION 		As String = "5.10 beta1"
+End Sub
+
+' <link>Open in browser|http://127.0.0.1:8080</link>
+' <link>Donate|https://paypal.me/aeric80/</link> | <link>Forum|https://www.b4x.com/android/forum/threads/project-template-pakai-server-v5.167788/)</link> | <link>GitHub|https://github.com/pyhoon/pakai-server-b4j</link>
+Sub AppStart (Args() As String)
+	App.Initialize
+
+	' *** Web handlers ***
+	App.Get("", "IndexWebHandler")
+	App.Get("/help", "HelpHandler")
+	App.Get("/categories", "CategoriesWebHandler")
+	
+	' *** Api handlers ***
+	App.Get("/api/categories", "CategoriesApiHandler")
+	App.Get("/api/categories/*", "CategoriesApiHandler")
+	App.Post("/api/categories", "CategoriesApiHandler")
+	App.Put("/api/categories/*", "CategoriesApiHandler")
+	App.Delete("/api/categories/*", "CategoriesApiHandler")
+	App.Get("/api/products", "ProductsApiHandler")
+	App.Get("/api/products/*", "ProductsApiHandler")
+	App.Post("/api/products", "ProductsApiHandler")
+	App.Put("/api/products/*", "ProductsApiHandler")
+	App.Delete("/api/products/*", "ProductsApiHandler")
+	App.Get("/api/find", "FindApiHandler")
+	App.Get("/api/find/products-by-category_id/*", "FindApiHandler")
+	App.Post("/api/find", "FindApiHandler")
+
+	' *** Api Settings ***
+	Dim Api As ApiSettings = App.api
+	Api.EnableHelp = True
+	Api.VerboseMode = True
+	Api.OrderedKeys = True
+
+	' *** Misc Settings ***
+	App.LogEnabled = True
+	App.UseConfigFile = True
+	#If Release
+	App.RedirectToHttps = True
+	#End If
+
+	App.Start
+	App.LogStartupMessage
+	App.ctx.Put("VERSION", VERSION)
+	
+	Log($"App version: ${VERSION}"$)
+	Log($"Open the following URL from your web browser"$)
+	Log(App.ServerUrl)
+	
+	Dim JS As JavaScript
+	JS.Initialize
+	DB.Initialize
+	StartMessageLoop
+End Sub
+
+Public Sub DBType As String
+	Return DB.Engine
+End Sub
+
+Public Sub DBOpen As SQL
+	Return DB.Open
+End Sub
+
+Public Sub DBClose
+	DB.Close
+End Sub
