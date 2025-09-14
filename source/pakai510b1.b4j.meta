@@ -37,6 +37,6 @@ ModuleClosedNodes6=
 ModuleClosedNodes7=
 ModuleClosedNodes8=
 ModuleClosedNodes9=
-NavigationStack=CategoriesApiHandler,Initialize,19,0,CategoriesApiHandler,GetCategoryById,102,0,HelpHandler,ShowHelpPage,36,0,WebApiUtils,ReturnHttpResponse,704,0,UsersApiHandler,Initialize,18,1,UsersApiHandler,PostUser,164,6,UsersApiHandler,GetUsers,95,0,HelpHandler,BuildMethods,230,2,UsersApiHandler,GetUserById,106,0,UsersApiHandler,PutUserById,222,0
+NavigationStack=CategoriesApiHandler,Initialize,19,0,CategoriesApiHandler,GetCategoryById,102,0,HelpHandler,ShowHelpPage,36,0,WebApiUtils,ReturnHttpResponse,704,0,UsersApiHandler,Initialize,18,1,UsersApiHandler,PostUser,164,6,UsersApiHandler,GetUsers,95,0,HelpHandler,BuildMethods,230,2,UsersApiHandler,GetUserById,106,0,UsersApiHandler,PutUserById,226,0,Main,AppStart,52,0
 SelectedBuild=1
 VisibleModules=3,12,4,1,11,10,5

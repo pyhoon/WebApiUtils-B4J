@@ -125,11 +125,11 @@ Private Sub Post$EndPoint$
 		End If
 	Next
 	
-	' Check conflict $EndPoint$ name
+	' Check conflict $endpoint$ name
 	DB.Initialize(Main.DBType, Main.DBOpen)
 	DB.Table = "$TableName$"
-	DB.Where = Array("$EndPoint$_name = ?")
-	DB.Parameters = Array As String(data.Get("$EndPoint$_name"))
+	DB.Where = Array("$endpoint$_name = ?")
+	DB.Parameters = Array As String(data.Get("$endpoint$_name"))
 	DB.Query
 	If DB.Found Then
 		HRM.ResponseCode = 409
@@ -141,8 +141,8 @@ Private Sub Post$EndPoint$
 	
 	' Insert new row
 	DB.Reset
-	DB.Columns = Array("$EndPoint$_name", "created_date")
-	DB.Parameters = Array(data.Get("$EndPoint$_name"), data.GetDefault("created_date", WebApiUtils.CurrentDateTime))
+	DB.Columns = Array("$endpoint$_name", "created_date")
+	DB.Parameters = Array(data.Get("$endpoint$_name"), data.GetDefault("created_date", WebApiUtils.CurrentDateTime))
 	DB.Save
 	
 	' Retrieve new row
@@ -169,18 +169,18 @@ Private Sub Put$EndPoint$ById (Id As Int)
 	End If
 	
 	' Check whether required keys are provided
-	If data.ContainsKey("$EndPoint$_name") = False Then
+	If data.ContainsKey("$endpoint$_name") = False Then
 		HRM.ResponseCode = 400
-		HRM.ResponseError = "Key '$EndPoint$_name' not found"
+		HRM.ResponseError = "Key '$endpoint$_name' not found"
 		ReturnApiResponse
 		Return
 	End If
 	
-	' Check conflict $EndPoint$ name
+	' Check conflict $endpoint$ name
 	DB.Initialize(Main.DBType, Main.DBOpen)
 	DB.Table = "$TableName$"
-	DB.Where = Array("$EndPoint$_name = ?", "id <> ?")
-	DB.Parameters = Array As String(data.Get("$EndPoint$_name"), Id)
+	DB.Where = Array("$endpoint$_name = ?", "id <> ?")
+	DB.Parameters = Array As String(data.Get("$endpoint$_name"), Id)
 	DB.Query
 	If DB.Found Then
 		HRM.ResponseCode = 409
@@ -200,9 +200,9 @@ Private Sub Put$EndPoint$ById (Id As Int)
 	End If
 
 	DB.Reset
-	DB.Columns = Array("$EndPoint$_name", _
+	DB.Columns = Array("$endpoint$_name", _
 	"modified_date")
-	DB.Parameters = Array(data.Get("$EndPoint$_name"), _
+	DB.Parameters = Array(data.Get("$endpoint$_name"), _
 	data.GetDefault("created_date", WebApiUtils.CurrentDateTime))
 	DB.Id = Id
 	DB.Save
