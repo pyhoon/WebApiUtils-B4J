@@ -1,5 +1,6 @@
 Public Sub Initialize
-	
+	App = Main.app
+	Api = App.api
 End Sub
 $end$
 Sub Handle (req As ServletRequest, resp As ServletResponse)
@@ -8,7 +9,7 @@ Sub Handle (req As ServletRequest, resp As ServletResponse)
 	Method = Request.Method.ToUpperCase
 	Dim FullElements() As String = WebApiUtils.GetUriElements(Request.RequestURI)
 	Elements = WebApiUtils.CropElements(FullElements, 2) ' 2 For Web handler
-	If Method <> "GET" Then
+	If App.MethodAvailable2(Method, "/$endpoints$", Me) = False Then
 		WebApiUtils.ReturnHtmlMethodNotAllowed(Response)
 		Return
 	End If
