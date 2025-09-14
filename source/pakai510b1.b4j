@@ -26,7 +26,9 @@ Library2=jcore
 Library3=webapiutils
 Library4=miniormutils
 Module1=CategoriesApiHandler
-Module10=|absolute|C:\B4X\Development\WebApiUtils-B4J\source\WebApiUtils
+Module10=UsersApiHandler
+Module11=UsersWebHandler
+Module12=|absolute|C:\B4X\Development\WebApiUtils-B4J\source\WebApiUtils
 Module2=CategoriesWebHandler
 Module3=Database
 Module4=FindApiHandler
@@ -37,7 +39,7 @@ Module8=JavaScript
 Module9=ProductsApiHandler
 NumberOfFiles=9
 NumberOfLibraries=4
-NumberOfModules=10
+NumberOfModules=12
 Version=10.3
 @EndOfDesignText@
 #Region Project Attributes
@@ -78,6 +80,7 @@ Sub AppStart (Args() As String)
 	App.Get("", "IndexWebHandler")
 	App.Get("/help", "HelpHandler")
 	App.Get("/categories", "CategoriesWebHandler")
+	App.Get("/users", "UsersWebHandler")
 	
 	' *** Api handlers ***
 	App.Get("/api/categories", "CategoriesApiHandler")
@@ -90,6 +93,13 @@ Sub AppStart (Args() As String)
 	App.Post("/api/products", "ProductsApiHandler")
 	App.Put("/api/products/*", "ProductsApiHandler")
 	App.Delete("/api/products/*", "ProductsApiHandler")
+	
+	App.Get("/api/users", "UsersApiHandler")
+	App.Get("/api/users/*", "UsersApiHandler")
+	App.Post("/api/users", "UsersApiHandler")
+	App.Put("/api/users/*", "UsersApiHandler")
+	App.Delete("/api/users/*", "UsersApiHandler")
+	
 	App.Get("/api/find", "FindApiHandler")
 	App.Get("/api/find/products-by-category_id/*", "FindApiHandler")
 	App.Post("/api/find", "FindApiHandler")

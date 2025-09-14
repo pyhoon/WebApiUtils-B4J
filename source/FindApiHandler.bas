@@ -24,6 +24,7 @@ Public Sub Initialize
 	Api = App.api
 	HRM.Initialize
 	HRM.VerboseMode = Api.VerboseMode
+	HRM.OrderedKeys = Api.OrderedKeys
 	DB.Initialize(Main.DBType, Null)
 End Sub
 
@@ -102,7 +103,7 @@ Public Sub GetAllProducts
 	DB.SQL = Main.DBOpen
 	DB.Table = "tbl_products p"
 	' Construct results with new column name alias
-	DB.Select = Array("p.category_id catid", "c.category_name category", "p.id id", "p.product_code code", "p.product_name name", "p.product_price price")
+	DB.Select = Array("p.id id", "p.category_id catid", "c.category_name category", "p.product_code code", "p.product_name name", "p.product_price price")
 	DB.Join = DB.CreateJoin("tbl_categories c", "p.category_id = c.id", "")
 	DB.OrderBy = CreateMap("p.id": "")
 	DB.Query
@@ -118,7 +119,7 @@ Public Sub GetProductsByCategoryId (id As Int)
 	DB.SQL = Main.DBOpen
 	DB.Table = "tbl_products p"
 	' Construct results with new column name alias
-	DB.Select = Array("p.category_id catid", "c.category_name category", "p.id id", "p.product_code code", "p.product_name name", "p.product_price price")
+	DB.Select = Array("p.id id", "p.category_id catid", "c.category_name category", "p.product_code code", "p.product_name name", "p.product_price price")
 	DB.Join = DB.CreateJoin("tbl_categories c", "p.category_id = c.id", "")
 	DB.WhereParam("c.id = ?", id)
 	DB.OrderBy = CreateMap("p.id": "")
@@ -151,7 +152,7 @@ Public Sub SearchByKeywords
 	DB.SQL = Main.DBOpen
 	DB.Table = "tbl_products p"
 	' Construct results with new column name alias
-	DB.Select = Array("p.id id", "p.product_code code", "p.product_name AS name", "p.category_id catid", "c.category_name category", "p.product_price price")
+	DB.Select = Array("p.id id", "p.category_id catid", "c.category_name category", "p.product_code code", "p.product_name AS name", "p.product_price price")
 	DB.Join = DB.CreateJoin("tbl_categories c", "p.category_id = c.id", "")
 	If SearchForText <> "" Then
 		DB.Where = Array("p.product_code LIKE ? Or UPPER(p.product_name) LIKE ? Or UPPER(c.category_name) LIKE ?")

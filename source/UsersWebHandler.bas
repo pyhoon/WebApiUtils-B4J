@@ -1,15 +1,31 @@
+﻿B4J=true
+Group=Handlers
+ModulesStructureVersion=1
+Type=Class
+Version=10.3
+@EndOfDesignText@
+'Handler class
+Sub Class_Globals
+	Private App As EndsMeet
+	Private Api As ApiSettings	
+	Private Request As ServletRequest
+	Private Response As ServletResponse
+	Private Method As String
+	Private Elements() As String
+End Sub
+
 Public Sub Initialize
 	App = Main.app
 	Api = App.api
 End Sub
-$end$
+
 Sub Handle (req As ServletRequest, resp As ServletResponse)
 	Request = req
 	Response = resp
 	Method = Request.Method.ToUpperCase
 	Dim FullElements() As String = WebApiUtils.GetUriElements(Request.RequestURI)
 	Elements = WebApiUtils.CropElements(FullElements, 2) ' 2 For Web handler
-	If App.MethodAvailable2(Method, "/$endpoints$", Me) = False Then
+	If App.MethodAvailable2(Method, "/users", Me) = False Then
 		WebApiUtils.ReturnHtmlMethodNotAllowed(Response)
 		Return
 	End If
@@ -22,11 +38,11 @@ End Sub
 
 Private Sub ReturnPage
 	Dim strMain As String = WebApiUtils.ReadTextFile("main.html")
-	Dim strView As String = WebApiUtils.ReadTextFile("$endpoint$.html")
+	Dim strView As String = WebApiUtils.ReadTextFile("user.html")
 	strMain = WebApiUtils.BuildDocView(strMain, strView)
 	strMain = WebApiUtils.BuildTag(strMain, "HELP", ReturnHelpElement)
 	strMain = WebApiUtils.BuildHtml(strMain, App.ctx)
-	Dim strJSFile As String = "$endpoint$.js"
+	Dim strJSFile As String = "user.js"
 	Dim strScripts As String = $"<script src="${App.ServerUrl}/assets/js/${strJSFile}"></script>"$
 	strMain = WebApiUtils.BuildScript(strMain, strScripts)
 	WebApiUtils.ReturnHTML(strMain, Response)

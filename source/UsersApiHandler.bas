@@ -1,11 +1,31 @@
+﻿B4J=true
+Group=Handlers
+ModulesStructureVersion=1
+Type=Class
+Version=10.3
+@EndOfDesignText@
+'Handler class
+Sub Class_Globals
+	Private DB As MiniORM
+	Private App As EndsMeet
+	Private Api As ApiSettings
+	Private Request As ServletRequest
+	Private Response As ServletResponse
+	Private HRM As HttpResponseMessage
+	Private Method As String
+	Private Elements() As String
+	Private ElementId As Int
+End Sub
+
 Public Sub Initialize
 	App = Main.app
 	Api = App.api
 	HRM.Initialize
 	HRM.VerboseMode = Api.VerboseMode
+	HRM.OrderedKeys = Api.OrderedKeys
 	DB.Initialize(Main.DBType, Null)
 End Sub
-$end$
+
 Sub Handle (req As ServletRequest, resp As ServletResponse)
 	Request = req
 	Response = resp
@@ -13,29 +33,29 @@ Sub Handle (req As ServletRequest, resp As ServletResponse)
 	Dim FullElements() As String = WebApiUtils.GetUriElements(Request.RequestURI)
 	Elements = WebApiUtils.CropElements(FullElements, 3) ' 3 For Api handler
 	If ElementMatch("") Then
-		If App.MethodAvailable2(Method, "/api/$endpoints$", Me) Then
+		If App.MethodAvailable2(Method, "/api/users", Me) Then
 			Select Method
 				Case "GET"
-					Get$EndPoints$
+					GetUsers
 					Return
 				Case "POST"
-					Post$EndPoint$
+					PostUser
 					Return
 			End Select
 		End If
 		ReturnMethodNotAllow
 		Return
 	Else If ElementMatch("id") Then
-		If App.MethodAvailable2(Method, "/api/$endpoints$/*", Me) Then
+		If App.MethodAvailable2(Method, "/api/users/*", Me) Then
 			Select Method
 				Case "GET"
-					Get$EndPoint$ById(ElementId)
+					GetUserById(ElementId)
 					Return
 				Case "PUT"
-					Put$EndPoint$ById(ElementId)
+					PutUserById(ElementId)
 					Return
 				Case "DELETE"
-					Delete$EndPoint$ById(ElementId)
+					DeleteUserById(ElementId)
 					Return
 			End Select
 		End If
@@ -74,32 +94,32 @@ Private Sub ReturnMethodNotAllow
 	WebApiUtils.ReturnMethodNotAllow(HRM, Response)
 End Sub
 
-Private Sub Get$EndPoints$
+Private Sub GetUsers
 	DB.Initialize(Main.DBType, Main.DBOpen)
-	DB.Table = "$TableName$"
+	DB.Table = "tbl_users"
 	DB.Query
 	HRM.ResponseCode = 200
-	HRM.ResponseData = DB.Results
+	HRM.ResponseData = DB.Results2
 	ReturnApiResponse
 	DB.Close
 End Sub
 
-Private Sub Get$EndPoint$ById (Id As Int)
+Private Sub GetUserById (Id As Int)
 	DB.Initialize(Main.DBType, Main.DBOpen)
-	DB.Table = "$TableName$"
+	DB.Table = "tbl_users"
 	DB.Find(Id)
 	If DB.Found Then
 		HRM.ResponseCode = 200
-		HRM.ResponseObject = DB.First
+		HRM.ResponseObject = DB.First2
 	Else
 		HRM.ResponseCode = 404
-		HRM.ResponseError = "$EndPoint$ not found"
+		HRM.ResponseError = "User not found"
 	End If
 	ReturnApiResponse
 	DB.Close
 End Sub
 
-Private Sub Post$EndPoint$
+Private Sub PostUser
 	Dim data As Map
 	If HRM.ContentType = WebApiUtils.CONTENT_TYPE_XML Then
 		data = WebApiUtils.RequestDataXml(Request)
@@ -115,7 +135,7 @@ Private Sub Post$EndPoint$
 	End If
 
 	' Check whether required keys are provided
-	Dim RequiredKeys As List = Array As String("key1", "key2", "key3")
+	Dim RequiredKeys As List = Array As String("user_name")
 	For Each requiredkey As String In RequiredKeys
 		If data.ContainsKey(requiredkey) = False Then
 			HRM.ResponseCode = 400
@@ -125,15 +145,15 @@ Private Sub Post$EndPoint$
 		End If
 	Next
 	
-	' Check conflict $EndPoint$ name
+	' Check conflict User name
 	DB.Initialize(Main.DBType, Main.DBOpen)
-	DB.Table = "$TableName$"
-	DB.Where = Array("$EndPoint$_name = ?")
-	DB.Parameters = Array As String(data.Get("$EndPoint$_name"))
+	DB.Table = "tbl_users"
+	DB.Where = Array("user_name = ?")
+	DB.Parameters = Array As String(data.Get("user_name"))
 	DB.Query
 	If DB.Found Then
 		HRM.ResponseCode = 409
-		HRM.ResponseError = "$EndPoint$ already exist"
+		HRM.ResponseError = "User already exist"
 		ReturnApiResponse
 		DB.Close
 		Return
@@ -141,19 +161,19 @@ Private Sub Post$EndPoint$
 	
 	' Insert new row
 	DB.Reset
-	DB.Columns = Array("$EndPoint$_name", "created_date")
-	DB.Parameters = Array(data.Get("$EndPoint$_name"), data.GetDefault("created_date", WebApiUtils.CurrentDateTime))
+	DB.Columns = Array("user_name", "created_date")
+	DB.Parameters = Array(data.Get("user_name"), data.GetDefault("created_date", WebApiUtils.CurrentDateTime))
 	DB.Save
 	
 	' Retrieve new row
 	HRM.ResponseCode = 201
-	HRM.ResponseObject = DB.First
-	HRM.ResponseMessage = "$EndPoint$ created successfully"
+	HRM.ResponseObject = DB.First2 'DB.Results2.Get(0)
+	HRM.ResponseMessage = "User created successfully"
 	ReturnApiResponse
 	DB.Close
 End Sub
 
-Private Sub Put$EndPoint$ById (Id As Int)
+Private Sub PutUserById (Id As Int)
 	Dim data As Map
 	If HRM.ContentType = WebApiUtils.CONTENT_TYPE_XML Then
 		data = WebApiUtils.RequestDataXml(Request)
@@ -169,22 +189,22 @@ Private Sub Put$EndPoint$ById (Id As Int)
 	End If
 	
 	' Check whether required keys are provided
-	If data.ContainsKey("$EndPoint$_name") = False Then
+	If data.ContainsKey("user_name") = False Then
 		HRM.ResponseCode = 400
-		HRM.ResponseError = "Key '$EndPoint$_name' not found"
+		HRM.ResponseError = "Key 'user_name' not found"
 		ReturnApiResponse
 		Return
 	End If
 	
-	' Check conflict $EndPoint$ name
+	' Check conflict User name
 	DB.Initialize(Main.DBType, Main.DBOpen)
-	DB.Table = "$TableName$"
-	DB.Where = Array("$EndPoint$_name = ?", "id <> ?")
-	DB.Parameters = Array As String(data.Get("$EndPoint$_name"), Id)
+	DB.Table = "tbl_users"
+	DB.Where = Array("user_name = ?", "id <> ?")
+	DB.Parameters = Array As String(data.Get("user_name"), Id)
 	DB.Query
 	If DB.Found Then
 		HRM.ResponseCode = 409
-		HRM.ResponseError = "$EndPoint$ already exist"
+		HRM.ResponseError = "User already exist"
 		ReturnApiResponse
 		DB.Close
 		Return
@@ -193,34 +213,34 @@ Private Sub Put$EndPoint$ById (Id As Int)
 	DB.Find(Id)
 	If DB.Found = False Then
 		HRM.ResponseCode = 404
-		HRM.ResponseError = "$EndPoint$ not found"
+		HRM.ResponseError = "User not found"
 		ReturnApiResponse
 		DB.Close
 		Return
 	End If
 
 	DB.Reset
-	DB.Columns = Array("$EndPoint$_name", _
+	DB.Columns = Array("user_name", _
 	"modified_date")
-	DB.Parameters = Array(data.Get("$EndPoint$_name"), _
+	DB.Parameters = Array(data.Get("user_name"), _
 	data.GetDefault("created_date", WebApiUtils.CurrentDateTime))
 	DB.Id = Id
 	DB.Save
 
 	HRM.ResponseCode = 200
-	HRM.ResponseMessage = "$EndPoint$ updated successfully"
-	HRM.ResponseObject = DB.First
+	HRM.ResponseMessage = "User updated successfully"
+	HRM.ResponseObject = DB.First2
 	ReturnApiResponse
 	DB.Close
 End Sub
 
-Private Sub Delete$EndPoint$ById (Id As Int)
+Private Sub DeleteUserById (Id As Int)
 	DB.Initialize(Main.DBType, Main.DBOpen)
-	DB.Table = "$TableName$"
+	DB.Table = "tbl_users"
 	DB.Find(Id)
 	If DB.Found = False Then
 		HRM.ResponseCode = 404
-		HRM.ResponseError = "$EndPoint$ not found"
+		HRM.ResponseError = "User not found"
 		ReturnApiResponse
 		DB.Close
 		Return
@@ -230,7 +250,7 @@ Private Sub Delete$EndPoint$ById (Id As Int)
 	DB.Id = Id
 	DB.Delete
 	HRM.ResponseCode = 200
-	HRM.ResponseMessage = "$EndPoint$ deleted successfully"
+	HRM.ResponseMessage = "User deleted successfully"
 	ReturnApiResponse
 	DB.Close
 End Sub
