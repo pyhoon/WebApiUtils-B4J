@@ -7,11 +7,6 @@ Version=10
 ' Web API Utility
 ' Version 5.20
 Sub Process_Globals
-	'Public Const CONTENT_TYPE_HTML As String = "text/html"
-	'Public Const CONTENT_TYPE_JSON As String = "application/json"
-	'Public Const CONTENT_TYPE_XML As String = "application/xml"
-	'Public Const CONTENT_TYPE_PDF As String = "application/pdf"
-	'Public Const CONTENT_TYPE_PNG As String = "image/png"
 	Public Const MIME_TYPE_HTML As String = "text/html"
 	Public Const MIME_TYPE_JSON As String = "application/json"
 	Public Const MIME_TYPE_XML As String = "application/xml"
@@ -482,9 +477,6 @@ Public Sub ProcessOrderedJsonFromList (L As List, Indent As String, Indentation 
 			First = False
 		End If
 		SB.Append(CRLF)
-		If value.As(String).StartsWith("[B@") Then
-			Log("Blob Field")
-		End If
 		Select True
 			Case value Is List
 				SB.Append(ProcessOrderedJsonFromList(value, Indent, Indentation))
@@ -520,9 +512,6 @@ Public Sub ProcessOrderedJsonFromMap (M As Map, Indent As String, Indentation As
 		End If
 		SB.Append(CRLF)
 		Dim value As Object = m.Get(key)
-		'If value.As(String).StartsWith("[B@") Then
-		'	Log("Blob Field")
-		'End If
 		If key <> "__order" Then
 			Select True
 				Case value Is List
@@ -647,9 +636,8 @@ End Sub
 
 ' To initialize: <code>
 ' App = Main.app
-' Api = App.api
 ' HRM.Initialize
-' HRM.VerboseMode = Api.VerboseMode</code>
+' HRM = WebApiUtils.SetApiMessage(HRM, App.api)</code>
 ' ---------------------------------------------------------------
 ' <em>Output:</em> 
 ' {
@@ -663,9 +651,7 @@ End Sub
 ' }
 Public Sub ReturnHttpResponse (Message As HttpResponseMessage, Response As ServletResponse)
 	If Message.XmlRoot = "" Then Message.XmlRoot = "root"
-	'If Message.ContentType = "" Then Message.ContentType = CONTENT_TYPE_JSON ' TODO: next version don't default to json
-	'If Message.PayloadType = "" Then Message.PayloadType = "json"
-	If Message.ContentType = "" Then Message.ContentType = MIME_TYPE_HTML
+	If Message.ContentType = "" Then Message.ContentType = MIME_TYPE_JSON ' Default as json
 	If Message.ResponseCode >= 200 And Message.ResponseCode < 300 Then ' SUCCESS
 		If Message.ResponseType = "" Then Message.ResponseType = "SUCCESS"
 		If Message.ResponseStatus = "" Then Message.ResponseStatus = "ok"
@@ -890,11 +876,11 @@ Public Sub ReturnFileAttachment (Ins As InputStream, FileName As String, Respons
 	ReturnOutputStream(Ins, Response)
 End Sub
 
-Public Sub SetApiMessage (Message As HttpResponseMessage, Api As ApiSettings) As HttpResponseMessage
-	Message.VerboseMode = Api.VerboseMode
-	Message.OrderedKeys = Api.OrderedKeys
-	Message.ContentType = Api.ContentType
-	Message.PayloadType = Api.PayloadType
+Public Sub SetApiMessage (Message As HttpResponseMessage, Settings As ApiSettings) As HttpResponseMessage
+	Message.VerboseMode = Settings.VerboseMode
+	Message.OrderedKeys = Settings.OrderedKeys
+	Message.ContentType = Settings.ContentType
+	Message.PayloadType = Settings.PayloadType
 	Return Message
 End Sub
 

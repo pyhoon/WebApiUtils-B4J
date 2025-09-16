@@ -1,7 +1,7 @@
 ﻿ModuleBookmarks0=
 ModuleBookmarks1=
 ModuleBookmarks10=
-ModuleBookmarks11=662
+ModuleBookmarks11=
 ModuleBookmarks2=
 ModuleBookmarks3=
 ModuleBookmarks4=
@@ -34,6 +34,6 @@ ModuleClosedNodes6=
 ModuleClosedNodes7=
 ModuleClosedNodes8=
 ModuleClosedNodes9=
-NavigationStack=WebApiUtils,ReturnHttpResponse,657,0,FindApiHandler,Initialize,18,4,FindApiHandler,SearchByKeywords,155,0,FindApiHandler,GetAllProducts,96,0,WebApiUtils,ProcessOrderedJsonFromMap,516,0,Main,AppStart,35,1
+NavigationStack=ProductsApiHandler,GetProductById,109,0,ProductsApiHandler,GetProducts,88,0,ProductsApiHandler,Handle,20,0,UsersApiHandler,GetUsers,103,0,Main,AppStart,36,0,WebApiUtils,Process_Globals,5,0,CategoriesApiHandler,Class_Globals,2,0,CategoriesApiHandler,Initialize,16,0,WebApiUtils,ProcessOrderedXmlFromMap,640,0,WebApiUtils,ReturnHttpResponse,648,2
 SelectedBuild=1
-VisibleModules=3,11,4,1,7,9
+VisibleModules=11,7,5,1,4,9,10

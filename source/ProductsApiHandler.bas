@@ -5,11 +5,10 @@ Type=Class
 Version=10.2
 @EndOfDesignText@
 'Api Handler class
-'Version 5.10
+'Version 5.20
 Sub Class_Globals
 	Private DB As MiniORM
 	Private App As EndsMeet
-	Private Api As ApiSettings
 	Private Request As ServletRequest
 	Private Response As ServletResponse
 	Private HRM As HttpResponseMessage
@@ -20,12 +19,8 @@ End Sub
 
 Public Sub Initialize
 	App = Main.app
-	Api = App.api
 	HRM.Initialize
-	HRM = WebApiUtils.SetApiMessage(HRM, Api)
-	'HRM.ContentType = Api.ContentType
-	'HRM.VerboseMode = Api.VerboseMode
-	'HRM.OrderedKeys = Api.OrderedKeys
+	HRM = WebApiUtils.SetApiMessage(HRM, App.Api)
 	DB.Initialize(Main.DBType, Null)
 End Sub
 
@@ -115,7 +110,7 @@ Private Sub GetProductById (id As Int)
 	DB.Find(id)
 	If DB.Found Then
 		HRM.ResponseCode = 200
-		HRM.ResponseObject = DB.First
+		HRM.ResponseObject = DB.First2
 	Else
 		HRM.ResponseCode = 404
 		HRM.ResponseError = "Product not found"
@@ -172,7 +167,7 @@ Private Sub PostProduct
 	DB.Save
 	' Retrieve new row
 	HRM.ResponseCode = 201
-	HRM.ResponseObject = DB.First
+	HRM.ResponseObject = DB.First2
 	HRM.ResponseMessage = "Product created successfully"
 	ReturnApiResponse
 	DB.Close
@@ -237,7 +232,7 @@ Private Sub PutProductById (id As Int)
 	' Return updated row
 	HRM.ResponseCode = 200
 	HRM.ResponseMessage = "Product updated successfully"
-	HRM.ResponseObject = DB.First
+	HRM.ResponseObject = DB.First2
 	ReturnApiResponse
 	DB.Close
 End Sub

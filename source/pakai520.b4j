@@ -24,7 +24,7 @@ Library2=jcore
 Library3=webapiutils
 Library4=miniormutils
 Module1=CategoriesApiHandler
-Module10=UsersWebHandler
+Module10=UsersApiHandler
 Module11=|absolute|C:\B4X\Development\WebApiUtils-B4J\source\WebApiUtils
 Module2=CategoriesWebHandler
 Module3=Database
@@ -63,6 +63,7 @@ Version=10.3
 Sub Process_Globals
 	Public DB 					As Database
 	Public App 					As EndsMeet
+	Private JS 					As JavaScript
 	Public Const COLOR_RED 		As Int = -65536
 	Public Const COLOR_BLUE 	As Int = -16776961
 	Public Const VERSION 		As String = "5.20"
@@ -72,6 +73,8 @@ End Sub
 ' <link>Donate|https://paypal.me/aeric80/</link> | <link>Forum|https://www.b4x.com/android/forum/threads/project-template-pakai-server-v5.167788/)</link> | <link>GitHub|https://github.com/pyhoon/pakai-server-b4j</link>
 Sub AppStart (Args() As String)
 	App.Initialize
+	
+	' *** Load settings from config.ini ***
 	App.LoadConfig
 
 	' *** Web handlers ***
@@ -91,16 +94,15 @@ Sub AppStart (Args() As String)
 	App.Post("/api/products", "ProductsApiHandler")
 	App.Put("/api/products/*", "ProductsApiHandler")
 	App.Delete("/api/products/*", "ProductsApiHandler")
+	App.Get("/api/find", "FindApiHandler")
+	App.Get("/api/find/products-by-category_id/*", "FindApiHandler")
+	App.Post("/api/find", "FindApiHandler")
 	
 	App.Get("/api/users", "UsersApiHandler")
 	App.Get("/api/users/*", "UsersApiHandler")
 	App.Post("/api/users", "UsersApiHandler")
 	App.Put("/api/users/*", "UsersApiHandler")
 	App.Delete("/api/users/*", "UsersApiHandler")
-	
-	App.Get("/api/find", "FindApiHandler")
-	App.Get("/api/find/products-by-category_id/*", "FindApiHandler")
-	App.Post("/api/find", "FindApiHandler")
 
 	' *** Api Settings ***
 	Dim Api As ApiSettings = App.api
@@ -124,9 +126,11 @@ Sub AppStart (Args() As String)
 	Log($"Open the following URL from your web browser"$)
 	Log(App.ServerUrl)
 	
-	Dim JS As JavaScript
 	JS.Initialize
+	JS.CreateJSFiles
+	
 	DB.Initialize
+	DB.ConnectDatabase
 	StartMessageLoop
 End Sub
 
