@@ -81,7 +81,7 @@ Sub AppStart (Args() As String)
 	App.Get("", "IndexWebHandler")
 	App.Get("/help", "HelpHandler")
 	App.Get("/categories", "CategoriesWebHandler")
-	App.Get("/users", "UsersWebHandler")
+	'App.Get("/users", "UsersWebHandler")
 	
 	' *** Api handlers ***
 	App.Get("/api/categories", "CategoriesApiHandler")
@@ -106,10 +106,10 @@ Sub AppStart (Args() As String)
 
 	' *** Api Settings ***
 	Dim Api As ApiSettings = App.api
-	Api.PayloadType = WebApiUtils.MIME_TYPE_JSON
-	Api.ContentType = WebApiUtils.MIME_TYPE_JSON
+	'Api.PayloadType = WebApiUtils.MIME_TYPE_JSON
+	Api.ContentType = WebApiUtils.MIME_TYPE_XML
 	Api.EnableHelp = True
-	Api.VerboseMode = True
+	'Api.VerboseMode = True
 	Api.OrderedKeys = True
 
 	' *** Misc Settings ***

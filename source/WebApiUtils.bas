@@ -740,6 +740,7 @@ Public Sub ReturnHttpResponse (Message As HttpResponseMessage, Response As Servl
 			Select Message.ContentType
 				Case MIME_TYPE_XML
 					SB.Append($"<${Message.XmlRoot}>"$)
+					If Message.XmlElement = "" Then Message.XmlElement = "item"
 					SB.Append(CRLF).Append("  ").Append(ProcessOrderedXmlFromMap(Message.XmlElement, ResponseElementsVerbose, "  ", "  "))
 					SB.Append(CRLF).Append($"</${Message.XmlRoot}>"$)
 				Case MIME_TYPE_JSON
@@ -764,6 +765,7 @@ Public Sub ReturnHttpResponse (Message As HttpResponseMessage, Response As Servl
 				Case Message.ResponseObject.IsInitialized
 					If Message.ContentType = MIME_TYPE_XML Then
 						SB.Append($"<${Message.XmlRoot}>"$)
+						If Message.XmlElement = "" Then Message.XmlElement = "item"
 						SB.Append(CRLF).Append("  ").Append(ProcessOrderedXmlFromMap(Message.XmlElement, Message.ResponseObject, "  ", "  "))
 						SB.Append(CRLF).Append($"</${Message.XmlRoot}>"$)
 					Else
