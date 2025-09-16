@@ -8,7 +8,6 @@ Version=10.3
 Sub Class_Globals
 	Private DB As MiniORM
 	Private App As EndsMeet
-	Private Api As ApiSettings
 	Private Request As ServletRequest
 	Private Response As ServletResponse
 	Private HRM As HttpResponseMessage
@@ -19,9 +18,8 @@ End Sub
 
 Public Sub Initialize
 	App = Main.app
-	Api = App.api
 	HRM.Initialize
-	HRM = WebApiUtils.SetApiMessage(HRM, Api)
+	HRM = WebApiUtils.SetApiMessage(HRM, App.api)
 	'HRM.ContentType = Api.ContentType
 	'HRM.VerboseMode = Api.VerboseMode
 	'HRM.OrderedKeys = Api.OrderedKeys
