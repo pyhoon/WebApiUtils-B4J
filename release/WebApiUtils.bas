@@ -253,6 +253,10 @@ Public Sub ParseXML (Text As String) As Map
 	Return data
 End Sub
 
+Public Sub ParseJSON (Text As String) As Map
+	Return Text.As(JSON).ToMap
+End Sub
+
 Public Sub RequestMultiPart (Request As ServletRequest, Folder As String, MaxSize As Long) As Part
 	Dim part As Part
 	Dim config As JavaObject
