@@ -5,7 +5,7 @@ Type=Class
 Version=10.3
 @EndOfDesignText@
 'JavaScript class module
-'Version 5.10
+'Version 5.20
 Sub Class_Globals
 	Private ContentType As String
 	Private PayloadType As String
@@ -58,7 +58,7 @@ Private Sub AlertScript (AlertMessage As String, SuccessCode As Int, SubmitForm 
 		End If
 	End If
 	Select ContentType
-		Case WebApiUtils.CONTENT_TYPE_XML
+		Case WebApiUtils.MIME_TYPE_XML
 			Return $"const root = $(response).find("${XmlRoot}")
           const code = $(root).children("${RESPONSE_ELEMENT_CODE}").text()
           const error = $(root).children("${RESPONSE_ELEMENT_ERROR}").text()
@@ -128,7 +128,7 @@ End Sub
 Private Sub AccessTokenPart As String
 	Return $"// Access Token
           let access_token = ""
-          ${IIf(ContentType = WebApiUtils.CONTENT_TYPE_XML, _
+          ${IIf(ContentType = WebApiUtils.MIME_TYPE_XML, _
           $"const result = ${IIf(Verbose, _
 		  $"$(response).children("${RESPONSE_ELEMENT_RESULT}")"$, _
 		  $"response"$)}
@@ -150,12 +150,15 @@ Private Sub AccessTokenPart As String
           //}"$
 End Sub
 
+' For jQuery Ajax
 Private Sub dataType As String
 	Select ContentType
-		Case  WebApiUtils.CONTENT_TYPE_XML
+		Case  WebApiUtils.MIME_TYPE_XML
 			Return "xml"
-		Case Else
+		Case WebApiUtils.MIME_TYPE_JSON
 			Return "json"
+		Case Else
+			Return ""
 	End Select
 End Sub
 
@@ -248,7 +251,7 @@ End Sub
 
 Private Sub script05 As String
 	Select ContentType
-		Case WebApiUtils.CONTENT_TYPE_XML
+		Case WebApiUtils.MIME_TYPE_XML
 			If Verbose Then
 				Return $"function showFadeAlertSuccess (id, xhr, textStatus, response) {
   const root = $(response).find("${XmlRoot}")
@@ -348,7 +351,7 @@ Private Sub script07 As String
     url: "/${Api.Name}/categories",
     success: function (response, status, xhr) {
       let data = []
-      ${IIf(ContentType = WebApiUtils.CONTENT_TYPE_XML, _
+      ${IIf(ContentType = WebApiUtils.MIME_TYPE_XML, _
       $"// XML format
       const root = $(response).find("${XmlRoot}")
       ${IIf(Verbose, _
@@ -573,7 +576,7 @@ Private Sub script14 As String
       $category1.empty()
       $category2.empty()
       let data = []
-      ${IIf(ContentType = WebApiUtils.CONTENT_TYPE_XML, _
+      ${IIf(ContentType = WebApiUtils.MIME_TYPE_XML, _
 	  $"const root = $(response).find("${XmlRoot}")
 	  ${IIf(Verbose, _
 	  $"const result = $(root).children("${RESPONSE_ELEMENT_RESULT}")"$, _
@@ -610,7 +613,7 @@ Private Sub script15 (Verb As String) As String
     url: "/${Api.Name}/find",
     success: function (response, status, xhr) {
       let rows = []
-      ${IIf(ContentType = WebApiUtils.CONTENT_TYPE_XML, _
+      ${IIf(ContentType = WebApiUtils.MIME_TYPE_XML, _
       $"// XML format
       const root = $(response).find("${XmlRoot}")
       ${IIf(Verbose, _
@@ -694,7 +697,7 @@ End Sub
 
 Private Sub script16 As String
 	Select ContentType
-		Case WebApiUtils.CONTENT_TYPE_XML
+		Case WebApiUtils.MIME_TYPE_XML
 			Return $"$(document).on("click", ".edit", function (e) {
   const id = $(this).attr("data-id")
   const code = $(this).attr("data-code")

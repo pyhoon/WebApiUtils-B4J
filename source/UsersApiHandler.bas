@@ -21,8 +21,10 @@ Public Sub Initialize
 	App = Main.app
 	Api = App.api
 	HRM.Initialize
-	HRM.VerboseMode = Api.VerboseMode
-	HRM.OrderedKeys = Api.OrderedKeys
+	HRM = WebApiUtils.SetApiMessage(HRM, Api)
+	'HRM.ContentType = Api.ContentType
+	'HRM.VerboseMode = Api.VerboseMode
+	'HRM.OrderedKeys = Api.OrderedKeys
 	DB.Initialize(Main.DBType, Null)
 End Sub
 
@@ -98,8 +100,13 @@ Private Sub GetUsers
 	DB.Initialize(Main.DBType, Main.DBOpen)
 	DB.Table = "tbl_users"
 	DB.Query
-	HRM.ResponseCode = 200
-	HRM.ResponseData = DB.Results2
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
+	Else
+		HRM.ResponseCode = 200
+		HRM.ResponseData = DB.Results2
+	End If
 	ReturnApiResponse
 	DB.Close
 End Sub
@@ -121,7 +128,7 @@ End Sub
 
 Private Sub PostUser
 	Dim data As Map
-	If HRM.ContentType = WebApiUtils.CONTENT_TYPE_XML Then
+	If HRM.ContentType = WebApiUtils.MIME_TYPE_XML Then
 		data = WebApiUtils.RequestDataXml(Request)
 		data = data.Get("root")
 	Else
@@ -166,16 +173,21 @@ Private Sub PostUser
 	DB.Save
 	
 	' Retrieve new row
-	HRM.ResponseCode = 201
-	HRM.ResponseObject = DB.First2 'DB.Results2.Get(0)
-	HRM.ResponseMessage = "User created successfully"
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
+	Else
+		HRM.ResponseCode = 201
+		HRM.ResponseObject = DB.First2 'DB.Results2.Get(0)
+		HRM.ResponseMessage = "User created successfully"
+	End If
 	ReturnApiResponse
 	DB.Close
 End Sub
 
 Private Sub PutUserById (Id As Int)
 	Dim data As Map
-	If HRM.ContentType = WebApiUtils.CONTENT_TYPE_XML Then
+	If HRM.ContentType = WebApiUtils.MIME_TYPE_XML Then
 		data = WebApiUtils.RequestDataXml(Request)
 		data = data.Get("root")
 	Else

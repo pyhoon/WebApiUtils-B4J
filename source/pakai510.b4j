@@ -5,12 +5,11 @@ Build3=MySQL,b4j.webapi,MySQL,hu2_acceptall
 File1=category.html
 File2=config.example
 File3=help.html
-File4=icon.png
-File5=index.html
-File6=main.html
-File7=mariadb.example
-File8=mysql.example
-File9=sqlite.example
+File4=index.html
+File5=main.html
+File6=mariadb.example
+File7=mysql.example
+File8=sqlite.example
 FileGroup1=Default Group
 FileGroup2=Default Group
 FileGroup3=Default Group
@@ -19,16 +18,14 @@ FileGroup5=Default Group
 FileGroup6=Default Group
 FileGroup7=Default Group
 FileGroup8=Default Group
-FileGroup9=Default Group
 Group=App
 Library1=endsmeet
 Library2=jcore
 Library3=webapiutils
 Library4=miniormutils
 Module1=CategoriesApiHandler
-Module10=UsersApiHandler
-Module11=UsersWebHandler
-Module12=|absolute|C:\B4X\Development\WebApiUtils-B4J\source\WebApiUtils
+Module10=UsersWebHandler
+Module11=|absolute|C:\B4X\Development\WebApiUtils-B4J\source\WebApiUtils
 Module2=CategoriesWebHandler
 Module3=Database
 Module4=FindApiHandler
@@ -37,14 +34,14 @@ Module6=HttpsFilter
 Module7=IndexWebHandler
 Module8=JavaScript
 Module9=ProductsApiHandler
-NumberOfFiles=9
+NumberOfFiles=8
 NumberOfLibraries=4
-NumberOfModules=12
+NumberOfModules=11
 Version=10.3
 @EndOfDesignText@
 #Region Project Attributes
 ' Product: WebApiUtils
-' Version: 5.10
+' Version: 5.20
 ' License: MIT License
 ' Developer: Poon Yip Hoon (Aeric)
 '#Macro: Title, Start, 	ide://goto?Module=Main&Sub=AppStart
@@ -68,13 +65,14 @@ Sub Process_Globals
 	Public App 					As EndsMeet
 	Public Const COLOR_RED 		As Int = -65536
 	Public Const COLOR_BLUE 	As Int = -16776961
-	Public Const VERSION 		As String = "5.10 beta1"
+	Public Const VERSION 		As String = "5.20"
 End Sub
 
 ' <link>Open in browser|http://127.0.0.1:8080</link>
 ' <link>Donate|https://paypal.me/aeric80/</link> | <link>Forum|https://www.b4x.com/android/forum/threads/project-template-pakai-server-v5.167788/)</link> | <link>GitHub|https://github.com/pyhoon/pakai-server-b4j</link>
 Sub AppStart (Args() As String)
 	App.Initialize
+	App.LoadConfig
 
 	' *** Web handlers ***
 	App.Get("", "IndexWebHandler")
@@ -106,13 +104,14 @@ Sub AppStart (Args() As String)
 
 	' *** Api Settings ***
 	Dim Api As ApiSettings = App.api
+	Api.PayloadType = WebApiUtils.MIME_TYPE_JSON
+	Api.ContentType = WebApiUtils.MIME_TYPE_JSON
 	Api.EnableHelp = True
 	Api.VerboseMode = True
 	Api.OrderedKeys = True
 
 	' *** Misc Settings ***
 	App.LogEnabled = True
-	App.UseConfigFile = True
 	#If Release
 	App.RedirectToHttps = True
 	#End If

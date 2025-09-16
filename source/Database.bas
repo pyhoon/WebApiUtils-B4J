@@ -5,7 +5,7 @@ Type=Class
 Version=10.3
 @EndOfDesignText@
 'Database class module
-'Version 5.10
+'Version 5.20
 Sub Class_Globals
 	Private DB 		As MiniORM
 	Private conn 	As ORMConnector
@@ -148,13 +148,13 @@ Private Sub CreateDatabase
 		LogColor("Database creation failed!", Main.COLOR_RED)
 	End If
 	
-	' Adding an image to blob field
-	Dim b() As Byte = File.ReadBytes(File.DirAssets, "icon.png")
-	DB.Table = "tbl_products"
-	DB.Columns = Array("product_image")
-	DB.Parameters = Array(b)
-	DB.Id = 3 ' after setting Columns and Parameters
-	DB.Save
+	'' Adding an image to blob field
+	'Dim b() As Byte = File.ReadBytes(File.DirAssets, "icon.png")
+	'DB.Table = "tbl_products"
+	'DB.Columns = Array("product_image")
+	'DB.Parameters = Array(b)
+	'DB.Id = 3 ' after setting Columns and Parameters
+	'DB.Save
 	
 	DB.Close
 End Sub

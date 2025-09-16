@@ -22,8 +22,10 @@ Public Sub Initialize
 	App = Main.app
 	Api = App.api
 	HRM.Initialize
-	HRM.VerboseMode = Api.VerboseMode
-	HRM.OrderedKeys = Api.OrderedKeys
+	HRM = WebApiUtils.SetApiMessage(HRM, Api)
+	'HRM.ContentType = Api.ContentType
+	'HRM.VerboseMode = Api.VerboseMode
+	'HRM.OrderedKeys = Api.OrderedKeys
 	DB.Initialize(Main.DBType, Null)
 End Sub
 
