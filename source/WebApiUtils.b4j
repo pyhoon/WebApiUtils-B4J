@@ -21,11 +21,13 @@ FileGroup8=Default Group
 Group=App
 Library1=endsmeet
 Library2=jcore
-Library3=webapiutils
+Library3=json
 Library4=miniormutils
+Library5=xml2map
+Library6=jstringutils
 Module1=CategoriesApiHandler
 Module10=UsersApiHandler
-Module11=|absolute|C:\B4X\Development\WebApiUtils-B4J\source\WebApiUtils
+Module11=WebApiUtils
 Module2=CategoriesWebHandler
 Module3=Database
 Module4=FindApiHandler
@@ -35,7 +37,7 @@ Module7=IndexWebHandler
 Module8=JavaScript
 Module9=ProductsApiHandler
 NumberOfFiles=8
-NumberOfLibraries=4
+NumberOfLibraries=6
 NumberOfModules=11
 Version=10.3
 @EndOfDesignText@
@@ -110,7 +112,6 @@ Sub AppStart (Args() As String)
 	'Api.PayloadType = WebApiUtils.MIME_TYPE_JSON
 	Api.ContentType = WebApiUtils.MIME_TYPE_XML
 	Api.EnableHelp = True
-	'Api.VerboseMode = True
 	Api.OrderedKeys = True
 
 	' *** Misc Settings ***
