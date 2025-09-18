@@ -5,7 +5,7 @@ Type=Class
 Version=10.2
 @EndOfDesignText@
 'Web Handler class
-'Version 5.20
+'Version 5.30
 Sub Class_Globals
 	Private App As EndsMeet
 	Private Api As ApiSettings	

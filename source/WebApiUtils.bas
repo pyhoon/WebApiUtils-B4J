@@ -5,7 +5,7 @@ Type=StaticCode
 Version=10
 @EndOfDesignText@
 ' Web API Utility
-' Version 5.20
+' Version 5.30
 Sub Process_Globals
 	Public Const MIME_TYPE_HTML As String = "text/html"
 	Public Const MIME_TYPE_JSON As String = "application/json"
@@ -880,14 +880,6 @@ Public Sub ReturnFileAttachment (Ins As InputStream, FileName As String, Respons
 	If FileName = "" Then FileName = "file"
 	Response.SetHeader("Content-Disposition", "inline;filename=" & FileName)
 	ReturnOutputStream(Ins, Response)
-End Sub
-
-Public Sub SetApiMessage (Message As HttpResponseMessage, Settings As ApiSettings) As HttpResponseMessage
-	Message.VerboseMode = Settings.VerboseMode
-	Message.OrderedKeys = Settings.OrderedKeys
-	Message.ContentType = Settings.ContentType
-	Message.PayloadType = Settings.PayloadType
-	Return Message
 End Sub
 
 ' // Source: http://www.b4x.com/android/forum/threads/validate-a-correctly-formatted-email-address.39803/
