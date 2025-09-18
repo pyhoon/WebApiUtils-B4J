@@ -100,7 +100,7 @@ End Sub
 
 Private Sub Post$EndPoint$
 	Dim data As Map
-	If HRM.ContentType = WebApiUtils.CONTENT_TYPE_XML Then
+	If HRM.ContentType = WebApiUtils.MIME_TYPE_XML Then
 		data = WebApiUtils.RequestDataXml(Request)
 		data = data.Get("root")
 	Else
@@ -154,7 +154,7 @@ End Sub
 
 Private Sub Put$EndPoint$ById (Id As Int)
 	Dim data As Map
-	If HRM.ContentType = WebApiUtils.CONTENT_TYPE_XML Then
+	If HRM.ContentType = WebApiUtils.MIME_TYPE_XML Then
 		data = WebApiUtils.RequestDataXml(Request)
 		data = data.Get("root")
 	Else
