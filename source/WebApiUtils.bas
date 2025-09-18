@@ -2,7 +2,7 @@
 Group=App
 ModulesStructureVersion=1
 Type=StaticCode
-Version=10
+Version=10.3
 @EndOfDesignText@
 ' Web API Utility
 ' Version 5.30

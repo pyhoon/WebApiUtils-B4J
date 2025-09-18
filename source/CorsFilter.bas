@@ -2,7 +2,7 @@
 Group=Filters
 ModulesStructureVersion=1
 Type=Class
-Version=10.2
+Version=10.3
 @EndOfDesignText@
 'Cross-Origin Resource Sharing (CORS) Filter class
 Sub Class_Globals

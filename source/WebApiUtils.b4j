@@ -46,7 +46,7 @@ Version=10.3
 ' Version: 5.30
 ' License: MIT License
 ' Developer: Poon Yip Hoon (Aeric)
-'#Macro: Title, Start, 	ide://goto?Module=Main&Sub=AppStart
+#Macro: Title, Copy, ide://run?file=%WINDIR%\System32\cmd.exe&Args=/c&Args=copy&Args=%PROJECT%\WebApiUtils.bas&Args=%PROJECT%\..\release\WebApiUtils.bas
 #Macro: Title, Release, ide://run?file=%WINDIR%\SysWOW64\explorer.exe&Args=%PROJECT%\..\release
 #Macro: Title, Publish, ide://run?file=%JAVABIN%\jar.exe&WorkingDirectory=..\..\release&Args=-cMf&Args=%ADDITIONAL%\%PROJECT_NAME%.b4xlib&Args=*
 '#Macro: Title, AddLibs, ide://run?file=%JAVABIN%\java.exe&Args=-jar&Args=%ADDITIONAL%\..\B4X\libget-non-ui.jar&Args=%PROJECT%&Args=False

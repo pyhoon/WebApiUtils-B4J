@@ -2,7 +2,7 @@
 Group=Handlers
 ModulesStructureVersion=1
 Type=Class
-Version=10.2
+Version=10.3
 @EndOfDesignText@
 'Web Handler class
 'Version 5.30
