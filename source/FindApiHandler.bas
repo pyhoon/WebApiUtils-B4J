@@ -21,7 +21,7 @@ End Sub
 Public Sub Initialize
 	App = Main.app
 	HRM.Initialize
-	HRM = WebApiUtils.SetApiMessage(HRM, App.api)
+	HRM = App.SetApiMessage(HRM, App.api)
 	DB.Initialize(Main.DBType, Null)
 End Sub
 
