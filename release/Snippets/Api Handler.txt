@@ -100,15 +100,18 @@ End Sub
 
 Private Sub Post$EndPoint$
 	Dim data As Map
+	Dim payload As String
 	If HRM.ContentType = WebApiUtils.MIME_TYPE_XML Then
+		payload = "xml"
 		data = WebApiUtils.RequestDataXml(Request)
 		data = data.Get("root")
 	Else
+		payload = "json"
 		data = WebApiUtils.RequestDataJson(Request)
 	End If
 	If Not(data.IsInitialized) Then
 		HRM.ResponseCode = 400
-		HRM.ResponseError = "Invalid json object"
+		HRM.ResponseError = $"Invalid ${payload} object"$
 		ReturnApiResponse
 		Return
 	End If
@@ -153,16 +156,19 @@ Private Sub Post$EndPoint$
 End Sub
 
 Private Sub Put$EndPoint$ById (Id As Int)
+	Dim payload As String
 	Dim data As Map
 	If HRM.ContentType = WebApiUtils.MIME_TYPE_XML Then
+		payload = "xml"
 		data = WebApiUtils.RequestDataXml(Request)
 		data = data.Get("root")
 	Else
+		payload = "json"
 		data = WebApiUtils.RequestDataJson(Request)
 	End If
 	If Not(data.IsInitialized) Then
 		HRM.ResponseCode = 400
-		HRM.ResponseError = "Invalid json object"
+		HRM.ResponseError = $"Invalid ${payload} object"$
 		ReturnApiResponse
 		Return
 	End If
