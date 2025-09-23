@@ -638,6 +638,8 @@ Public Sub ProcessOrderedXmlFromMap (Tag As String, M As Map, Indent As String, 
 	Return SB.ToString.Trim
 End Sub
 
+' Current version only show xmlelement "item" if OrderedKeys = True
+
 ' To initialize: <code>
 ' App = Main.app
 ' HRM.Initialize
