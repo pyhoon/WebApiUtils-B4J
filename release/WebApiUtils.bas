@@ -1,11 +1,11 @@
 ﻿B4J=true
-Group=App
+Group=Classes
 ModulesStructureVersion=1
 Type=StaticCode
 Version=10.3
 @EndOfDesignText@
 ' Web API Utility
-' Version 5.30
+' Version 5.40
 Sub Process_Globals
 	Public Const MIME_TYPE_HTML As String = "text/html"
 	Public Const MIME_TYPE_JSON As String = "application/json"
