@@ -26,7 +26,7 @@ Private Sub ReturnPage
 	strMain = WebApiUtils.BuildTag(strMain, "HELP", ReturnHelpElement)
 	strMain = WebApiUtils.BuildHtml(strMain, App.ctx)
 	Dim strJSFile As String = "$endpoint$.js"
-	Dim strScripts As String = $"<script src="${App.ServerUrl}/assets/js/${strJSFile}"></script>"$
+	Dim strScripts As String = $"<script src="${App.ServerUrl}/assets/scripts/${strJSFile}"></script>"$
 	strMain = WebApiUtils.BuildScript(strMain, strScripts)
 	WebApiUtils.ReturnHTML(strMain, Response)
 End Sub
