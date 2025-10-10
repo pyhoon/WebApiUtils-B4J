@@ -1,11 +1,11 @@
 ﻿B4J=true
-Group=Classes
+Group=Modules
 ModulesStructureVersion=1
 Type=StaticCode
 Version=10.3
 @EndOfDesignText@
 ' Web API Utility
-' Version 5.40
+' Version 5.50
 Sub Process_Globals
 	Public Const MIME_TYPE_HTML As String = "text/html"
 	Public Const MIME_TYPE_JSON As String = "application/json"
@@ -776,9 +776,13 @@ Public Sub ReturnHttpResponse (Message As HttpResponseMessage, Response As Servl
 				Case Message.ResponseData.IsInitialized
 					If Message.ContentType = MIME_TYPE_XML Then
 						If Message.XmlElement = "" Then Message.XmlElement = "item"
-						SB.Append($"<${Message.XmlRoot}>"$)
-						SB.Append(CRLF).Append(ProcessOrderedXmlFromList(Message.XmlElement, Message.ResponseData, "  ", "  "))
-						SB.Append(CRLF).Append($"</${Message.XmlRoot}>"$)
+						If Message.ResponseData.Size > 0 Then
+							SB.Append($"<${Message.XmlRoot}>"$)
+							SB.Append(CRLF).Append(ProcessOrderedXmlFromList(Message.XmlElement, Message.ResponseData, "  ", "  "))
+							SB.Append(CRLF).Append($"</${Message.XmlRoot}>"$)
+						Else
+							SB.Append($"<${Message.XmlRoot} />"$)
+						End If
 					Else
 						SB.Append(ProcessOrderedJsonFromList(Message.ResponseData, "", "  "))
 					End If
