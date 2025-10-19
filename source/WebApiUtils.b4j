@@ -73,7 +73,7 @@ Sub Process_Globals
 End Sub
 
 ' <link>Open in browser|http://127.0.0.1:8080</link>
-' <link>Donate|https://paypal.me/aeric80/</link> | <link>Forum|https://www.b4x.com/android/forum/threads/project-template-pakai-server-v5.167788/)</link> | <link>GitHub|https://github.com/pyhoon/pakai-server-b4j</link>
+' <link>Donate|https://paypal.me/aeric80/</link> | <link>Forum|https://www.b4x.com/android/forum/threads/web-webapiutils-v5-40.167012/)</link> | <link>GitHub|https://github.com/pyhoon/WebApiUtils-B4J</link>
 Sub AppStart (Args() As String)
 	App.Initialize
 	App.LoadConfig
