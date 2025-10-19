@@ -1,4 +1,5 @@
 # ignore files
+*ini
 
 # ignore ALL files in these directories
 AutoBackups
