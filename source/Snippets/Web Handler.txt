@@ -1,5 +1,5 @@
 Public Sub Initialize
-	App = Main.app
+	App = Main.App
 End Sub
 $end$
 Sub Handle (req As ServletRequest, resp As ServletResponse)
