@@ -17,7 +17,7 @@ Sub Class_Globals
 End Sub
 
 Public Sub Initialize
-	App = Main.app
+	App = Main.App
 	HRM.Initialize
 	Main.SetApiMessage(HRM)
 	DB.Initialize(Main.DBType, Null)
@@ -92,6 +92,7 @@ Private Sub ReturnMethodNotAllow
 End Sub
 
 Private Sub GetUsers
+	Log($"${Request.Method}: ${Request.RequestURI}"$)
 	DB.Initialize(Main.DBType, Main.DBOpen)
 	DB.Table = "tbl_users"
 	DB.Query
@@ -107,6 +108,7 @@ Private Sub GetUsers
 End Sub
 
 Private Sub GetUserById (Id As Int)
+	Log($"${Request.Method}: ${Request.RequestURI}"$)
 	DB.Initialize(Main.DBType, Main.DBOpen)
 	DB.Table = "tbl_users"
 	DB.Find(Id)
@@ -122,20 +124,19 @@ Private Sub GetUserById (Id As Int)
 End Sub
 
 Private Sub PostUser
-	Dim data As Map
-	If HRM.ContentType = WebApiUtils.MIME_TYPE_XML Then
-		data = WebApiUtils.RequestDataXml(Request)
-		data = data.Get("root")
-	Else
-		data = WebApiUtils.RequestDataJson(Request)
-	End If
-	If Not(data.IsInitialized) Then
-		HRM.ResponseCode = 400
-		HRM.ResponseError = "Invalid json object"
+	Log($"${Request.Method}: ${Request.RequestURI}"$)
+	Dim str As String = WebApiUtils.RequestDataText(Request)
+	If WebApiUtils.ValidateContent(str, HRM.PayloadType) = False Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = $"Invalid ${HRM.PayloadType} payload"$
 		ReturnApiResponse
 		Return
 	End If
-
+	If HRM.PayloadType = WebApiUtils.MIME_TYPE_XML Then
+		Dim data As Map = WebApiUtils.ParseXML(str)		' XML payload
+	Else
+		Dim data As Map = WebApiUtils.ParseJSON(str)	' JSON payload
+	End If
 	' Check whether required keys are provided
 	Dim RequiredKeys As List = Array As String("user_name")
 	For Each requiredkey As String In RequiredKeys
@@ -181,20 +182,19 @@ Private Sub PostUser
 End Sub
 
 Private Sub PutUserById (Id As Int)
-	Dim data As Map
-	If HRM.ContentType = WebApiUtils.MIME_TYPE_XML Then
-		data = WebApiUtils.RequestDataXml(Request)
-		data = data.Get("root")
-	Else
-		data = WebApiUtils.RequestDataJson(Request)
-	End If
-	If Not(data.IsInitialized) Then
-		HRM.ResponseCode = 400
-		HRM.ResponseError = "Invalid json object"
+	Log($"${Request.Method}: ${Request.RequestURI}"$)
+	Dim str As String = WebApiUtils.RequestDataText(Request)
+	If WebApiUtils.ValidateContent(str, HRM.PayloadType) = False Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = $"Invalid ${HRM.PayloadType} payload"$
 		ReturnApiResponse
 		Return
 	End If
-	
+	If HRM.PayloadType = WebApiUtils.MIME_TYPE_XML Then
+		Dim data As Map = WebApiUtils.ParseXML(str)		' XML payload
+	Else
+		Dim data As Map = WebApiUtils.ParseJSON(str)	' JSON payload
+	End If
 	' Check whether required keys are provided
 	If data.ContainsKey("user_name") = False Then
 		HRM.ResponseCode = 400
@@ -242,6 +242,7 @@ Private Sub PutUserById (Id As Int)
 End Sub
 
 Private Sub DeleteUserById (Id As Int)
+	Log($"${Request.Method}: ${Request.RequestURI}"$)
 	DB.Initialize(Main.DBType, Main.DBOpen)
 	DB.Table = "tbl_users"
 	DB.Find(Id)

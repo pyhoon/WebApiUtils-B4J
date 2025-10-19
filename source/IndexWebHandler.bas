@@ -8,7 +8,6 @@ Version=10.3
 'Version 5.50
 Sub Class_Globals
 	Private App As EndsMeet
-	Private Api As ApiSettings	
 	Private Request As ServletRequest
 	Private Response As ServletResponse
 	Private Method As String
@@ -16,8 +15,7 @@ Sub Class_Globals
 End Sub
 
 Public Sub Initialize
-	App = Main.app
-	Api = App.api
+	App = Main.App
 End Sub
 
 Sub Handle (req As ServletRequest, resp As ServletResponse)
@@ -49,6 +47,7 @@ Private Sub ReturnPage
 End Sub
 
 Private Sub ReturnHelpElement As String
+	Dim Api As ApiSettings = App.api
 	If Api.EnableHelp = False Then
 		Return ""
 	End If

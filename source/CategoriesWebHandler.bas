@@ -15,7 +15,7 @@ Sub Class_Globals
 End Sub
 
 Public Sub Initialize
-	App = Main.app
+	App = Main.App
 End Sub
 
 Sub Handle (req As ServletRequest, resp As ServletResponse)

@@ -19,7 +19,7 @@ Sub Class_Globals
 End Sub
 
 Public Sub Initialize
-	App = Main.app
+	App = Main.App
 	HRM.Initialize
 	Main.SetApiMessage(HRM)
 	DB.Initialize(Main.DBType, Null)
@@ -106,7 +106,6 @@ Public Sub GetAllProducts
 	DB.Query
 	HRM.ResponseCode = 200
 	HRM.ResponseData = DB.Results2
-	HRM.OrderedKeys = True
 	DB.Close
 	ReturnApiResponse
 End Sub
@@ -123,13 +122,13 @@ Public Sub GetProductsByCategoryId (id As Int)
 	DB.Query
 	HRM.ResponseCode = 200
 	HRM.ResponseData = DB.Results2
-	HRM.OrderedKeys = True
 	DB.Close
 	ReturnApiResponse
 End Sub
 
 Public Sub SearchByKeywords
 	Log($"${Request.Method}: ${Request.RequestURI}"$)
+	
 	Dim str As String = WebApiUtils.RequestDataText(Request)
 	If WebApiUtils.ValidateContent(str, HRM.PayloadType) = False Then
 		HRM.ResponseCode = 422
@@ -137,7 +136,11 @@ Public Sub SearchByKeywords
 		ReturnApiResponse
 		Return
 	End If
-	Dim data As Map = str.As(JSON).ToMap ' JSON payload
+	If HRM.PayloadType = WebApiUtils.MIME_TYPE_XML Then
+		Dim data As Map = WebApiUtils.ParseXML(str)		' XML payload
+	Else
+		Dim data As Map = WebApiUtils.ParseJSON(str)	' JSON payload
+	End If
 	' Check whether required keys are provided
 	If data.ContainsKey("keyword") = False Then
 		HRM.ResponseCode = 400
@@ -159,7 +162,6 @@ Public Sub SearchByKeywords
 	DB.Query
 	HRM.ResponseCode = 200
 	HRM.ResponseData = DB.Results2
-	HRM.OrderedKeys = True
 	DB.Close
 	ReturnApiResponse
 End Sub

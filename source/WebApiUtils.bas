@@ -13,11 +13,11 @@ Sub Process_Globals
 	Public Const MIME_TYPE_PDF As String = "application/pdf"
 	Public Const MIME_TYPE_PNG As String = "image/png"
 	Public Const RESPONSE_ELEMENT_MESSAGE As String = "m"
-	Public Const RESPONSE_ELEMENT_CODE As String 	= "a"
-	Public Const RESPONSE_ELEMENT_STATUS As String 	= "s"
-	Public Const RESPONSE_ELEMENT_TYPE As String 	= "t"
-	Public Const RESPONSE_ELEMENT_ERROR As String 	= "e"
-	Public Const RESPONSE_ELEMENT_RESULT As String 	= "r"
+	Public Const RESPONSE_ELEMENT_CODE As String    = "a"
+	Public Const RESPONSE_ELEMENT_STATUS As String  = "s"
+	Public Const RESPONSE_ELEMENT_TYPE As String    = "t"
+	Public Const RESPONSE_ELEMENT_ERROR As String   = "e"
+	Public Const RESPONSE_ELEMENT_RESULT As String  = "r"
 	Type HttpResponseContent (ResponseBody As String)
 	Type HttpResponseMessage (ResponseMessage As String, ResponseCode As Int, ResponseStatus As String, ResponseType As String, ResponseError As Object, ResponseData As List, ResponseObject As Map, ResponseBody As Object, PayloadType As String, ContentType As String, XmlRoot As String, XmlElement As String, VerboseMode As Boolean, OrderedKeys As Boolean, ResponseKeys As List, ResponseKeysAlias As List)
 End Sub
@@ -491,7 +491,6 @@ Public Sub ProcessOrderedJsonFromList (L As List, Indent As String, Indentation 
 			Case Else
 				If value.As(String).StartsWith("[B@") Then ' Maybe a blob/byte object
 					SB.Append(Indent & QUOTE & EncodeBase64(value) & QUOTE)
-					'File.WriteBytes(File.DirApp, "temp.png", DecodeBase64(EncodeBase64(value)))
 				Else
 					SB.Append(Indent & value)
 				End If
@@ -527,7 +526,6 @@ Public Sub ProcessOrderedJsonFromMap (M As Map, Indent As String, Indentation As
 				Case Else
 					If value.As(String).StartsWith("[B@") Then ' Maybe a blob/byte object
 						SB.Append(Indent & Indentation & QUOTE & key & QUOTE & ": " & QUOTE & EncodeBase64(value) & QUOTE)
-						'File.WriteBytes(File.DirApp, "temp.png", DecodeBase64(EncodeBase64(value)))
 					Else
 						SB.Append(Indent & Indentation & QUOTE & key & QUOTE & ": " & value)
 					End If
