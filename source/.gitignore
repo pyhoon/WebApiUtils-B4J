@@ -1,6 +1,16 @@
 # ignore files
-*ini
+Objects/*.ini
+Objects/*.log
+Objects/*.jar
+Objects/*.db*
+Objects/keystore*
+Objects/help.html
 
 # ignore ALL files in these directories
 AutoBackups
-Objects
+Objects/b4xlibs
+Objects/bin
+Objects/logs
+Objects/shell
+Objects/src
+Objects/www/assets/scripts
