@@ -5,7 +5,7 @@ Type=StaticCode
 Version=10.3
 @EndOfDesignText@
 ' Web API Utility
-' Version 5.55
+' Version 5.60
 Sub Process_Globals
 	Public Const MIME_TYPE_HTML As String = "text/html"
 	Public Const MIME_TYPE_JSON As String = "application/json"
@@ -153,6 +153,18 @@ End Sub
 
 Public Sub Object2Json (O As Object) As String
 	Return O.As(JSON).ToString
+End Sub
+
+Private Sub List2PrettyJson (L As List) As String 'ignore
+	Dim JG As JSONGenerator
+	JG.Initialize2(L)
+	Return JG.ToPrettyString(2)
+End Sub
+
+Private Sub Map2PrettyJson (M As Map) As String 'ignore
+	Dim JG As JSONGenerator
+	JG.Initialize(M)
+	Return JG.ToPrettyString(2)
 End Sub
 
 Public Sub GetCurrentTimezone As String
@@ -473,6 +485,10 @@ Public Sub ProcessOrderedJsonFromList (L As List, Indent As String, Indentation 
 	Dim SB As StringBuilder
 	SB.Initialize
 	SB.Append("[")
+	If L.Size = 0 Then
+		SB.Append("]")
+		Return SB.ToString
+	End If
 	Dim First As Boolean = True
 	For Each value As Object In L
 		If First = False Then
@@ -501,13 +517,18 @@ Public Sub ProcessOrderedJsonFromList (L As List, Indent As String, Indentation 
 End Sub
 
 Public Sub ProcessOrderedJsonFromMap (M As Map, Indent As String, Indentation As String, ParentIsList As Boolean) As String
-	If M.ContainsKey("__order") = False Then Return M.As(JSON).ToString
+	'If M.ContainsKey("__order") = False Then Return M.As(JSON).ToString
+	If M.ContainsKey("__order") = False Then Return Map2PrettyJson(M)
 	Dim SB As StringBuilder
 	SB.Initialize
 	If ParentIsList Then
 		SB.Append(Indent & "{")
 	Else
 		SB.Append("{")
+	End If
+	If M.Size = 0 Then
+		SB.Append("}")
+		Return SB.ToString
 	End If
 	Dim order As List = M.Get("__order")
 	Dim First As Boolean = True
@@ -517,7 +538,7 @@ Public Sub ProcessOrderedJsonFromMap (M As Map, Indent As String, Indentation As
 				SB.Append(",")
 			Else
 				First = False
-			End If			
+			End If
 			SB.Append(CRLF)
 			Dim value As Object = M.Get(key)
 			Select True
@@ -759,7 +780,8 @@ Public Sub ReturnHttpResponse (Message As HttpResponseMessage, Response As Servl
 					m2x.Initialize
 					SB.Append(m2x.MapToXml(Message.ResponseObject))
 				Case MIME_TYPE_JSON
-					SB.Append(ResponseElementsVerbose.As(JSON).ToString)
+					'SB.Append(ResponseElementsVerbose.As(JSON).ToString)
+					SB.Append(Map2PrettyJson(ResponseElementsVerbose))
 			End Select
 		End If
 	Else ' VerboseMode = False
@@ -798,7 +820,8 @@ Public Sub ReturnHttpResponse (Message As HttpResponseMessage, Response As Servl
 						SB.Append(CRLF).Append($"</${Message.XmlRoot}>"$)
 					Else
 						Message.ResponseObject = CreateMap("error": Message.ResponseError)
-						SB.Append(Message.ResponseObject.As(JSON).ToString)
+						'SB.Append(Message.ResponseObject.As(JSON).ToString)
+						SB.Append(Map2PrettyJson(Message.ResponseObject))
 					End If
 			End Select
 		Else
@@ -811,7 +834,8 @@ Public Sub ReturnHttpResponse (Message As HttpResponseMessage, Response As Servl
 						m2x.Initialize
 						SB.Append(m2x.MapToXml(Message.ResponseObject))
 					Else
-						SB.Append(Message.ResponseObject.As(JSON).ToString)
+						'SB.Append(Message.ResponseObject.As(JSON).ToString)
+						SB.Append(Map2PrettyJson(Message.ResponseObject))
 					End If
 				Case Message.ResponseData.IsInitialized
 					If Message.ContentType = MIME_TYPE_XML Then
@@ -821,7 +845,8 @@ Public Sub ReturnHttpResponse (Message As HttpResponseMessage, Response As Servl
 						m2x.Initialize
 						SB.Append(m2x.MapToXml(Message.ResponseObject))
 					Else
-						SB.Append(Message.ResponseData.As(JSON).ToString)
+						'SB.Append(Message.ResponseData.As(JSON).ToString)
+						SB.Append(List2PrettyJson(Message.ResponseData))
 					End If
 				Case Message.ResponseBody Is String
 					SB.Append(Message.ResponseBody)
@@ -833,7 +858,8 @@ Public Sub ReturnHttpResponse (Message As HttpResponseMessage, Response As Servl
 						SB.Append(CRLF).Append($"</${Message.XmlRoot}>"$)
 					Else
 						Message.ResponseObject = CreateMap("error": Message.ResponseError)
-						SB.Append(Message.ResponseObject.As(JSON).ToString)
+						'SB.Append(Message.ResponseObject.As(JSON).ToString)
+						SB.Append(Map2PrettyJson(Message.ResponseObject))
 					End If
 			End Select
 		End If
