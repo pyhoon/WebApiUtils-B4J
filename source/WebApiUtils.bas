@@ -5,7 +5,7 @@ Type=StaticCode
 Version=10.3
 @EndOfDesignText@
 ' Web API Utility
-' Version 5.50
+' Version 5.55
 Sub Process_Globals
 	Public Const MIME_TYPE_HTML As String = "text/html"
 	Public Const MIME_TYPE_JSON As String = "application/json"
@@ -483,9 +483,9 @@ Public Sub ProcessOrderedJsonFromList (L As List, Indent As String, Indentation 
 		SB.Append(CRLF)
 		Select True
 			Case value Is List
-				SB.Append(ProcessOrderedJsonFromList(value, Indent, Indentation))
+				SB.Append(ProcessOrderedJsonFromList(value, Indent & Indentation, Indentation))
 			Case value Is Map
-				SB.Append(ProcessOrderedJsonFromMap(value, Indent & Indentation, Indentation))
+				SB.Append(ProcessOrderedJsonFromMap(value, Indent & Indentation, Indentation, True))
 			Case value Is String
 				SB.Append(Indent & QUOTE & value & QUOTE)
 			Case Else
@@ -500,27 +500,31 @@ Public Sub ProcessOrderedJsonFromList (L As List, Indent As String, Indentation 
 	Return SB.ToString
 End Sub
 
-Public Sub ProcessOrderedJsonFromMap (M As Map, Indent As String, Indentation As String) As String
+Public Sub ProcessOrderedJsonFromMap (M As Map, Indent As String, Indentation As String, ParentIsList As Boolean) As String
 	If M.ContainsKey("__order") = False Then Return M.As(JSON).ToString
 	Dim SB As StringBuilder
 	SB.Initialize
-	SB.Append(Indent & "{")
+	If ParentIsList Then
+		SB.Append(Indent & "{")
+	Else
+		SB.Append("{")
+	End If
 	Dim order As List = M.Get("__order")
 	Dim First As Boolean = True
 	For Each key As String In order
-		If First = False Then
-			SB.Append(",")
-		Else
-			First = False
-		End If
-		SB.Append(CRLF)
-		Dim value As Object = m.Get(key)
 		If key <> "__order" Then
+			If First = False Then
+				SB.Append(",")
+			Else
+				First = False
+			End If			
+			SB.Append(CRLF)
+			Dim value As Object = M.Get(key)
 			Select True
 				Case value Is List
 					SB.Append(Indent & Indentation & QUOTE & key & QUOTE & ": " & ProcessOrderedJsonFromList(value, Indent & Indentation, Indentation))
 				Case value Is Map
-					SB.Append(Indent & Indentation & QUOTE & key & QUOTE & ": " & ProcessOrderedJsonFromMap(value, Indent & Indentation & Indentation, Indentation))
+					SB.Append(Indent & Indentation & QUOTE & key & QUOTE & ": " & ProcessOrderedJsonFromMap(value, Indent & Indentation, Indentation, False))
 				Case value Is String
 					SB.Append(Indent & Indentation & QUOTE & key & QUOTE & ": " & QUOTE & value & QUOTE)
 				Case Else
@@ -682,8 +686,8 @@ Public Sub ReturnHttpResponse (Message As HttpResponseMessage, Response As Servl
 			Message.ResponseKeys.Initialize
 		End If
 		If Message.ResponseKeys.Size = 0 Then
-			Message.ResponseKeys.Add("s")
 			Message.ResponseKeys.Add("a")
+			Message.ResponseKeys.Add("s")
 			Message.ResponseKeys.Add("m")
 			Message.ResponseKeys.Add("e")
 			Message.ResponseKeys.Add("r")
@@ -744,7 +748,7 @@ Public Sub ReturnHttpResponse (Message As HttpResponseMessage, Response As Servl
 					SB.Append(CRLF).Append("  ").Append(ProcessOrderedXmlFromMap(Message.XmlElement, ResponseElementsVerbose, "  ", "  "))
 					SB.Append(CRLF).Append($"</${Message.XmlRoot}>"$)
 				Case MIME_TYPE_JSON
-					SB.Append(ProcessOrderedJsonFromMap(ResponseElementsVerbose, "", "  "))
+					SB.Append(ProcessOrderedJsonFromMap(ResponseElementsVerbose, "", "  ", False))
 			End Select
 		Else
 			' order not preserved
@@ -769,7 +773,7 @@ Public Sub ReturnHttpResponse (Message As HttpResponseMessage, Response As Servl
 						SB.Append(CRLF).Append("  ").Append(ProcessOrderedXmlFromMap(Message.XmlElement, Message.ResponseObject, "  ", "  "))
 						SB.Append(CRLF).Append($"</${Message.XmlRoot}>"$)
 					Else
-						SB.Append(ProcessOrderedJsonFromMap(Message.ResponseObject, "", "  "))
+						SB.Append(ProcessOrderedJsonFromMap(Message.ResponseObject, "", "  ", False))
 					End If
 				Case Message.ResponseData.IsInitialized
 					If Message.ContentType = MIME_TYPE_XML Then

@@ -19,31 +19,30 @@ FileGroup6=Default Group
 FileGroup7=Default Group
 FileGroup8=Default Group
 Group=App
-Library1=endsmeet
-Library2=jcore
-Library3=json
+Library1=jcore
+Library2=json
+Library3=jstringutils
 Library4=miniormutils
 Library5=xml2map
-Library6=jstringutils
+Library6=endsmeet
 Module1=CategoriesApiHandler
-Module10=UsersApiHandler
-Module11=WebApiUtils
+Module10=WebApiUtils
 Module2=CategoriesWebHandler
-Module3=Database
-Module4=FindApiHandler
-Module5=HelpHandler
-Module6=HttpsFilter
-Module7=IndexWebHandler
-Module8=JavaScript
-Module9=ProductsApiHandler
+Module3=FindApiHandler
+Module4=HelpHandler
+Module5=HttpsFilter
+Module6=IndexWebHandler
+Module7=JavaScript
+Module8=ProductsApiHandler
+Module9=UsersApiHandler
 NumberOfFiles=8
 NumberOfLibraries=6
-NumberOfModules=11
+NumberOfModules=10
 Version=10.3
 @EndOfDesignText@
 #Region Project Attributes
 ' Product: WebApiUtils
-' Version: 5.50
+' Version: 5.55
 ' License: MIT License
 ' Developer: Poon Yip Hoon (Aeric)
 #CommandLineArgs:
@@ -57,25 +56,26 @@ Version=10.3
 #AdditionalJar: mariadb-java-client-3.5.6
 #End If
 #Region Macros
-#Macro: Title, Update Version, ide://run?file=%JAVABIN%\java.exe&Args=-jar&Args=%ADDITIONAL%\..\B4X\manifest-writer.jar&Args=%PROJECT%&Args=%PROJECT%&Args=Version&Args=5.50
+#Macro: Title, Update Manifest, ide://run?file=%JAVABIN%\java.exe&Args=-jar&Args=%ADDITIONAL%\..\B4X\manifest-writer.jar&Args=%PROJECT%&Args=%PROJECT%&Args=Version&Args=5.55
 #Macro: Title, Create B4xLib, ide://run?file=%JAVABIN%\jar.exe&WorkingDirectory=..&Args=-cMf&Args=..\release\%PROJECT_NAME%.b4xlib&Args=Snippets&Args=%PROJECT_NAME%.bas&Args=manifest.txt&Args=LICENSE
 #Macro: Title, Release folder, ide://run?file=%WINDIR%\SysWOW64\explorer.exe&Args=%PROJECT%\..\release
-#Macro: Title, Copy to AddLibs, ide://run?file=%COMSPEC%&Args=/c&Args=copy&Args=%PROJECT%\..\release\*.b4xlib&Args=%ADDITIONAL%\..\B4X
-#Macro: Title, GetLibraries, ide://run?file=%JAVABIN%\java.exe&args=-jar&args=%ADDITIONAL%\..\B4X\libget.jar&args=%PROJECT%&args=false
-#Macro: Title, GetResources, ide://run?file=%JAVABIN%\java.exe&args=-jar&args=%ADDITIONAL%\..\B4X\resget.jar&args=%PROJECT%&args=true
+#Macro: Title, Copy to AddLibs, ide://run?file=%COMSPEC%&Args=/c&Args=copy&Args=%PROJECT%\..\release\*.b4xlib&Args=%ADDITIONAL%
+'#Macro: Title, GetLibraries, ide://run?file=%JAVABIN%\java.exe&args=-jar&args=%ADDITIONAL%\..\B4X\libget.jar&args=%PROJECT%&args=false
+'#Macro: Title, GetResources, ide://run?file=%JAVABIN%\java.exe&args=-jar&args=%ADDITIONAL%\..\B4X\resget.jar&args=%PROJECT%&args=true
 #End Region
 
 Sub Process_Globals
-	Public DB 					As Database
+	Public DB 					As MiniORM
+	Public MS 					As ORMSettings
 	Public App 					As EndsMeet
 	Public Api 					As ApiSettings
 	Public Const COLOR_RED 		As Int = -65536
 	Public Const COLOR_BLUE 	As Int = -16776961
-	Public Const VERSION 		As String = "5.50"
+	Public Const VERSION 		As String = "5.55"
 End Sub
 
 ' <link>Open in browser|http://127.0.0.1:8080</link>
-' <link>Donate|https://paypal.me/aeric80/</link> | <link>Forum|https://www.b4x.com/android/forum/threads/web-webapiutils-v5-40.167012/)</link> | <link>GitHub|https://github.com/pyhoon/WebApiUtils-B4J</link>
+' <link>Donate|https://paypal.me/aeric80/</link> | <link>Forum|https://www.b4x.com/android/forum/threads/web-webapiutils-v5-50.167012/)</link> | <link>GitHub|https://github.com/pyhoon/WebApiUtils-B4J</link>
 Sub AppStart (Args() As String)
 	App.Initialize
 	App.LoadConfig
@@ -129,9 +129,7 @@ Sub AppStart (Args() As String)
 	Log($"App version: ${VERSION}"$)
 	Log($"Open the following URL from your web browser"$)
 	Log(App.ServerUrl)
-
-	DB.Initialize
-	DB.ConnectDatabase
+	ConfigureDatabase
 	JavaScript.CreateJSFiles
 	StartMessageLoop
 End Sub
@@ -144,14 +142,139 @@ Public Sub SetApiMessage (Message As HttpResponseMessage)
 	Message.PayloadType = Api.PayloadType
 End Sub
 
-Public Sub DBType As String
-	Return DB.Engine
+Public Sub ConfigureDatabase
+	Try
+		#If MariaDB
+		Dim dbvar As String = "mariadb"
+		#Else If MySQL
+		Dim dbvar As String = "mysql"
+		#Else
+		Dim dbvar As String = "sqlite"
+		#End If
+		If File.Exists(File.DirApp, $"${dbvar}.ini"$) = False Then
+			File.Copy(File.DirAssets, $"${dbvar}.example"$, File.DirApp, $"${dbvar}.ini"$)
+		End If
+		Dim ctx As Map = File.ReadMap(File.DirApp, $"${dbvar}.ini"$)
+		DB.Initialize
+		DB.ShowExtraLogs = True
+		MS.Initialize
+		MS.DBType = ctx.GetDefault("DbType", "")
+		Select MS.DBType
+			Case DB.MARIADB, DB.MYSQL
+				MS.DBHost = ctx.GetDefault("DbHost", "")
+				MS.DBPort = ctx.GetDefault("DbPort", "")
+				MS.DBName = ctx.GetDefault("DbName", "")
+				MS.DriverClass = ctx.GetDefault("DriverClass", "")
+				MS.JdbcUrl = ctx.GetDefault("JdbcUrl", "")
+				MS.User = ctx.GetDefault("User", "")
+				MS.Password = ctx.GetDefault("Password", "")
+				MS.MaxPoolSize = ctx.GetDefault("MaxPoolSize", 0)
+			Case DB.SQLITE
+				MS.DBDir = ctx.GetDefault("DbDir", File.DirApp)
+				MS.DBFile = ctx.GetDefault("DbFile", "Pakai.db")
+				MS.JournalMode = "WAL"
+			Case Else
+				LogColor($"${MS.DBType} not supported!"$, COLOR_RED)
+				Log("Application is terminated.")
+				ExitApplication
+		End Select
+		DB.Settings = MS
+
+		LogColor("Checking database...", COLOR_BLUE)
+		Select DB.DbType
+			Case DB.SQLITE
+				Dim DBExist As Boolean = DB.Exist
+			Case DB.MARIADB, DB.MYSQL
+				Wait For (DB.InitSchema) Complete (Success As Boolean)
+				If Success = False Then
+					LogColor("Database initilialization failed!", COLOR_RED)
+					Log("Application is terminated.")
+					ExitApplication
+				End If
+				If DB.Test = False Then
+					LogColor("Database connection test failed!", COLOR_RED)
+					Log("Application is terminated.")
+					ExitApplication
+				End If
+				Wait For (DB.ExistAsync) Complete (DBExist As Boolean)
+			Case Else
+				LogColor("Database type is unknown!", COLOR_RED)
+				ExitApplication
+		End Select
+		If DBExist = False Then
+			LogColor($"${DB.DbType} database not existed!"$, COLOR_RED)
+			CreateDatabase
+			Return
+		End If
+		LogColor($"${DB.DbType} database existed!"$, COLOR_BLUE)
+		'AddUsersTable
+		If UsePool(DB.DbType) Then
+			DB.InitPool
+		End If
+	Catch
+		LogError(LastException.Message)
+		LogColor("Error checking database!", COLOR_RED)
+		Log("Application is terminated.")
+		ExitApplication
+	End Try
 End Sub
 
-Public Sub DBOpen As SQL
-	Return DB.Open
+Private Sub UsePool (Name As String) As Boolean
+	Dim DbArray() As String = Array As String(DB.MARIADB, DB.MYSQL)
+	Return DbArray.As(List).IndexOf(Name) > -1
 End Sub
 
-Public Sub DBClose
+' Create Database Tables and Populate Data
+Private Sub CreateDatabase
+	LogColor("Creating database...", COLOR_BLUE)
+	If UsePool(DB.DbType) Then
+		Wait For (DB.CreateDatabaseAsync) Complete (Success As Boolean)
+	Else
+		Dim Success As Boolean = DB.InitializeSQLite
+	End If
+	If Not(Success) Then
+		LogColor("Database creation failed!", COLOR_RED)
+		Return
+	End If
+	
+	LogColor("Creating tables...", COLOR_BLUE)
+	If UsePool(DB.DbType) Then
+		DB.InitPool
+	End If
+
+	DB.ShowExtraLogs = True
+	DB.UseTimestamps = True
+	DB.QueryAddToBatch = True
+	
+	DB.Table = "tbl_categories"
+	DB.Columns.Add(DB.CreateColumn2(CreateMap("Name": "category_name", "Null": False)))
+	DB.Create
+
+	DB.Columns = Array("category_name")
+	DB.Insert2(Array("Hardwares"))
+	DB.Insert2(Array("Toys"))
+
+	DB.Table = "tbl_products"
+	DB.Columns.Add(DB.CreateColumn2(CreateMap("Name": "category_id", "Type": DB.INTEGER, "Null": False)))
+	DB.Columns.Add(DB.CreateColumn2(CreateMap("Name": "product_code", "Length": "12", "Null": False)))
+	DB.Columns.Add(DB.CreateColumn2(CreateMap("Name": "product_name", "Null": False)))
+	DB.Columns.Add(DB.CreateColumn2(CreateMap("Name": "product_price", "Type": DB.DECIMAL, "Length": "10,2", "Null": False, "Default": "0.00")))
+	DB.Columns.Add(DB.CreateColumn2(CreateMap("Name": "product_image", "Type": DB.BLOB)))
+	'DB.Foreign("category_id", "id", "tbl_categories", "", "")
+	DB.Foreign = "category_id"
+	DB.References("tbl_categories", "id")
+	DB.Create
+	
+	DB.Columns = Array("category_id", "product_code", "product_name", "product_price")
+	DB.Insert2(Array(2, "T001", "Teddy Bear", 99.9))
+	DB.Insert2(Array(1, "H001", "Hammer", 15.75))
+	DB.Insert2(Array(2, "T002", "Optimus Prime", 1000))
+	
+	Wait For (DB.ExecuteBatchAsync) Complete (Success As Boolean)
+	If Success Then
+		LogColor("Database is created successfully!", COLOR_BLUE)
+	Else
+		LogColor("Database creation failed!", COLOR_RED)
+	End If
 	DB.Close
 End Sub

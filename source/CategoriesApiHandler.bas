@@ -5,7 +5,7 @@ Type=Class
 Version=10.3
 @EndOfDesignText@
 'Api Handler class
-'Version 5.50
+'Version 5.55
 Sub Class_Globals
 	Private DB As MiniORM
 	Private App As EndsMeet
@@ -18,10 +18,10 @@ Sub Class_Globals
 End Sub
 
 Public Sub Initialize
+	DB = Main.DB
 	App = Main.App
 	HRM.Initialize
 	Main.SetApiMessage(HRM)
-	DB.Initialize(Main.DBType, Null)
 End Sub
 
 Sub Handle (req As ServletRequest, resp As ServletResponse)
@@ -94,7 +94,7 @@ End Sub
 
 Private Sub GetCategories
 	Log($"${Request.Method}: ${Request.RequestURI}"$)
-	DB.SQL = Main.DBOpen
+	DB.SQL = DB.Open
 	DB.Table = "tbl_categories"
 	DB.Query
 	HRM.ResponseCode = 200
@@ -105,7 +105,7 @@ End Sub
 
 Private Sub GetCategoryById (id As Int)
 	Log($"${Request.Method}: ${Request.RequestURI}"$)
-	DB.SQL = Main.DBOpen
+	DB.SQL = DB.Open
 	DB.Table = "tbl_categories"
 	DB.Find(id)
 	If DB.Found Then
@@ -144,7 +144,7 @@ Private Sub CreateNewCategory
 		End If
 	Next
 	' Check conflict category name
-	DB.SQL = Main.DBOpen
+	DB.SQL = DB.Open
 	DB.Table = "tbl_categories"
 	DB.Where = Array("category_name = ?")
 	DB.Parameters = Array(data.Get("category_name"))
@@ -193,7 +193,7 @@ Private Sub UpdateCategoryById (id As Int)
 		Return
 	End If
 	' Check conflict category name
-	DB.SQL = Main.DBOpen
+	DB.SQL = DB.Open
 	DB.Table = "tbl_categories"
 	DB.Where = Array("category_name = ?", "id <> ?")
 	DB.Parameters = Array(data.Get("category_name"), id)
@@ -232,7 +232,7 @@ End Sub
 
 Private Sub DeleteCategoryById (id As Int)
 	Log($"${Request.Method}: ${Request.RequestURI}"$)
-	DB.SQL = Main.DBOpen
+	DB.SQL = DB.Open
 	DB.Table = "tbl_categories"
 	' Find row by id
 	DB.Find(id)

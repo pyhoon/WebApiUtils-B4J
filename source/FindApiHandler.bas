@@ -5,7 +5,7 @@ Type=Class
 Version=10.2
 @EndOfDesignText@
 'Api Handler class
-'Version 5.50
+'Version 5.55
 Sub Class_Globals
 	Private DB As MiniORM
 	Private App As EndsMeet
@@ -19,10 +19,10 @@ Sub Class_Globals
 End Sub
 
 Public Sub Initialize
+	DB = Main.DB
 	App = Main.App
 	HRM.Initialize
 	Main.SetApiMessage(HRM)
-	DB.Initialize(Main.DBType, Null)
 End Sub
 
 Sub Handle (req As ServletRequest, resp As ServletResponse)
@@ -97,11 +97,11 @@ End Sub
 
 Public Sub GetAllProducts
 	Log($"${Request.Method}: ${Request.RequestURI}"$)
-	DB.SQL = Main.DBOpen
+	DB.SQL = DB.Open
 	DB.Table = "tbl_products p"
 	' Construct results with new column name alias
-	DB.Select = Array("p.id id", "p.category_id catid", "c.category_name category", "p.product_code code", "p.product_name name", "p.product_price price")
-	DB.Join = DB.CreateJoin("tbl_categories c", "p.category_id = c.id", "")
+	DB.Columns = Array("p.id id", "p.category_id catid", "c.category_name category", "p.product_code code", "p.product_name name", "p.product_price price")
+	DB.Join("tbl_categories c", "p.category_id = c.id", "")
 	DB.OrderBy = CreateMap("p.id": "")
 	DB.Query
 	HRM.ResponseCode = 200
@@ -112,11 +112,11 @@ End Sub
 
 Public Sub GetProductsByCategoryId (id As Int)
 	Log($"${Request.Method}: ${Request.RequestURI}"$)
-	DB.SQL = Main.DBOpen
+	DB.SQL = DB.Open
 	DB.Table = "tbl_products p"
 	' Construct results with new column name alias
-	DB.Select = Array("p.id id", "p.category_id catid", "c.category_name category", "p.product_code code", "p.product_name name", "p.product_price price")
-	DB.Join = DB.CreateJoin("tbl_categories c", "p.category_id = c.id", "")
+	DB.Columns = Array("p.id id", "p.category_id catid", "c.category_name category", "p.product_code code", "p.product_name name", "p.product_price price")
+	DB.Join("tbl_categories c", "p.category_id = c.id", "")
 	DB.WhereParam("c.id = ?", id)
 	DB.OrderBy = CreateMap("p.id": "")
 	DB.Query
@@ -149,11 +149,11 @@ Public Sub SearchByKeywords
 		Return
 	End If
 	Dim SearchForText As String = data.Get("keyword")
-	DB.SQL = Main.DBOpen
+	DB.SQL = DB.Open
 	DB.Table = "tbl_products p"
 	' Construct results with new column name alias
-	DB.Select = Array("p.id id", "p.category_id catid", "c.category_name category", "p.product_code code", "p.product_name AS name", "p.product_price price")
-	DB.Join = DB.CreateJoin("tbl_categories c", "p.category_id = c.id", "")
+	DB.Columns = Array("p.id id", "p.category_id catid", "c.category_name category", "p.product_code code", "p.product_name AS name", "p.product_price price")
+	DB.Join("tbl_categories c", "p.category_id = c.id", "")
 	If SearchForText <> "" Then
 		DB.Where = Array("p.product_code LIKE ? Or UPPER(p.product_name) LIKE ? Or UPPER(c.category_name) LIKE ?")
 		DB.Parameters = Array("%" & SearchForText & "%", "%" & SearchForText.ToUpperCase & "%", "%" & SearchForText.ToUpperCase & "%")

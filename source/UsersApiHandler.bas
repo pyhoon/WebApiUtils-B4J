@@ -17,10 +17,10 @@ Sub Class_Globals
 End Sub
 
 Public Sub Initialize
+	DB = Main.DB
 	App = Main.App
 	HRM.Initialize
 	Main.SetApiMessage(HRM)
-	DB.Initialize(Main.DBType, Null)
 End Sub
 
 Sub Handle (req As ServletRequest, resp As ServletResponse)
@@ -93,7 +93,7 @@ End Sub
 
 Private Sub GetUsers
 	Log($"${Request.Method}: ${Request.RequestURI}"$)
-	DB.Initialize(Main.DBType, Main.DBOpen)
+	DB.SQL = DB.Open
 	DB.Table = "tbl_users"
 	DB.Query
 	If DB.Error.IsInitialized Then
@@ -109,7 +109,7 @@ End Sub
 
 Private Sub GetUserById (Id As Int)
 	Log($"${Request.Method}: ${Request.RequestURI}"$)
-	DB.Initialize(Main.DBType, Main.DBOpen)
+	DB.SQL = DB.Open
 	DB.Table = "tbl_users"
 	DB.Find(Id)
 	If DB.Found Then
@@ -149,7 +149,7 @@ Private Sub PostUser
 	Next
 	
 	' Check conflict User name
-	DB.Initialize(Main.DBType, Main.DBOpen)
+	DB.SQL = DB.Open
 	DB.Table = "tbl_users"
 	DB.Where = Array("user_name = ?")
 	DB.Parameters = Array As String(data.Get("user_name"))
@@ -204,7 +204,7 @@ Private Sub PutUserById (Id As Int)
 	End If
 	
 	' Check conflict User name
-	DB.Initialize(Main.DBType, Main.DBOpen)
+	DB.SQL = DB.Open
 	DB.Table = "tbl_users"
 	DB.Where = Array("user_name = ?", "id <> ?")
 	DB.Parameters = Array As String(data.Get("user_name"), Id)
@@ -243,7 +243,7 @@ End Sub
 
 Private Sub DeleteUserById (Id As Int)
 	Log($"${Request.Method}: ${Request.RequestURI}"$)
-	DB.Initialize(Main.DBType, Main.DBOpen)
+	DB.SQL = DB.Open
 	DB.Table = "tbl_users"
 	DB.Find(Id)
 	If DB.Found = False Then
