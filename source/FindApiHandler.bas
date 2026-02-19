@@ -104,10 +104,15 @@ Public Sub GetAllProducts
 	DB.Join("tbl_categories c", "p.category_id = c.id", "")
 	DB.OrderBy = CreateMap("p.id": "")
 	DB.Query
-	HRM.ResponseCode = 200
-	HRM.ResponseData = DB.Results2
-	DB.Close
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
+	Else
+		HRM.ResponseCode = 200
+		HRM.ResponseData = DB.Results2
+	End If
 	ReturnApiResponse
+	DB.Close
 End Sub
 
 Public Sub GetProductsByCategoryId (id As Int)
@@ -120,10 +125,15 @@ Public Sub GetProductsByCategoryId (id As Int)
 	DB.WhereParam("c.id = ?", id)
 	DB.OrderBy = CreateMap("p.id": "")
 	DB.Query
-	HRM.ResponseCode = 200
-	HRM.ResponseData = DB.Results2
-	DB.Close
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
+	Else
+		HRM.ResponseCode = 200
+		HRM.ResponseData = DB.Results2
+	End If
 	ReturnApiResponse
+	DB.Close
 End Sub
 
 Public Sub SearchByKeywords
@@ -160,8 +170,13 @@ Public Sub SearchByKeywords
 	End If
 	DB.OrderBy = CreateMap("p.id": "")
 	DB.Query
-	HRM.ResponseCode = 200
-	HRM.ResponseData = DB.Results2
-	DB.Close
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
+	Else
+		HRM.ResponseCode = 200
+		HRM.ResponseData = DB.Results2
+	End If
 	ReturnApiResponse
+	DB.Close
 End Sub

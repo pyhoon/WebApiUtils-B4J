@@ -19,7 +19,7 @@ End Sub
 
 Public Sub Initialize
 	App = Main.App
-	Api = App.api
+	Api = Main.Api
 	AllMethods.Initialize
 	AllGroups.Initialize
 	Handlers.Initialize

@@ -97,8 +97,13 @@ Private Sub GetCategories
 	DB.SQL = DB.Open
 	DB.Table = "tbl_categories"
 	DB.Query
-	HRM.ResponseCode = 200
-	HRM.ResponseData = DB.Results2
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
+	Else
+		HRM.ResponseCode = 200
+		HRM.ResponseData = DB.Results2
+	End If
 	ReturnApiResponse
 	DB.Close
 End Sub
@@ -108,12 +113,17 @@ Private Sub GetCategoryById (id As Int)
 	DB.SQL = DB.Open
 	DB.Table = "tbl_categories"
 	DB.Find(id)
-	If DB.Found Then
-		HRM.ResponseCode = 200
-		HRM.ResponseObject = DB.First2
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
 	Else
-		HRM.ResponseCode = 404
-		HRM.ResponseError = "Category not found"
+		If DB.Found Then
+			HRM.ResponseCode = 200
+			HRM.ResponseObject = DB.First2
+		Else
+			HRM.ResponseCode = 404
+			HRM.ResponseError = "Category not found"
+		End If
 	End If
 	ReturnApiResponse
 	DB.Close
@@ -134,7 +144,7 @@ Private Sub CreateNewCategory
 		Dim data As Map = WebApiUtils.ParseJSON(str)	' JSON payload
 	End If
 	' Check whether required keys are provided
-	Dim RequiredKeys As List = Array As String("category_name") 
+	Dim RequiredKeys As List = Array As String("category_name")
 	For Each requiredkey As String In RequiredKeys
 		If data.ContainsKey(requiredkey) = False Then
 			HRM.ResponseCode = 400
@@ -149,6 +159,13 @@ Private Sub CreateNewCategory
 	DB.Where = Array("category_name = ?")
 	DB.Parameters = Array(data.Get("category_name"))
 	DB.Query
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
+		ReturnApiResponse
+		DB.Close
+		Return
+	End If
 	If DB.Found Then
 		HRM.ResponseCode = 409
 		HRM.ResponseError = "Category already exist"
@@ -163,10 +180,15 @@ Private Sub CreateNewCategory
 	DB.Parameters = Array(data.Get("category_name"), _
 	data.GetDefault("created_date", WebApiUtils.CurrentDateTime))
 	DB.Save
-	' Retrieve new row
-	HRM.ResponseCode = 201
-	HRM.ResponseObject = DB.First2
-	HRM.ResponseMessage = "Category created successfully"
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
+	Else
+		' Retrieve new row
+		HRM.ResponseCode = 201
+		HRM.ResponseObject = DB.First2
+		HRM.ResponseMessage = "Category created successfully"
+	End If
 	ReturnApiResponse
 	DB.Close
 End Sub
@@ -198,6 +220,13 @@ Private Sub UpdateCategoryById (id As Int)
 	DB.Where = Array("category_name = ?", "id <> ?")
 	DB.Parameters = Array(data.Get("category_name"), id)
 	DB.Query
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
+		ReturnApiResponse
+		DB.Close
+		Return
+	End If
 	If DB.Found Then
 		HRM.ResponseCode = 409
 		HRM.ResponseError = "Category already exist"
@@ -207,6 +236,13 @@ Private Sub UpdateCategoryById (id As Int)
 	End If
 	' Find row by id
 	DB.Find(id)
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
+		ReturnApiResponse
+		DB.Close
+		Return
+	End If
 	If DB.Found = False Then
 		HRM.ResponseCode = 404
 		HRM.ResponseError = "Category not found"
@@ -222,10 +258,15 @@ Private Sub UpdateCategoryById (id As Int)
 	data.GetDefault("created_date", WebApiUtils.CurrentDateTime))
 	DB.Id = id
 	DB.Save
-	' Return updated row
-	HRM.ResponseCode = 200
-	HRM.ResponseMessage = "Category updated successfully"
-	HRM.ResponseObject = DB.First2
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
+	Else
+		' Return updated row
+		HRM.ResponseCode = 200
+		HRM.ResponseMessage = "Category updated successfully"
+		HRM.ResponseObject = DB.First2
+	End If
 	ReturnApiResponse
 	DB.Close
 End Sub
@@ -236,6 +277,13 @@ Private Sub DeleteCategoryById (id As Int)
 	DB.Table = "tbl_categories"
 	' Find row by id
 	DB.Find(id)
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
+		ReturnApiResponse
+		DB.Close
+		Return
+	End If
 	If DB.Found = False Then
 		HRM.ResponseCode = 404
 		HRM.ResponseError = "Category not found"
@@ -247,8 +295,13 @@ Private Sub DeleteCategoryById (id As Int)
 	DB.Reset
 	DB.Id = id
 	DB.Delete
-	HRM.ResponseCode = 200
-	HRM.ResponseMessage = "Category deleted successfully"
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
+	Else
+		HRM.ResponseCode = 200
+		HRM.ResponseMessage = "Category deleted successfully"
+	End If
 	ReturnApiResponse
 	DB.Close
 End Sub

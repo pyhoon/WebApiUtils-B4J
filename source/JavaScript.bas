@@ -34,7 +34,7 @@ Public Sub CreateJSFiles
 	#End If
 	End If
 	If skip = False Then
-		Api = Main.App.api
+		Api = Main.Api
 		Verbose = Api.VerboseMode
 		ContentType = Api.ContentType
 		GenerateJSFileForHelp(DirName, "help.js")

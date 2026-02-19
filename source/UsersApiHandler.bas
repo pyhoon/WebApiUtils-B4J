@@ -112,12 +112,17 @@ Private Sub GetUserById (Id As Int)
 	DB.SQL = DB.Open
 	DB.Table = "tbl_users"
 	DB.Find(Id)
-	If DB.Found Then
-		HRM.ResponseCode = 200
-		HRM.ResponseObject = DB.First2
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
 	Else
-		HRM.ResponseCode = 404
-		HRM.ResponseError = "User not found"
+		If DB.Found Then
+			HRM.ResponseCode = 200
+			HRM.ResponseObject = DB.First2
+		Else
+			HRM.ResponseCode = 404
+			HRM.ResponseError = "User not found"
+		End If
 	End If
 	ReturnApiResponse
 	DB.Close
@@ -154,12 +159,20 @@ Private Sub PostUser
 	DB.Where = Array("user_name = ?")
 	DB.Parameters = Array As String(data.Get("user_name"))
 	DB.Query
-	If DB.Found Then
-		HRM.ResponseCode = 409
-		HRM.ResponseError = "User already exist"
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
 		ReturnApiResponse
 		DB.Close
 		Return
+	Else
+		If DB.Found Then
+			HRM.ResponseCode = 409
+			HRM.ResponseError = "User already exist"
+			ReturnApiResponse
+			DB.Close
+			Return
+		End If
 	End If
 	
 	' Insert new row
@@ -209,12 +222,20 @@ Private Sub PutUserById (Id As Int)
 	DB.Where = Array("user_name = ?", "id <> ?")
 	DB.Parameters = Array As String(data.Get("user_name"), Id)
 	DB.Query
-	If DB.Found Then
-		HRM.ResponseCode = 409
-		HRM.ResponseError = "User already exist"
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
 		ReturnApiResponse
 		DB.Close
 		Return
+	Else
+		If DB.Found Then
+			HRM.ResponseCode = 409
+			HRM.ResponseError = "User already exist"
+			ReturnApiResponse
+			DB.Close
+			Return
+		End If
 	End If
 	
 	DB.Find(Id)
@@ -233,10 +254,14 @@ Private Sub PutUserById (Id As Int)
 	data.GetDefault("created_date", WebApiUtils.CurrentDateTime))
 	DB.Id = Id
 	DB.Save
-
-	HRM.ResponseCode = 200
-	HRM.ResponseMessage = "User updated successfully"
-	HRM.ResponseObject = DB.First2
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
+	Else
+		HRM.ResponseCode = 200
+		HRM.ResponseMessage = "User updated successfully"
+		HRM.ResponseObject = DB.First2
+	End If
 	ReturnApiResponse
 	DB.Close
 End Sub
@@ -246,19 +271,32 @@ Private Sub DeleteUserById (Id As Int)
 	DB.SQL = DB.Open
 	DB.Table = "tbl_users"
 	DB.Find(Id)
-	If DB.Found = False Then
-		HRM.ResponseCode = 404
-		HRM.ResponseError = "User not found"
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
 		ReturnApiResponse
 		DB.Close
 		Return
+	Else
+		If DB.Found = False Then
+			HRM.ResponseCode = 404
+			HRM.ResponseError = "User not found"
+			ReturnApiResponse
+			DB.Close
+			Return
+		End If
 	End If
 	
 	DB.Reset
 	DB.Id = Id
 	DB.Delete
-	HRM.ResponseCode = 200
-	HRM.ResponseMessage = "User deleted successfully"
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
+	Else
+		HRM.ResponseCode = 200
+		HRM.ResponseMessage = "User deleted successfully"
+	End If
 	ReturnApiResponse
 	DB.Close
 End Sub
