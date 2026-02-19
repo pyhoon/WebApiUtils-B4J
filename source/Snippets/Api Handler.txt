@@ -1,8 +1,8 @@
 Public Sub Initialize
+	DB = Main.DB
 	App = Main.App
 	HRM.Initialize
 	Main.SetApiMessage(HRM)
-	DB.Initialize(Main.DBType, Null)
 End Sub
 $end$
 Sub Handle (req As ServletRequest, resp As ServletResponse)
@@ -74,48 +74,56 @@ Private Sub ReturnMethodNotAllow
 End Sub
 
 Private Sub Get$EndPoints$
-	DB.Initialize(Main.DBType, Main.DBOpen)
+	Log($"${Request.Method}: ${Request.RequestURI}"$)
+	DB.SQL = DB.Open
 	DB.Table = "$TableName$"
 	DB.Query
-	HRM.ResponseCode = 200
-	HRM.ResponseData = DB.Results
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
+	Else
+		HRM.ResponseCode = 200
+		HRM.ResponseData = DB.Results2
+	End If
 	ReturnApiResponse
 	DB.Close
 End Sub
 
 Private Sub Get$EndPoint$ById (Id As Int)
-	DB.Initialize(Main.DBType, Main.DBOpen)
+	Log($"${Request.Method}: ${Request.RequestURI}"$)
+	DB.SQL = DB.Open
 	DB.Table = "$TableName$"
 	DB.Find(Id)
-	If DB.Found Then
-		HRM.ResponseCode = 200
-		HRM.ResponseObject = DB.First
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
 	Else
-		HRM.ResponseCode = 404
-		HRM.ResponseError = "$EndPoint$ not found"
+		If DB.Found Then
+			HRM.ResponseCode = 200
+			HRM.ResponseObject = DB.First2
+		Else
+			HRM.ResponseCode = 404
+			HRM.ResponseError = "$EndPoint$ not found"
+		End If
 	End If
 	ReturnApiResponse
 	DB.Close
 End Sub
 
 Private Sub Post$EndPoint$
-	Dim data As Map
-	Dim payload As String
-	If HRM.ContentType = WebApiUtils.MIME_TYPE_XML Then
-		payload = "xml"
-		data = WebApiUtils.RequestDataXml(Request)
-		data = data.Get("root")
-	Else
-		payload = "json"
-		data = WebApiUtils.RequestDataJson(Request)
-	End If
-	If Not(data.IsInitialized) Then
-		HRM.ResponseCode = 400
-		HRM.ResponseError = $"Invalid ${payload} object"$
+	Log($"${Request.Method}: ${Request.RequestURI}"$)
+	Dim str As String = WebApiUtils.RequestDataText(Request)
+	If WebApiUtils.ValidateContent(str, HRM.PayloadType) = False Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = $"Invalid ${HRM.PayloadType} payload"$
 		ReturnApiResponse
 		Return
 	End If
-
+	If HRM.PayloadType = WebApiUtils.MIME_TYPE_XML Then
+		Dim data As Map = WebApiUtils.ParseXML(str)	' XML payload
+	Else
+		Dim data As Map = WebApiUtils.ParseJSON(str)	' JSON payload
+	End If
 	' Check whether required keys are provided
 	Dim RequiredKeys As List = Array As String("key1", "key2", "key3")
 	For Each requiredkey As String In RequiredKeys
@@ -126,67 +134,78 @@ Private Sub Post$EndPoint$
 			Return
 		End If
 	Next
-	
 	' Check conflict $endpoint$ name
-	DB.Initialize(Main.DBType, Main.DBOpen)
+	DB.SQL = DB.Open
 	DB.Table = "$TableName$"
-	DB.Where = Array("$endpoint$_name = ?")
-	DB.Parameters = Array As String(data.Get("$endpoint$_name"))
+	DB.Conditions = Array("$endpoint$_name = ?")
+	DB.Parameters = Array(data.Get("$endpoint$_name"))
 	DB.Query
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
+		ReturnApiResponse
+		DB.Close
+		Return
+	End If
 	If DB.Found Then
 		HRM.ResponseCode = 409
 		HRM.ResponseError = "$EndPoint$ already exist"
 		ReturnApiResponse
 		DB.Close
 		Return
-	End If
-	
+	End If	
 	' Insert new row
 	DB.Reset
 	DB.Columns = Array("$endpoint$_name", "created_date")
 	DB.Parameters = Array(data.Get("$endpoint$_name"), data.GetDefault("created_date", WebApiUtils.CurrentDateTime))
 	DB.Save
-	
-	' Retrieve new row
-	HRM.ResponseCode = 201
-	HRM.ResponseObject = DB.First
-	HRM.ResponseMessage = "$EndPoint$ created successfully"
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
+	Else
+		' Retrieve new row
+		HRM.ResponseCode = 201
+		HRM.ResponseObject = DB.First
+		HRM.ResponseMessage = "$EndPoint$ created successfully"
+	End If	
 	ReturnApiResponse
 	DB.Close
 End Sub
 
 Private Sub Put$EndPoint$ById (Id As Int)
-	Dim payload As String
-	Dim data As Map
-	If HRM.ContentType = WebApiUtils.MIME_TYPE_XML Then
-		payload = "xml"
-		data = WebApiUtils.RequestDataXml(Request)
-		data = data.Get("root")
-	Else
-		payload = "json"
-		data = WebApiUtils.RequestDataJson(Request)
-	End If
-	If Not(data.IsInitialized) Then
-		HRM.ResponseCode = 400
-		HRM.ResponseError = $"Invalid ${payload} object"$
+	Log($"${Request.Method}: ${Request.RequestURI}"$)
+	Dim str As String = WebApiUtils.RequestDataText(Request)
+	If WebApiUtils.ValidateContent(str, HRM.PayloadType) = False Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = $"Invalid ${HRM.PayloadType} payload"$
 		ReturnApiResponse
 		Return
 	End If
-	
+	If HRM.PayloadType = WebApiUtils.MIME_TYPE_XML Then
+		Dim data As Map = WebApiUtils.ParseXML(str)	' XML payload
+	Else
+		Dim data As Map = WebApiUtils.ParseJSON(str)	' JSON payload
+	End If	
 	' Check whether required keys are provided
 	If data.ContainsKey("$endpoint$_name") = False Then
 		HRM.ResponseCode = 400
 		HRM.ResponseError = "Key '$endpoint$_name' not found"
 		ReturnApiResponse
 		Return
-	End If
-	
+	End If	
 	' Check conflict $endpoint$ name
-	DB.Initialize(Main.DBType, Main.DBOpen)
+	DB.SQL = DB.Open
 	DB.Table = "$TableName$"
-	DB.Where = Array("$endpoint$_name = ?", "id <> ?")
-	DB.Parameters = Array As String(data.Get("$endpoint$_name"), Id)
+	DB.Conditions = Array("$endpoint$_name = ?", "id <> ?")
+	DB.Parameters = Array(data.Get("$endpoint$_name"), Id)
 	DB.Query
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
+		ReturnApiResponse
+		DB.Close
+		Return
+	End If
 	If DB.Found Then
 		HRM.ResponseCode = 409
 		HRM.ResponseError = "$EndPoint$ already exist"
@@ -194,8 +213,15 @@ Private Sub Put$EndPoint$ById (Id As Int)
 		DB.Close
 		Return
 	End If
-	
+	' Find row by id
 	DB.Find(Id)
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
+		ReturnApiResponse
+		DB.Close
+		Return
+	End If
 	If DB.Found = False Then
 		HRM.ResponseCode = 404
 		HRM.ResponseError = "$EndPoint$ not found"
@@ -203,7 +229,7 @@ Private Sub Put$EndPoint$ById (Id As Int)
 		DB.Close
 		Return
 	End If
-
+	' Update row by id
 	DB.Reset
 	DB.Columns = Array("$endpoint$_name", _
 	"modified_date")
@@ -211,18 +237,32 @@ Private Sub Put$EndPoint$ById (Id As Int)
 	data.GetDefault("created_date", WebApiUtils.CurrentDateTime))
 	DB.Id = Id
 	DB.Save
-
-	HRM.ResponseCode = 200
-	HRM.ResponseMessage = "$EndPoint$ updated successfully"
-	HRM.ResponseObject = DB.First
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
+	Else
+		' Return updated row
+		HRM.ResponseCode = 200
+		HRM.ResponseMessage = "$EndPoint$ updated successfully"
+		HRM.ResponseObject = DB.First2
+	End If
 	ReturnApiResponse
 	DB.Close
 End Sub
 
 Private Sub Delete$EndPoint$ById (Id As Int)
-	DB.Initialize(Main.DBType, Main.DBOpen)
+	Log($"${Request.Method}: ${Request.RequestURI}"$)
+	DB.SQL = DB.Open
 	DB.Table = "$TableName$"
+	' Find row by id
 	DB.Find(Id)
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
+		ReturnApiResponse
+		DB.Close
+		Return
+	End If
 	If DB.Found = False Then
 		HRM.ResponseCode = 404
 		HRM.ResponseError = "$EndPoint$ not found"
@@ -230,12 +270,17 @@ Private Sub Delete$EndPoint$ById (Id As Int)
 		DB.Close
 		Return
 	End If
-	
+	' Delete row
 	DB.Reset
 	DB.Id = Id
 	DB.Delete
-	HRM.ResponseCode = 200
-	HRM.ResponseMessage = "$EndPoint$ deleted successfully"
+	If DB.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = DB.Error.Message
+	Else
+		HRM.ResponseCode = 200
+		HRM.ResponseMessage = "$EndPoint$ deleted successfully"
+	End If
 	ReturnApiResponse
 	DB.Close
 End Sub

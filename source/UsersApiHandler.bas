@@ -156,7 +156,7 @@ Private Sub PostUser
 	' Check conflict User name
 	DB.SQL = DB.Open
 	DB.Table = "tbl_users"
-	DB.Where = Array("user_name = ?")
+	DB.Conditions = Array("user_name = ?")
 	DB.Parameters = Array As String(data.Get("user_name"))
 	DB.Query
 	If DB.Error.IsInitialized Then
@@ -219,7 +219,7 @@ Private Sub PutUserById (Id As Int)
 	' Check conflict User name
 	DB.SQL = DB.Open
 	DB.Table = "tbl_users"
-	DB.Where = Array("user_name = ?", "id <> ?")
+	DB.Conditions = Array("user_name = ?", "id <> ?")
 	DB.Parameters = Array As String(data.Get("user_name"), Id)
 	DB.Query
 	If DB.Error.IsInitialized Then
