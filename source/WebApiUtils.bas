@@ -5,7 +5,7 @@ Type=StaticCode
 Version=10.3
 @EndOfDesignText@
 ' Web API Utility
-' Version 5.60
+' Version 5.70
 Sub Process_Globals
 	Public Const MIME_TYPE_HTML As String = "text/html"
 	Public Const MIME_TYPE_JSON As String = "application/json"
@@ -565,13 +565,21 @@ Public Sub ProcessOrderedXmlFromList (Tag As String, L As List, Indent As String
 	Dim SB As StringBuilder
 	SB.Initialize
 	Dim First As Boolean = True
+	If First Then
+		First = False
+	Else
+		SB.Append(CRLF)
+		SB.Append(Indent)
+	End If
 	For Each value As Object In L
 		Dim child As String
 		Select True
 			Case value Is Map
-				child = CRLF & Indent & Indentation & ProcessOrderedXmlFromMap(Tag, value, Indent & Indentation, Indentation) & CRLF & Indent
+				'child = CRLF & Indent & Indentation & ProcessOrderedXmlFromMap(Tag, value, Indent & Indentation, Indentation) & CRLF & Indent
+				child = Indent & Indentation & ProcessOrderedXmlFromMap(Tag, value, Indent & Indentation, Indentation) & CRLF & Indent
 			Case value Is List
-				child = CRLF & Indentation & ProcessOrderedXmlFromList(Tag, value, Indent & Indentation, Indentation) & CRLF '& Indent
+				'child = CRLF & Indentation & ProcessOrderedXmlFromList(Tag, value, Indent & Indentation, Indentation) & CRLF '& Indent
+				child = Indent & Indentation & ProcessOrderedXmlFromList(Tag, value, Indent & Indentation, Indentation) & CRLF
 			Case value Is String
 				child = EscapeXml(value)
 			Case Else
@@ -581,12 +589,7 @@ Public Sub ProcessOrderedXmlFromList (Tag As String, L As List, Indent As String
 					child = value
 				End If
 		End Select
-		If First Then
-			First = False
-		Else
-			SB.Append(CRLF)
-		End If
-		SB.Append(Indent).Append("<").Append(Tag).Append(">")
+		SB.Append("<").Append(Tag).Append(">")
 		SB.Append(child)
 		SB.Append("</").Append(Tag).Append(">")
 	Next
@@ -601,13 +604,23 @@ Public Sub ProcessOrderedXmlFromMap (Tag As String, M As Map, Indent As String, 
 		Dim First As Boolean = True
 		For Each key As String In order
 			If key = "__order" Then Continue
+			If First Then
+				First = False
+			Else
+				SB.Append(CRLF)
+				SB.Append(Indent)
+			End If
 			Dim value As Object = M.Get(key)
 			Dim child As String
 			Select True
 				Case value Is Map
-					child = CRLF & Indent & Indentation & ProcessOrderedXmlFromMap(Tag, value, Indent & Indentation, Indentation) & CRLF & Indent
+					'child = CRLF & Indent & Indentation & ProcessOrderedXmlFromMap(Tag, value, Indent & Indentation, Indentation) & CRLF & Indent
+					If First = False Then child = CRLF & Indent & Indentation
+					child = child & ProcessOrderedXmlFromMap(Tag, value, Indent & Indentation, Indentation) & CRLF & Indent
 				Case value Is List
-					child = CRLF & ProcessOrderedXmlFromList(Tag, value, Indent & Indentation, Indentation) & CRLF & Indent
+					'child = CRLF & ProcessOrderedXmlFromList(Tag, value, Indent & Indentation, Indentation) & CRLF & Indent
+					If First = False Then child = CRLF & Indent & Indentation
+					child = ProcessOrderedXmlFromList(Tag, value, Indent & Indentation, Indentation) & CRLF & Indent
 				Case value Is String
 					child = EscapeXml(value)
 				Case Else
@@ -617,12 +630,6 @@ Public Sub ProcessOrderedXmlFromMap (Tag As String, M As Map, Indent As String, 
 						child = value
 					End If
 			End Select
-			If First Then
-				First = False
-			Else
-				SB.Append(CRLF)
-			End If
-			SB.Append(Indent)
 			SB.Append("<").Append(key).Append(">")
 			SB.Append(child)
 			SB.Append("</").Append(key).Append(">")
@@ -630,20 +637,30 @@ Public Sub ProcessOrderedXmlFromMap (Tag As String, M As Map, Indent As String, 
 	Else
 		For Each key As String In M.Keys
 			If key = "__order" Then Continue
+			If First Then
+				First = False
+			Else
+				SB.Append(CRLF)
+				SB.Append(Indent)
+			End If
 			Dim value As Object = M.Get(key)
 			Dim child As String
 			Select True
 				Case value Is Map
 					Dim M2 As Map = value
 					If M2.ContainsKey("__order") Then
-						child = CRLF & Indent & Indentation & ProcessOrderedXmlFromMap(Tag, M2, Indent & Indentation, Indentation) & CRLF & Indent & Indentation
+						'child = ProcessOrderedXmlFromMap(Tag, M2, Indent & Indentation, Indentation) '& CRLF & Indent & Indentation
+						If First = False Then child = CRLF & Indent & Indentation
+						child = child & ProcessOrderedXmlFromMap(Tag, M2, Indent & Indentation, Indentation) & CRLF & Indent & Indentation
 					Else
 						Dim m2x As Map2Xml
 						m2x.Initialize
 						child = m2x.MapToXml(M2)
 					End If
 				Case value Is List
-					child = CRLF & Indent & Indentation & ProcessOrderedXmlFromList(key, value, Indent & Indentation, Indentation) & CRLF & Indent & Indentation
+					'child = CRLF & Indent & Indentation & ProcessOrderedXmlFromList(key, value, Indent & Indentation, Indentation) '& CRLF & Indent & Indentation
+					If First = False Then child = CRLF & Indent & Indentation
+					child = child & ProcessOrderedXmlFromList(key, value, Indent & Indentation, Indentation) & CRLF & Indent & Indentation
 				Case value Is String
 					child = EscapeXml(value)
 				Case Else
@@ -653,7 +670,7 @@ Public Sub ProcessOrderedXmlFromMap (Tag As String, M As Map, Indent As String, 
 						child = value
 					End If
 			End Select
-			SB.Append(Indent).Append("<").Append(key).Append(">")
+			SB.Append("<").Append(key).Append(">")
 			SB.Append(child)
 			SB.Append("</").Append(key).Append(">")
 		Next
