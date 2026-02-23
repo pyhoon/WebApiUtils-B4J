@@ -564,22 +564,23 @@ End Sub
 Public Sub ProcessOrderedXmlFromList (Tag As String, L As List, Indent As String, Indentation As String) As String
 	Dim SB As StringBuilder
 	SB.Initialize
+	SB.Append(Indent)
 	Dim First As Boolean = True
-	If First Then
-		First = False
-	Else
-		SB.Append(CRLF)
-		SB.Append(Indent)
-	End If
 	For Each value As Object In L
+		If First Then
+			First = False
+		Else
+			SB.Append(CRLF)
+			SB.Append(Indent)
+		End If
 		Dim child As String
 		Select True
 			Case value Is Map
-				'child = CRLF & Indent & Indentation & ProcessOrderedXmlFromMap(Tag, value, Indent & Indentation, Indentation) & CRLF & Indent
-				child = Indent & Indentation & ProcessOrderedXmlFromMap(Tag, value, Indent & Indentation, Indentation) & CRLF & Indent
+				child = CRLF & Indent & Indentation & ProcessOrderedXmlFromMap(Tag, value, Indent & Indentation, Indentation) & CRLF & Indent
+				'child = Indent & Indentation & ProcessOrderedXmlFromMap(Tag, value, Indent & Indentation, Indentation) & CRLF & Indent
 			Case value Is List
-				'child = CRLF & Indentation & ProcessOrderedXmlFromList(Tag, value, Indent & Indentation, Indentation) & CRLF '& Indent
-				child = Indent & Indentation & ProcessOrderedXmlFromList(Tag, value, Indent & Indentation, Indentation) & CRLF
+				child = CRLF & Indentation & ProcessOrderedXmlFromList(Tag, value, Indent & Indentation, Indentation) & CRLF '& Indent
+				'child = Indent & Indentation & ProcessOrderedXmlFromList(Tag, value, Indent & Indentation, Indentation) & CRLF
 			Case value Is String
 				child = EscapeXml(value)
 			Case Else
