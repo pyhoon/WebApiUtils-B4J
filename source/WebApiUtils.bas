@@ -5,7 +5,7 @@ Type=StaticCode
 Version=10.3
 @EndOfDesignText@
 ' Web API Utility
-' Version 5.70
+' Version 5.76
 Sub Process_Globals
 	Public Const MIME_TYPE_HTML As String = "text/html"
 	Public Const MIME_TYPE_JSON As String = "application/json"
@@ -963,9 +963,9 @@ End Sub
 Public Sub ValidateContent (Text As String, Format As String) As Boolean
 	Text = Text.Trim
 	Select Format.ToLowerCase
-		Case "xml"
+		Case MIME_TYPE_XML
 			Return Text.StartsWith("<")
-		Case "json"
+		Case MIME_TYPE_JSON
 			Return Text.StartsWith("{") Or Text.StartsWith("[")
 		Case Else
 			Return True
