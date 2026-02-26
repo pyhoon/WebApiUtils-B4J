@@ -5,7 +5,7 @@ Type=StaticCode
 Version=10.3
 @EndOfDesignText@
 'JavaScript Code Module
-'Version 5.80
+'Version 6.00
 Sub Process_Globals
 	Private Api	As ApiSettings
 	Private XmlRoot As String = "root"

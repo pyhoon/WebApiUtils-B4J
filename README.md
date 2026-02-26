@@ -1,4 +1,4 @@
 # WebApiUtils
-Version: 5.80
+Version: 6.00
 
-For use in Pakai framework
+For use in Pakai Server framework

@@ -31,6 +31,6 @@ ModuleClosedNodes6=
 ModuleClosedNodes7=
 ModuleClosedNodes8=
 ModuleClosedNodes9=
-NavigationStack=WebApiUtils,ParseJSON,262,0,JavaScript,script13,527,0,CategoriesApiHandler,CreateNewCategory,137,0,WebApiUtils,ValidateContent,957,3,Main,AppStart,49,0,WebApiUtils,ProcessOrderedXmlFromList,588,5,Main,Process_Globals,35,0,Main,CreateDatabase,227,0,CategoriesWebHandler,Class_Globals,9,0,WebApiUtils,Process_Globals,5,0
+NavigationStack=Main,AppStart,36,1,WebApiUtils,ReturnHttpResponse,736,1
 SelectedBuild=0
 VisibleModules=10

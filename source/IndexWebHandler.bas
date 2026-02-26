@@ -5,7 +5,7 @@ Type=Class
 Version=10.3
 @EndOfDesignText@
 'Web Handler class
-'Version 5.80
+'Version 6.00
 Sub Class_Globals
 	Private App As EndsMeet
 	Private Request As ServletRequest
