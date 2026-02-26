@@ -19,12 +19,15 @@ FileGroup6=Default Group
 FileGroup7=Default Group
 FileGroup8=Default Group
 Group=App
-Library1=jcore
-Library2=json
-Library3=jstringutils
-Library4=miniormutils
-Library5=xml2map
-Library6=endsmeet
+Library1=endsmeet
+Library2=jcore
+Library3=json
+Library4=jstringutils
+Library5=minicss
+Library6=minihtml
+Library7=miniormutils
+Library8=xml2map
+Library9=minijs
 Module1=CategoriesApiHandler
 Module10=WebApiUtils
 Module2=CategoriesWebHandler
@@ -36,13 +39,13 @@ Module7=JavaScript
 Module8=ProductsApiHandler
 Module9=UsersApiHandler
 NumberOfFiles=8
-NumberOfLibraries=6
+NumberOfLibraries=9
 NumberOfModules=10
-Version=10.3
+Version=10.45
 @EndOfDesignText@
 #Region Project Attributes
 ' Product: WebApiUtils
-' Version: 5.80
+' Version: 6.00
 ' License: MIT License
 ' Developer: Poon Yip Hoon (Aeric)
 #CommandLineArgs:
@@ -56,8 +59,8 @@ Version=10.3
 #AdditionalJar: mariadb-java-client-3.5.6
 #End If
 #Region Macros
-#Macro: Title, Update Manifest, ide://run?file=%JAVABIN%\java.exe&Args=-jar&Args=%ADDITIONAL%\..\B4X\manifest-writer.jar&Args=%PROJECT%&Args=%PROJECT%&Args=Version&Args=5.80
-#Macro: Title, Create B4xLib, ide://run?file=%JAVABIN%\jar.exe&WorkingDirectory=..&Args=-cMf&Args=..\release\%PROJECT_NAME%.b4xlib&Args=Snippets&Args=%PROJECT_NAME%.bas&Args=manifest.txt&Args=LICENSE
+#Macro: Title, Update Manifest, ide://run?file=%JAVABIN%\java.exe&Args=-jar&Args=%ADDITIONAL%\..\B4X\manifest-writer.jar&Args=%PROJECT%&Args=%PROJECT%&Args=Version&Args=6.00
+#Macro: Title, Create B4xLib, ide://run?file=%JAVABIN%\jar.exe&WorkingDirectory=..&Args=-cMf&Args=..\release\%PROJECT_NAME%.b4xlib&Args=Snippets&Args=%PROJECT_NAME%.bas&Args=HelpHandler.b4x_excluded&Args=manifest.txt&Args=LICENSE
 #Macro: Title, Release folder, ide://run?file=%WINDIR%\SysWOW64\explorer.exe&Args=%PROJECT%\..\release
 #Macro: Title, Copy to AddLibs, ide://run?file=%COMSPEC%&Args=/c&Args=copy&Args=%PROJECT%\..\release\*.b4xlib&Args=%ADDITIONAL%
 '#Macro: Title, GetLibraries, ide://run?file=%JAVABIN%\java.exe&args=-jar&args=%ADDITIONAL%\..\B4X\libget.jar&args=%PROJECT%&args=false
@@ -71,7 +74,7 @@ Sub Process_Globals
 	Public Api 					As ApiSettings
 	Public Const COLOR_RED 		As Int = -65536
 	Public Const COLOR_BLUE 	As Int = -16776961
-	Public Const VERSION 		As String = "5.80"
+	Public Const VERSION 		As String = "6.00"
 End Sub
 
 ' <link>Open in browser|http://127.0.0.1:8080</link>
@@ -89,7 +92,7 @@ Sub AppStart (Args() As String)
 	Api = App.api
 	'Api.OrderedKeys = False
 	'Api.PayloadType = WebApiUtils.MIME_TYPE_JSON
-	Api.ContentType = WebApiUtils.MIME_TYPE_XML
+	'Api.ContentType = WebApiUtils.MIME_TYPE_XML
 	#If Debug
 	Api.EnableHelp = True
 	#End If

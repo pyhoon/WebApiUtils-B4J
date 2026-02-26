@@ -1,10 +1,4 @@
-﻿B4J=true
-Group=Handlers
-ModulesStructureVersion=1
-Type=Class
-Version=10.3
-@EndOfDesignText@
-' Help Handler class
+﻿' Help Handler class
 ' Version 6.00
 Sub Class_Globals
 	Private Request As ServletRequest 'ignore
