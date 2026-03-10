@@ -537,7 +537,7 @@ Private Sub Create$Endpoints$Row As MiniHtml
 		Dim td1 As MiniHtml = Td.up(tr1)
 		td1.cls("align-middle").sty("text-align: right").text("%id%")
 		Dim td2 As MiniHtml = Td.up(tr1)
-		td2.cls("align-middle").text("%name%$)
+		td2.cls("align-middle").text("%name%")
 		Dim td3 As MiniHtml = Td.up(tr1)
 		td3.cls("align-middle text-center px-1 py-1")
 		

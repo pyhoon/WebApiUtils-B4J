@@ -5,7 +5,7 @@ Type=Class
 Version=10.3
 @EndOfDesignText@
 ' Help Handler class
-' Version 6.00
+' Version 6.01
 Sub Class_Globals
 	Private Request As ServletRequest 'ignore
 	Private Response As ServletResponse
@@ -314,9 +314,9 @@ Private Sub FindMethod (MethodName As String) As Int
 End Sub
 
 Private Sub RetrieveMethod (GroupName As String, MethodLine As String) As Map
-	Dim index As Int = FindMethod(ExtractMethod(MethodLine))
-	If index > -1 Then
-		Return AllMethods.Get(index)
+	Dim i As Int = FindMethod(ExtractMethod(MethodLine))
+	If i > -1 Then
+		Return AllMethods.Get(i)
 	Else
 		Return CreateMethodProperties(GroupName, MethodLine)
 	End If
@@ -326,19 +326,19 @@ End Sub
 ' Order in list is preserved
 Private Sub ReplaceMethod (Method As Map)
 	' Replacement will failed if the Method name cannot be found
-	Dim index As Int = FindMethod(Method.Get("Method"))
-	If index > -1 Then
-		AllMethods.RemoveAt(index)
-		AllMethods.InsertAt(index, Method)
+	Dim i As Int = FindMethod(Method.Get("Method"))
+	If i > -1 Then
+		AllMethods.RemoveAt(i)
+		AllMethods.InsertAt(i, Method)
 	Else
 		AllMethods.Add(Method)
 	End If
 End Sub
 
 Private Sub RemoveMethodAndReAdd (Method As Map)
-	Dim index As Int = FindMethod(Method.Get("Method"))
-	If index > -1 Then
-		AllMethods.RemoveAt(index)
+	Dim i As Int = FindMethod(Method.Get("Method"))
+	If i > -1 Then
+		AllMethods.RemoveAt(i)
 	End If
 	AllMethods.Add(Method) ' Add at the end of list
 End Sub
@@ -435,9 +435,9 @@ Private Sub ReadHandlers 'ignore
 		Dim lines As List = File.ReadList(File.DirApp.Replace("\Objects", ""), Handler & ".bas")
 		For Each line As String In lines
 			If line.StartsWith("'") Or line.StartsWith("#") Then Continue
-			Dim index As Int = line.toLowerCase.IndexOf("sub ")
-			If index > -1 Then
-				Dim MethodLine As String = line.SubString(index).Replace("Sub ", "").Trim
+			Dim i As Int = line.toLowerCase.IndexOf("sub ")
+			If i > -1 Then
+				Dim MethodLine As String = line.SubString(i).Replace("Sub ", "").Trim
 				For Each verb As String In verbs
 					If MethodLine.ToUpperCase.StartsWith(verb) Or MethodLine.ToUpperCase.Contains("#" & verb) Then
 						'RemoveComment(MethodLine)
@@ -525,8 +525,8 @@ End Sub
 Private Sub RemoveReturnType (Line As String) As String
 	' Clean up As type on the right of a sub
 	If Line.ToLowerCase.Contains(" as ") Then
-		Dim index As Int = Line.ToLowerCase.IndexOf(" as ")
-		Line = Line.SubString2(0, index)
+		Dim i As Int = Line.ToLowerCase.IndexOf(" as ")
+		Line = Line.SubString2(0, i)
 	End If
 	Return Line
 End Sub
@@ -550,9 +550,9 @@ Private Sub ExtractMethod (methodLine As String) As String
 	' Take the method name only without arguments
 	methodLine = RemoveComment(methodLine)
 	methodLine = RemoveReturnType(methodLine)
-	Dim index As Int = methodLine.IndexOf("(")
-	If index > -1 Then
-		Return methodLine.SubString2(0, index).Trim
+	Dim i As Int = methodLine.IndexOf("(")
+	If i > -1 Then
+		Return methodLine.SubString2(0, i).Trim
 	Else
 		Return methodLine.Trim
 	End If
