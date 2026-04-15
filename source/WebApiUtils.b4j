@@ -29,7 +29,8 @@ Library7=miniormutils
 Library8=xml2map
 Library9=minijs
 Module1=CategoriesApiHandler
-Module10=WebApiUtils
+Module10=UsersApiHandler
+Module11=WebApiUtils
 Module2=CategoriesWebHandler
 Module3=FindApiHandler
 Module4=HelpHandler
@@ -37,15 +38,15 @@ Module5=HttpsFilter
 Module6=IndexWebHandler
 Module7=JavaScript
 Module8=ProductsApiHandler
-Module9=UsersApiHandler
+Module9=StaffsApiHandler
 NumberOfFiles=8
 NumberOfLibraries=9
-NumberOfModules=10
-Version=10.45
+NumberOfModules=11
+Version=10.5
 @EndOfDesignText@
 #Region Project Attributes
 ' Product: WebApiUtils
-' Version: 6.01
+' Version: 6.10
 ' License: MIT License
 ' Developer: Poon Yip Hoon (Aeric)
 #CommandLineArgs:
@@ -59,7 +60,7 @@ Version=10.45
 #AdditionalJar: mariadb-java-client-3.5.6
 #End If
 #Region Macros
-#Macro: Title, Update Manifest, ide://run?file=%JAVABIN%\java.exe&Args=-jar&Args=%ADDITIONAL%\..\B4X\manifest-writer.jar&Args=%PROJECT%&Args=%PROJECT%&Args=Version&Args=6.01
+#Macro: Title, Update Manifest, ide://run?file=%JAVABIN%\java.exe&Args=-jar&Args=%ADDITIONAL%\..\B4X\manifest-writer.jar&Args=%PROJECT%&Args=%PROJECT%&Args=Version&Args=6.10
 #Macro: Title, Create B4xLib, ide://run?file=%JAVABIN%\jar.exe&WorkingDirectory=..&Args=-cMf&Args=..\release\%PROJECT_NAME%.b4xlib&Args=Snippets&Args=%PROJECT_NAME%.bas&Args=HelpHandler.b4x_excluded&Args=manifest.txt&Args=LICENSE
 #Macro: Title, Release folder, ide://run?file=%WINDIR%\SysWOW64\explorer.exe&Args=%PROJECT%\..\release
 #Macro: Title, Copy to AddLibs, ide://run?file=%COMSPEC%&Args=/c&Args=copy&Args=%PROJECT%\..\release\*.b4xlib&Args=%ADDITIONAL%
@@ -69,12 +70,12 @@ Version=10.45
 
 Sub Process_Globals
 	Public DB 					As MiniORM
-	Public MS 					As ORMSettings
+	Public MS 					As MiniORMSettings
 	Public App 					As EndsMeet
 	Public Api 					As ApiSettings
 	Public Const COLOR_RED 		As Int = -65536
 	Public Const COLOR_BLUE 	As Int = -16776961
-	Public Const VERSION 		As String = "6.01"
+	Public Const VERSION 		As String = "6.10"
 End Sub
 
 ' <link>Open in browser|http://127.0.0.1:8080</link>
@@ -233,7 +234,7 @@ Private Sub CreateDatabase
 	If UsePool(DB.DbType) Then
 		Wait For (DB.CreateDatabaseAsync) Complete (Success As Boolean)
 	Else
-		Dim Success As Boolean = DB.InitializeSQLite
+		Dim Success As Boolean = DB.CreateSQLite
 	End If
 	If Not(Success) Then
 		LogColor("Database creation failed!", COLOR_RED)
@@ -250,27 +251,27 @@ Private Sub CreateDatabase
 	DB.QueryAddToBatch = True
 	
 	DB.Table = "tbl_categories"
-	DB.Columns.Add(DB.CreateColumn2(CreateMap("Name": "category_name", "Null": False)))
+	DB.Columns.Add(CreateMap("Name": "category_name", "Null": False))
 	DB.Create
 
 	DB.Columns = Array("category_name")
-	DB.Insert2(Array("Hardwares"))
-	DB.Insert2(Array("Toys"))
+	DB.Inserts = Array("Hardwares")
+	DB.Inserts = Array("Toys")
 
 	DB.Table = "tbl_products"
-	DB.Columns.Add(DB.CreateColumn2(CreateMap("Name": "category_id", "Type": DB.INTEGER, "Null": False)))
-	DB.Columns.Add(DB.CreateColumn2(CreateMap("Name": "product_code", "Length": "12", "Null": False)))
-	DB.Columns.Add(DB.CreateColumn2(CreateMap("Name": "product_name", "Null": False)))
-	DB.Columns.Add(DB.CreateColumn2(CreateMap("Name": "product_price", "Type": DB.DECIMAL, "Length": "10,2", "Null": False, "Default": "0.00")))
-	DB.Columns.Add(DB.CreateColumn2(CreateMap("Name": "product_image", "Type": DB.BLOB)))
+	DB.Columns.Add(CreateMap("Name": "category_id", "Type": DB.INTEGER, "Null": False))
+	DB.Columns.Add(CreateMap("Name": "product_code", "Length": "12", "Null": False))
+	DB.Columns.Add(CreateMap("Name": "product_name", "Null": False))
+	DB.Columns.Add(CreateMap("Name": "product_price", "Type": DB.DECIMAL, "Length": "10,2", "Null": False, "Default": "0.00"))
+	DB.Columns.Add(CreateMap("Name": "product_image", "Type": DB.BLOB))
 	DB.Foreign = "category_id"
 	DB.References("tbl_categories", "id")
 	DB.Create
 	
 	DB.Columns = Array("category_id", "product_code", "product_name", "product_price")
-	DB.Insert2(Array(2, "T001", "Teddy Bear", 99.9))
-	DB.Insert2(Array(1, "H001", "Hammer", 15.75))
-	DB.Insert2(Array(2, "T002", "Optimus Prime", 1000))
+	DB.Inserts = Array(2, "T001", "Teddy Bear", 99.9)
+	DB.Inserts = Array(1, "H001", "Hammer", 15.75)
+	DB.Inserts = Array(2, "T002", "Optimus Prime", 1000)
 	
 	Wait For (DB.ExecuteBatchAsync) Complete (Success As Boolean)
 	If Success Then

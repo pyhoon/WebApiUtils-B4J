@@ -1,5 +1,6 @@
 	Private DB As MiniORM
 	Private App As EndsMeet
+	Private Path As String
 	Private Method As String
 	Private Request As ServletRequest
 	Private Response As ServletResponse$end$

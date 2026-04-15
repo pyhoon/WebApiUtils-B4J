@@ -6,9 +6,9 @@ $end$
 Sub Handle (req As ServletRequest, resp As ServletResponse)
 	Request = req
 	Response = resp
-	Method = Request.Method
-	Log($"${Request.Method}: ${Request.RequestURI}"$)
-	Dim path As String = req.RequestURI
+	Path = Request.RequestURI
+	Method = Request.Method.ToUpperCase
+	Log($"${Method}: ${Path}"$)
 	If path = "/$endpoints$" Then
 		RenderPage
 	Else If path = "/hx/$endpoints$/table" Then
@@ -108,6 +108,7 @@ Private Sub RenderPage
 
 		Dim page1 As MiniHtml = main1.Render
 		Dim ulist1 As MiniHtml = FindUListTag(page1)
+
 		Dim list1 As MiniHtml = Li.up(ulist1)
 		list1.cls("nav-item d-block d-lg-block")
 		Dim a1 As MiniHtml = Anchor.up(list1)
@@ -118,7 +119,8 @@ Private Sub RenderPage
 		i1.cls("bi bi-house me-2")
 		i1.attr("title", "Home")
 
-		Dim list2 As MiniHtml = Li.up(ulist1).cls("nav-item d-block d-lg-block")
+		Dim list2 As MiniHtml = Li.up(ulist1)
+		list2.cls("nav-item d-block d-lg-block")
 		Dim a2 As MiniHtml = Anchor.up(list2)
 		a2.attr("href", "/help")
 		a2.cls("nav-link float-end")
@@ -128,10 +130,12 @@ Private Sub RenderPage
 		i2.attr("title", "API")
 
 		' Sample for adding additional menu link
-		'Dim list2 As MiniHtml = Li.up(ulist1).cls("nav-item d-block d-lg-block")
-		'Dim a2 As MiniHtml = Anchor.up(list2).attr("href", "/users")
-		'a2.cls("nav-link")
-		'a2.text("Users")
+		'Dim list3 As MiniHtml = Li.up(ulist1)
+		'list3.cls("nav-item d-block d-lg-block")
+		'Dim a3 As MiniHtml = Anchor.up(list3)
+		'a3.attr("href", "/users")
+		'a3.cls("nav-link")
+		'a3.text("Users")
 	
 		Dim doc As MiniHtml
 		doc.Initialize("")
@@ -205,12 +209,13 @@ Private Sub ModalContainer As MiniHtml
 End Sub
 
 Private Sub ToastContainer As MiniHtml
-	Dim div1 As MiniHtml = Div.cls("position-fixed end-0 p-3")
+	Dim div1 As MiniHtml = Div
+	div1.cls("position-fixed end-0 p-3")
 	div1.sty("z-index: 2000")
 	div1.sty("bottom: 0%")
 	Dim toast1 As MiniHtml = Div.up(div1)
-	toast1.attr("id", "toast-container")
 	toast1.cls("toast align-items-center text-bg-success border-0")
+	toast1.attr("id", "toast-container")
 	toast1.attr("role", "alert")
 	Dim div2 As MiniHtml = Div.up(toast1)
 	div2.cls("d-flex")
@@ -219,8 +224,8 @@ Private Sub ToastContainer As MiniHtml
 	div3.attr("id", "toast-body")
 	div3.text("Operation successful!")
 	Dim button1 As MiniHtml = Button.up(div2)
-	button1.attr("type", "button")
 	button1.cls("btn-close btn-close-white me-2 m-auto")
+	button1.attr("type", "button")
 	button1.attr("data-bs-dismiss", "toast")
 	Return div1
 End Sub
@@ -237,33 +242,45 @@ Private Sub HandleAddModal
 	form1.attr("hx-target", "#modal-messages")
 	form1.attr("hx-swap", "innerHTML")
 	
-	Dim modalHeader As MiniHtml = Div.up(form1).cls("modal-header")
+	Dim modalHeader As MiniHtml = Div.up(form1)
+	modalHeader.cls("modal-header")
 	Dim h51 As MiniHtml = H5.up(modalHeader)
-	h51.cls("modal-title").text("Add $Endpoint$")
+	h51.cls("modal-title")
+	h51.text("Add $Endpoint$")
 	Dim close1 As MiniHtml = Button.up(modalHeader) 
-	close1.attr("type", "button")
 	close1.cls("btn-close")
+	close1.attr("type", "button")
 	close1.attr("data-bs-dismiss", "modal")
 
 	Dim modalBody As MiniHtml = Div.up(form1)
 	modalBody.cls("modal-body")
-	Div.up(modalBody).attr("id", "modal-messages")
+	Dim div1 As MiniHtml = Div.up(modalBody)
+	div1.attr("id", "modal-messages")
 	
-	Dim group1 As MiniHtml = Div.up(modalBody).cls("form-group")
+	Dim group1 As MiniHtml = Div.up(modalBody)
+	group1.cls("form-group")
 	Dim label1 As MiniHtml = Label.up(group1)
-	label1.attr("for", "name").text("Name ")
+	label1.attr("for", "name")
+	label1.text("Name ")
 	Dim span1 As MiniHtml = Span.up(label1)
-	span1.cls("text-danger").text("*")
-	Input.attr("type", "text").up(group1).attr("id", "name").attr("name", "name").cls("form-control").required
+	span1.cls("text-danger")
+	span1.text("*")
+	Dim input1 As miniHtml = Input.up(group1)
+	input1.cls("form-control")
+	input1.attr("type", "text")
+	input1.attr("id", "name")
+	input1.attr("name", "name")
+	input1.required
 
-	Dim modalFooter As MiniHtml = Div.up(form1).cls("modal-footer")
+	Dim modalFooter As MiniHtml = Div.up(form1)
+	modalFooter.cls("modal-footer")
 	Dim button1 As MiniHtml = Button.up(modalFooter)
-	button1.attr("type", "submit")
 	button1.cls("btn btn-success px-3")
+	button1.attr("type", "submit")
 	button1.text("Create")
 	Dim button2 As MiniHtml = Button.up(modalFooter)
-	button2.attr("type", "button")
 	button2.cls("btn btn-secondary px-3")
+	button2.attr("type", "button")
 	button2.attr("data-bs-dismiss", "modal")
 	button2.text("Cancel")
 	
@@ -273,8 +290,8 @@ End Sub
 ' Edit modal
 Private Sub HandleEditModal
 	Try
-		Dim id As String = Request.RequestURI.SubString("/hx/$endpoints$/edit/".Length)
-		DB.SQL = DB.Open
+		Dim id As String = Path.SubString("/hx/$endpoints$/edit/".Length)
+		DB.Open
 		DB.Table = "$TableName$"
 		DB.Columns = Array("id", "$endpoint$_name")
 		DB.WhereParam("id = ?", id)
@@ -295,20 +312,22 @@ Private Sub HandleEditModal
 	Dim modalHeader As MiniHtml = Div.up(form1)
 	modalHeader.cls("modal-header")
 	Dim h51 As MiniHtml = H5.up(modalHeader)
-	h51.cls("modal-title").text("Edit $Endpoint$")
+	h51.cls("modal-title")
+	h51.text("Edit $Endpoint$")
 	Dim close1 As MiniHtml = Button.up(modalHeader)
-	close1.attr("type", "button")
 	close1.cls("btn-close")
+	close1.attr("type", "button")
 	close1.attr("data-bs-dismiss", "modal")
 		
 	Dim modalBody As MiniHtml = Div.up(form1)
 	modalBody.cls("modal-body")
 	Dim div1 As MiniHtml = Div.up(modalBody)
 	div1.attr("id", "modal-messages")
-	Dim id1 As MiniHtml = Input.up(modalBody)
-	id1.attr("type", "hidden")
-	id1.attr("name", "id")
-	id1.attr("value", id)
+	Dim input1 As MiniHtml = Input.up(modalBody)
+	input1.attr("type", "hidden")
+	input1.attr("name", "id")
+	input1.attr("value", id)
+
 	Dim group1 As MiniHtml = Div.up(modalBody)
 	group1.cls("form-group")
 	Dim label1 As MiniHtml = Label.up(group1)
@@ -316,22 +335,23 @@ Private Sub HandleEditModal
 	label1.text("Name ")
 	Dim span1 As MiniHtml = Span.up(label1)
 	span1.cls("text-danger").text("*")
-	Dim input1 As MiniHtml = Input.up(group1)
-	input1.attr("type", "text")
-	input1.cls("form-control")
-	input1.attr("id", "name")
-	input1.attr("name", "name")
-	input1.attr("value", name)
-	input1.required
+	Dim input2 As MiniHtml = Input.up(group1)
+	input2.cls("form-control")
+	input2.attr("type", "text")
+	input2.attr("id", "name")
+	input2.attr("name", "name")
+	input2.attr("value", name)
+	input2.required
 
-	Dim modalFooter As MiniHtml = Div.up(form1).cls("modal-footer")
+	Dim modalFooter As MiniHtml = Div.up(form1)
+	modalFooter.cls("modal-footer")
 	Dim button1 As MiniHtml = Button.up(modalFooter)
-	button1.attr("type", "submit")
 	button1.cls("btn btn-primary px-3")
+	button1.attr("type", "submit")
 	button1.text("Update")
 	Dim button2 As MiniHtml = Button.up(modalFooter)
-	button2.attr("type", "button")
 	button2.cls("btn btn-secondary px-3")
+	button2.attr("type", "button")
 	button2.attr("data-bs-dismiss", "modal")
 	button2.text("Cancel")
 
@@ -341,8 +361,8 @@ End Sub
 ' Delete modal
 Private Sub HandleDeleteModal
 	Try
-		Dim id As String = Request.RequestURI.SubString("/hx/$endpoints$/delete/".Length)
-		DB.SQL = DB.Open
+		Dim id As String = Path.SubString("/hx/$endpoints$/delete/".Length)
+		DB.Open
 		DB.Table = "$TableName$"
 		DB.Columns = Array("id", "$endpoint$_name")
 		DB.WhereParam("id = ?", id)
@@ -360,31 +380,36 @@ Private Sub HandleDeleteModal
 	form1.attr("hx-target", "#modal-messages")
 	form1.attr("hx-swap", "innerHTML")
 	
-	Dim modalHeader As MiniHtml = Div.up(form1).cls("modal-header")
+	Dim modalHeader As MiniHtml = Div.up(form1)
+	modalHeader.cls("modal-header")
 	Dim h51 As MiniHtml = H5.up(modalHeader)
-	h51.cls("modal-title").text("Delete $Endpoint$")
+	h51.cls("modal-title")
+	h51.text("Delete $Endpoint$")
 	Dim close1 As MiniHtml = Button.up(modalHeader)
-	close1.attr("type", "button")
 	close1.cls("btn-close")
+	close1.attr("type", "button")
 	close1.attr("data-bs-dismiss", "modal")
 		
-	Dim modalBody As MiniHtml = Div.up(form1).cls("modal-body")
+	Dim modalBody As MiniHtml = Div.up(form1)
+	modalBody.cls("modal-body")
 	Dim div1 As MiniHtml = Div.up(modalBody)
 	div1.attr("id", "modal-messages")
-	Dim input1 As MiniHtml = Input.attr("type", "hidden")
+	Dim input1 As MiniHtml = Input.up(modalBody)
+	input1.attr("type", "hidden")
 	input1.attr("name", "id")
 	input1.attr("value", id)
-	input1.up(modalBody)
-	CreateTag("p").up(modalBody).text($"Delete ${name}?"$)
+	Dim p1 As MiniHtml = CreateTag("p").up(modalBody)
+	p1.text($"Delete ${name}?"$)
 
-	Dim modalFooter As MiniHtml = Div.up(form1).cls("modal-footer")
+	Dim modalFooter As MiniHtml = Div.up(form1)
+	modalFooter.cls("modal-footer")
 	Dim button1 As MiniHtml = Button.up(modalFooter)
-	button1.attr("type", "submit")
 	button1.cls("btn btn-danger px-3")
+	button1.attr("type", "submit")
 	button1.text("Delete")
 	Dim button2 As MiniHtml = Button.up(modalFooter)
-	button2.attr("type", "button")
 	button2.cls("btn btn-secondary px-3")
+	button2.attr("type", "button")
 	button2.attr("data-bs-dismiss", "modal")
 	button2.text("Cancel")
 
@@ -402,7 +427,7 @@ Private Sub Handle$Endpoints$
 				Return
 			End If
 			Try
-				DB.SQL = DB.Open
+				DB.Open
 				DB.Table = "$TableName$"
 				DB.Conditions = Array("$endpoint$_name = ?")
 				DB.Parameters = Array(name)
@@ -432,9 +457,8 @@ Private Sub Handle$Endpoints$
 			' Update
 			Dim id As Int = Request.GetParameter("id")
 			Dim name As String = Request.GetParameter("name")
-			DB.SQL = DB.Open
+			DB.Open
 			DB.Table = "$TableName$"
-			
 			DB.Find(id)
 			If DB.Found = False Then
 				ShowAlert("$Endpoint$ not found!", "warning")
@@ -442,7 +466,7 @@ Private Sub Handle$Endpoints$
 				Return
 			End If
 
-			DB.Reset
+			DB.Table = "$TableName$"
 			DB.Conditions = Array("$endpoint$_name = ?", "id <> ?")
 			DB.Parameters = Array(name, id)
 			DB.Query
@@ -454,7 +478,7 @@ Private Sub Handle$Endpoints$
 			
 			' Update row
 			Try
-				DB.Reset
+				DB.Table = "$TableName$"
 				DB.Columns = Array("$endpoint$_name", "modified_date")
 				DB.Parameters = Array(name, Main.CurrentDateTime)
 				DB.Id = id
@@ -467,9 +491,8 @@ Private Sub Handle$Endpoints$
 		Case "DELETE"
 			' Delete
 			Dim id As Int = Request.GetParameter("id")
-			DB.SQL = DB.Open
+			DB.Open
 			DB.Table = "$TableName$"
-			
 			DB.Find(id)
 			If DB.Found = False Then
 				ShowAlert("$Endpoint$ not found!", "warning")
@@ -510,15 +533,15 @@ Private Sub Create$Endpoints$Table As MiniHtml
 		App.ctx.Put("/hx/$endpoints$/table", table1)
 	End If
 	
-	DB.SQL = DB.Open
+	Dim table1 As MiniHtml = App.ctx.Get("/hx/$endpoints$/table")
+	Dim tbody1 As MiniHtml = table1.Child(1)
+	tbody1.Children.Clear ' remove all children
+
+	DB.Open
 	DB.Table = "$TableName$"
 	DB.Columns = Array("id", "$endpoint$_name")
 	DB.OrderBy = CreateMap("id": "")
 	DB.Query
-
-	Dim table1 As MiniHtml = App.ctx.Get("/hx/$endpoints$/table")
-	Dim tbody1 As MiniHtml = table1.Child(1)
-	tbody1.Children.Clear ' remove all children
 	For Each row As Map In DB.Results
 		Dim tr1 As MiniHtml = Create$Endpoints$Row		
 		tr1.Child(0).text2(row.Get("id"))

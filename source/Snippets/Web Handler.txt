@@ -5,18 +5,13 @@ $end$
 Sub Handle (req As ServletRequest, resp As ServletResponse)
 	Request = req
 	Response = resp
+	Path = Request.RequestURI
 	Method = Request.Method.ToUpperCase
-	Dim FullElements() As String = WebApiUtils.GetUriElements(Request.RequestURI)
-	Elements = WebApiUtils.CropElements(FullElements, 2) ' 2 For Web handler
-	If App.MethodAvailable2(Method, "/$endpoints$", Me) = False Then
-		WebApiUtils.ReturnHtmlMethodNotAllowed(Response)
-		Return
+	If Path = "/$endpoints$" And Method = "GET" Then
+		ReturnPage	
+	Else
+		WebApiUtils.ReturnHtmlPageNotFound(Response)
 	End If
-	If Elements.Length = 0 Then
-		ReturnPage
-		Return
-	End If
-	WebApiUtils.ReturnHtmlPageNotFound(Response)
 End Sub
 
 Private Sub ReturnPage
