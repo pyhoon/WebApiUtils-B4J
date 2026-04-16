@@ -1,8 +1,16 @@
+	Private DB As MiniORM
+	Private HRM As HttpResponseMessage
+	Private Path As String
+	Private Method As String
+	Private Request As ServletRequest
+	Private Response As ServletResponse$end$
+End Sub
+
 Public Sub Initialize
 	DB = Main.DB
 	HRM = Main.HRM
 End Sub
-$end$
+
 Sub Handle (req As ServletRequest, resp As ServletResponse)
 	Request = req
 	Response = resp
@@ -275,4 +283,3 @@ Private Sub Delete$EndPoint$ById
 	End If
 	WebApiUtils.ReturnHttpResponse(HRM, Response)
 	DB.Close
-End Sub

@@ -1,6 +1,0 @@
-	Private DB As MiniORM
-	Private HRM As HttpResponseMessage
-	Private Request As ServletRequest
-	Private Response As ServletResponse
-	Private Path As String
-	Private Method As String$end$
