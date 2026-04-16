@@ -46,7 +46,7 @@ Version=10.5
 @EndOfDesignText@
 #Region Project Attributes
 ' Product: WebApiUtils
-' Version: 6.10
+' Version: 6.20
 ' License: MIT License
 ' Developer: Poon Yip Hoon (Aeric)
 #CommandLineArgs:
@@ -60,7 +60,7 @@ Version=10.5
 #AdditionalJar: mariadb-java-client-3.5.6
 #End If
 #Region Macros
-#Macro: Title, Update Manifest, ide://run?file=%JAVABIN%\java.exe&Args=-jar&Args=%ADDITIONAL%\..\B4X\manifest-writer.jar&Args=%PROJECT%&Args=%PROJECT%&Args=Version&Args=6.10
+#Macro: Title, Update Manifest, ide://run?file=%ADDITIONAL%\..\B4X\manifest-writer.jar&Args=%PROJECT%&Args=%PROJECT%&Args=Version&Args=6.20
 #Macro: Title, Create B4xLib, ide://run?file=%JAVABIN%\jar.exe&WorkingDirectory=..&Args=-cMf&Args=..\release\%PROJECT_NAME%.b4xlib&Args=Snippets&Args=%PROJECT_NAME%.bas&Args=HelpHandler.b4x_excluded&Args=manifest.txt&Args=LICENSE
 #Macro: Title, Release folder, ide://run?file=%WINDIR%\SysWOW64\explorer.exe&Args=%PROJECT%\..\release
 #Macro: Title, Copy to AddLibs, ide://run?file=%COMSPEC%&Args=/c&Args=copy&Args=%PROJECT%\..\release\*.b4xlib&Args=%ADDITIONAL%
@@ -75,7 +75,7 @@ Sub Process_Globals
 	Public Api 					As ApiSettings
 	Public Const COLOR_RED 		As Int = -65536
 	Public Const COLOR_BLUE 	As Int = -16776961
-	Public Const VERSION 		As String = "6.10"
+	Public Const VERSION 		As String = "6.20"
 End Sub
 
 ' <link>Open in browser|http://127.0.0.1:8080</link>
