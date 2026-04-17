@@ -5,7 +5,7 @@ Type=StaticCode
 Version=10.3
 @EndOfDesignText@
 ' Web API Utility
-' Version 6.20
+' Version 6.30
 Sub Process_Globals
 	Public Const MIME_TYPE_HTML As String = "text/html"
 	Public Const MIME_TYPE_JSON As String = "application/json"
@@ -30,7 +30,7 @@ Public Sub CheckMaxElements (Elements() As String, Max_Elements As Int) As Boole
 End Sub
 
 Public Sub CheckAllowedVerb (SupportedMethods As List, Method As String) As Boolean
-	'Methods: POST, GET, PUT, PATCH, DELETE
+	'Methods: POST, GET, PUT, DELETE
 	If SupportedMethods.IndexOf(Method) = -1 Then
 		Return False
 	End If

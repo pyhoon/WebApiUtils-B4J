@@ -46,7 +46,7 @@ Version=10.5
 @EndOfDesignText@
 #Region Project Attributes
 ' Product: WebApiUtils
-' Version: 6.20
+' Version: 6.30
 ' License: MIT License
 ' Developer: Poon Yip Hoon (Aeric)
 #CommandLineArgs:
@@ -60,7 +60,7 @@ Version=10.5
 #AdditionalJar: mariadb-java-client-3.5.6
 #End If
 #Region Macros
-#Macro: Title, Update Manifest, ide://run?file=%ADDITIONAL%\..\B4X\manifest-writer.jar&Args=%PROJECT%&Args=%PROJECT%&Args=Version&Args=6.20
+#Macro: Title, Update Manifest, ide://run?file=%ADDITIONAL%\..\B4X\manifest-writer.jar&Args=%PROJECT%&Args=%PROJECT%&Args=Version&Args=6.30
 #Macro: Title, Create B4xLib, ide://run?file=%JAVABIN%\jar.exe&WorkingDirectory=..&Args=-cMf&Args=..\release\%PROJECT_NAME%.b4xlib&Args=Snippets&Args=%PROJECT_NAME%.bas&Args=HelpHandler.b4x_excluded&Args=manifest.txt&Args=LICENSE
 #Macro: Title, Release folder, ide://run?file=%WINDIR%\SysWOW64\explorer.exe&Args=%PROJECT%\..\release
 #Macro: Title, Copy to AddLibs, ide://run?file=%COMSPEC%&Args=/c&Args=copy&Args=%PROJECT%\..\release\*.b4xlib&Args=%ADDITIONAL%
@@ -75,7 +75,7 @@ Sub Process_Globals
 	Public Api 					As ApiSettings
 	Public Const COLOR_RED 		As Int = -65536
 	Public Const COLOR_BLUE 	As Int = -16776961
-	Public Const VERSION 		As String = "6.20"
+	Public Const VERSION 		As String = "6.30"
 End Sub
 
 ' <link>Open in browser|http://127.0.0.1:8080</link>
@@ -85,8 +85,8 @@ Sub AppStart (Args() As String)
 	App.LoadConfig
 	App.LogEnabled = True
 	#If Release
-	App.ssl.Enabled = True
-	App.RedirectToHttps = True
+	'App.ssl.Enabled = True
+	'App.RedirectToHttps = True
 	#End If
 	
 	' *** Api Settings ***
@@ -107,25 +107,11 @@ Sub AppStart (Args() As String)
 	'App.Get("/users", "UsersWebHandler")
 	
 	' *** Api handlers ***
-	App.Get("/api/categories", "CategoriesApiHandler")
-	App.Get("/api/categories/*", "CategoriesApiHandler")
-	App.Post("/api/categories", "CategoriesApiHandler")
-	App.Put("/api/categories/*", "CategoriesApiHandler")
-	App.Delete("/api/categories/*", "CategoriesApiHandler")
-	App.Get("/api/products", "ProductsApiHandler")
-	App.Get("/api/products/*", "ProductsApiHandler")
-	App.Post("/api/products", "ProductsApiHandler")
-	App.Put("/api/products/*", "ProductsApiHandler")
-	App.Delete("/api/products/*", "ProductsApiHandler")
-	App.Get("/api/find", "FindApiHandler")
+	App.Route("/api/find", "FindApiHandler", Array("get", "post"))
 	App.Get("/api/find/products-by-category_id/*", "FindApiHandler")
-	App.Post("/api/find", "FindApiHandler")
-	
-	App.Get("/api/users", "UsersApiHandler")
-	App.Get("/api/users/*", "UsersApiHandler")
-	App.Post("/api/users", "UsersApiHandler")
-	App.Put("/api/users/*", "UsersApiHandler")
-	App.Delete("/api/users/*", "UsersApiHandler")
+	App.Rest("/api/products/*", "ProductsApiHandler")
+	App.Rest("/api/categories/*", "CategoriesApiHandler")
+	App.Rest("/api/users/*", "UsersApiHandler")
 
 	App.Start
 	App.LogStartupMessage
@@ -168,7 +154,7 @@ Public Sub ConfigureDatabase
 				MS.DBHost = ctx.GetDefault("DbHost", "")
 				MS.DBPort = ctx.GetDefault("DbPort", "")
 				MS.DBName = ctx.GetDefault("DbName", "")
-				MS.DriverClass = ctx.GetDefault("DriverClass", "")
+				MS.Driver = ctx.GetDefault("DriverClass", "")
 				MS.JdbcUrl = ctx.GetDefault("JdbcUrl", "")
 				MS.User = ctx.GetDefault("User", "")
 				MS.Password = ctx.GetDefault("Password", "")

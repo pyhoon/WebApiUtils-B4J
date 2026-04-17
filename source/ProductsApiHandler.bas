@@ -5,7 +5,7 @@ Type=Class
 Version=10.3
 @EndOfDesignText@
 'Api Handler class
-'Version 6.20
+'Version 6.30
 Sub Class_Globals
 	Private DB As MiniORM
 	Private App As EndsMeet
@@ -28,6 +28,7 @@ Sub Handle (req As ServletRequest, resp As ServletResponse)
 	Request = req
 	Response = resp
 	Method = Request.Method.ToUpperCase
+	Log($"Method:[${Method}]"$)
 	Dim FullElements() As String = WebApiUtils.GetUriElements(Request.RequestURI)
 	Elements = WebApiUtils.CropElements(FullElements, 3) ' 3 For Api handler
 	If ElementMatch("") Then

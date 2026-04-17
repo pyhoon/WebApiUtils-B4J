@@ -5,7 +5,7 @@ Type=Class
 Version=10.2
 @EndOfDesignText@
 'Api Handler class
-'Version 6.20
+'Version 6.30
 Sub Class_Globals
 	Private DB As MiniORM
 	Private App As EndsMeet
