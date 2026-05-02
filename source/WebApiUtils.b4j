@@ -44,11 +44,11 @@ NumberOfLibraries=9
 NumberOfModules=11
 Version=10.5
 @EndOfDesignText@
-#Region Project Attributes
-' Product: WebApiUtils
-' Version: 6.30
-' License: MIT License
-' Developer: Poon Yip Hoon (Aeric)
+#Region  Project Attributes
+'Product: WebApiUtils
+'Version: 6.80
+'License: MIT License
+'Developer: Poon Yip Hoon (Aeric)
 #CommandLineArgs:
 #MergeLibraries: True
 #End Region
@@ -59,13 +59,13 @@ Version=10.5
 #Else If MariaDB
 #AdditionalJar: mariadb-java-client-3.5.6
 #End If
-#Region Macros
-#Macro: Title, Update Manifest, ide://run?file=%ADDITIONAL%\..\B4X\manifest-writer.jar&Args=%PROJECT%&Args=%PROJECT%&Args=Version&Args=6.30
-#Macro: Title, Create B4xLib, ide://run?file=%JAVABIN%\jar.exe&WorkingDirectory=..&Args=-cMf&Args=..\release\%PROJECT_NAME%.b4xlib&Args=Snippets&Args=%PROJECT_NAME%.bas&Args=HelpHandler.b4x_excluded&Args=manifest.txt&Args=LICENSE
-#Macro: Title, Release folder, ide://run?file=%WINDIR%\SysWOW64\explorer.exe&Args=%PROJECT%\..\release
-#Macro: Title, Copy to AddLibs, ide://run?file=%COMSPEC%&Args=/c&Args=copy&Args=%PROJECT%\..\release\*.b4xlib&Args=%ADDITIONAL%
-'#Macro: Title, GetLibraries, ide://run?file=%JAVABIN%\java.exe&args=-jar&args=%ADDITIONAL%\..\B4X\libget.jar&args=%PROJECT%&args=false
-'#Macro: Title, GetResources, ide://run?file=%JAVABIN%\java.exe&args=-jar&args=%ADDITIONAL%\..\B4X\resget.jar&args=%PROJECT%&args=true
+#Region  Macros
+#Macro: Title, Update Manifest, ide://run?File=%ADDITIONAL%\..\B4X\manifest-writer.jar&Args=%PROJECT%&Args=%PROJECT%&Args=Version&Args=6.80
+#Macro: Title, Create B4X Lib, ide://run?File=%JAVABIN%\jar.exe&WorkingDirectory=..&Args=-cMf&Args=..\release\%PROJECT_NAME%.b4xlib&Args=Snippets&Args=%PROJECT_NAME%.bas&Args=HelpHandler.b4x_excluded&Args=manifest.txt&Args=LICENSE
+#Macro: Title, Release folder, ide://run?File=%WINDIR%\SysWOW64\explorer.exe&Args=%PROJECT%\..\release
+#Macro: Title, Copy to AddLibs, ide://run?File=%COMSPEC%&Args=/c&Args=copy&Args=%PROJECT%\..\release\*.b4xlib&Args=%ADDITIONAL%
+'#Macro: Title, GetLibraries, ide://run?File=%ADDITIONAL%\libget.jar&args=%PROJECT%&args=false
+'#Macro: Title, GetResources, ide://run?File=%ADDITIONAL%\resget.jar&args=%PROJECT%&args=true
 #End Region
 
 Sub Process_Globals
@@ -75,7 +75,7 @@ Sub Process_Globals
 	Public Api 					As ApiSettings
 	Public Const COLOR_RED 		As Int = -65536
 	Public Const COLOR_BLUE 	As Int = -16776961
-	Public Const VERSION 		As String = "6.30"
+	Public Const VERSION 		As String = "6.80"
 End Sub
 
 ' <link>Open in browser|http://127.0.0.1:8080</link>

@@ -4,8 +4,8 @@ ModulesStructureVersion=1
 Type=Class
 Version=10.3
 @EndOfDesignText@
-' Help Handler class
-' Version 6.30
+'Help Handler class
+'Version: 6.30
 Sub Class_Globals
 	Private AllGroups 	As Map
 	Private AllMethods 	As List

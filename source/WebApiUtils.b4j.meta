@@ -34,6 +34,6 @@ ModuleClosedNodes6=
 ModuleClosedNodes7=
 ModuleClosedNodes8=
 ModuleClosedNodes9=
-NavigationStack=Main,AppStart,36,1,WebApiUtils,ReturnHttpResponse,736,1,WebApiUtils,Process_Globals,10,0,Main,ConfigureDatabase,108,0
+NavigationStack=Main,AppStart,36,1,WebApiUtils,ReturnHttpResponse,736,1,Main,ConfigureDatabase,108,0,FindApiHandler,GetAllProducts,97,0,FindApiHandler,GetProductsByCategoryId,112,0,FindApiHandler,SearchByKeywords,149,0,HelpHandler,Class_Globals,3,0,ProductsApiHandler,Class_Globals,8,0,WebApiUtils,Process_Globals,2,0,Main,Process_Globals,31,0
 SelectedBuild=0
 VisibleModules=11,1,2,3,4,5,6,7,8,9
