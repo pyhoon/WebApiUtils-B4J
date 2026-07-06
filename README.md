@@ -89,14 +89,15 @@ Code Snippets (with Entity placeholders)
 
 ## Response Format
 
-All API responses use a consistent envelope:
+All API responses use a consistent envelope (VerboseMode):
 
 ### JSON Success
 ```json
 {
-  "s": "success",
   "a": 200,
+  "s": "success",
   "m": "Products retrieved successfully",
+  "e": null,
   "r": [ { "id": 1, "product_name": "Hammer", ... } ]
 }
 ```
@@ -104,10 +105,11 @@ All API responses use a consistent envelope:
 ### JSON Error
 ```json
 {
-  "s": "error",
   "a": 422,
+  "s": "error",
   "m": "Query execution error",
-  "e": "Column 'xyz' not found"
+  "e": "Column 'xyz' not found",
+  "r": null
 }
 ```
 
