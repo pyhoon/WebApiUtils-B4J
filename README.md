@@ -1,7 +1,8 @@
 # WebApiUtils
 Version: 6.96
 
-A B4J utility library for the [Pakai Server](https://github.com/pyhoon/pakai-server-b4j) framework. Provides HTTP request/response handling, JSON/XML APIs, cookie management, authentication, file uploads, HTML templating, database ORM integration, and auto-generated API documentation.
+A B4J utility library for the [Pakai Server](https://github.com/pyhoon/pakai-server-b4j) framework. \
+Provides HTTP request/response handling, JSON/XML APIs, cookie management, authentication, file uploads, HTML templating, database ORM integration, and auto-generated API documentation.
 
 ---
 
