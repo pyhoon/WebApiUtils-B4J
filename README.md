@@ -28,6 +28,10 @@ Code modules
 
 Handlers (Class templates)
 └── HelpHandler.b4x_excluded   — /help auto-generated docs
+
+Code Snippets (with Entity placeholders)
+├── Handler (Api).txt   — Code Snippets for Api Handler
+└── Handler (Web).txt   — Code Snippets for Web Handler
 ```
 
 ### Dependencies
