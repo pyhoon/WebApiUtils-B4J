@@ -384,7 +384,7 @@ Private Sub GetEntityById '#GET
 ```
 Note: #hashtag comments only work when building /help page on debug mode.
 
-It is recommended to build the web page on release mode using BuildMethods in HelpHandler by constructing Map for each endpoint/route without compiling on debug mode.
+It is recommended to build the /help page on release mode using BuildMethods in HelpHandler by constructing Map for each endpoint/route without compiling on debug mode.
 
 Example:
 ```b4x
