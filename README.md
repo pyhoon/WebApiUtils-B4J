@@ -70,17 +70,106 @@ The library registers a **Custom Class Template** named `Help Handler` — you c
 App.Get("/help", "HelpHandler")
 ```
 
-To register API handlers for documentation discovery, edit the `Handlers` list in `HelpHandler.Initialize`:
+To register API handlers for documentation discovery, add your handler name to the `Handlers` list in `HelpHandler.Initialize`:
 
 ```b4x
 Public Sub Initialize
     Handlers.Initialize
-    Handlers.Add("MyApiHandler")
-    ...
+    Handlers.Add("ProductsApiHandler")
+    Handlers.Add("CategoriesApiHandler")
+    Handlers.Add("FindApiHandler")
 End Sub
 ```
 
-### 4. Swagger UI Setup
+### 4. Customizing API Documentation with BuildMethods
+
+The `BuildMethods` sub (`HelpHandler.bas:307`) is the **recommended way** to define endpoint metadata for both the interactive `/help` page and the OpenAPI 3.0 JSON spec at `/help?format=openapi`. Unlike `ReadHandlers` which parses `#hashtag` comments from source code at compile time (Debug mode only), `BuildMethods` constructs endpoint properties programmatically and works in **both Debug and Release modes** without source file access.
+
+#### How BuildMethods works
+
+Each endpoint is represented as a **Map** of properties. You retrieve an existing entry, modify its properties, and replace it. The key helper methods:
+
+| Method | Purpose |
+|--------|---------|
+| `RetrieveMethod(Group, SubName)` | Gets the method's default Map (auto-populated by parsing the sub signature). If not found, calls `CreateMethodProperties` to build a new Map. |
+| `CreateMethodProperties(Group, SubName)` | Creates a fresh Map with auto-detected Verb (from sub name prefix like `Get`, `Post`, `Put`, `Delete` or `#hashtag` overrides) and Parameters (from sub arguments). |
+| `ReplaceMethod(Method)` | Finds existing entry by method name and replaces it in-place (keeping list order). |
+| `RemoveMethodAndReAdd(Method)` | Removes then appends to end of list (for ordering control). |
+| `FindMethod(MethodName)` | Returns the index of a method in `AllMethods`, or -1. |
+
+#### Available Method Map Keys
+
+| Key | Description |
+|-----|-------------|
+| `Group` | Heading/group name for categorizing endpoints (e.g., "Products", "Categories") |
+| `Name` | URL path segment override (defaults to Group). Used for the `/api/{name}/...` route |
+| `Method` | Sub name (read-only identifier for matching) |
+| `Desc` | Description text shown in the accordion header |
+| `Verb` | HTTP method: `GET`, `POST`, `PUT`, `DELETE` |
+| `Params` | Parameter display string like `"id [Int]"` or `"Not required"` |
+| `Format` | JSON string showing the expected request body format (displayed as a sample) |
+| `Body` | JSON string with default values for the request body editor |
+| `Elements` | JSON array string for URL path elements (e.g., `["{id}"]`) |
+| `Noapi` | Boolean — set `True` for routes outside `/api/` (uses `$SERVER_URL$/` instead) |
+| `Expected` | HTML string describing expected response codes |
+| `FileUpload` | File upload type (`"image"`, `"pdf"`) — shows upload UI in the docs page |
+| `Authenticate` | Auth type (`"basic"`, `"token"`, `"apikey"`) — shows auth badge |
+
+#### Example: Adding a custom endpoint
+
+```b4x
+Private Sub BuildMethods
+    ' --- Using RetrieveMethod (auto-detects from sub signature) ---
+    Dim Method As Map = RetrieveMethod("Products", "GetProducts")
+    Method.Put("Desc", "Read all Products")
+    ReplaceMethod(Method)
+
+    ' --- Adding path element (URL variable) ---
+    Dim Method As Map = RetrieveMethod("Products", "GetProductById (id As Int)")
+    Method.Put("Desc", "Read one Product by id")
+    Method.Put("Elements", $"["{id}"]"$)
+    ReplaceMethod(Method)
+
+    ' --- Creating from scratch with CreateMethodProperties ---
+    ' Useful when there is no matching sub (e.g. sub name doesn't start with a verb)
+    ' The Verb will be inferred from the sub name prefix (Get, Post, Put, Delete)
+    ' or from #hashtag overrides like '#POST
+    Dim Method As Map = CreateMethodProperties("Products", "PostProduct")
+    Method.Put("Desc", "Add new Product")
+    Dim FormatMap As Map = CreateMap("category_id": 3, "product_code": "E001", "product_name": "Wireless Mouse", "product_price": 29.99)
+    Method.Put("Format", FormatMap.As(JSON).ToString)
+    Method.Put("Body", FormatMap.As(JSON).ToString)
+    ReplaceMethod(Method)
+
+    ' --- POST/PUT endpoints with request body examples ---
+    Dim Method As Map = RetrieveMethod("Find", "SearchByKeywords ' #post")
+    Dim FormatMap As Map = CreateMap("keyword": "text")
+    Dim BodyMap As Map = CreateMap("keyword": "")
+    Method.Put("Format", FormatMap.As(JSON).ToString)
+    Method.Put("Body", BodyMap.As(JSON).ToString)
+    Method.Put("Desc", "Filter Products (with Category name)")
+    Method.Put("Expected", GetExpectedResponse(""))
+    ReplaceMethod(Method)
+
+    ' --- Move an endpoint to the end of list ---
+    Dim Method As Map = RetrieveMethod("Categories", "DeleteCategoryById (id As Int)")
+    Method.Put("Desc", "Delete Category by id")
+    Method.Put("Elements", $"["{id}"]"$)
+    RemoveMethodAndReAdd(Method)
+End Sub
+```
+
+#### How it connects to OpenAPI
+
+The `ServeOpenApiJson` sub (`HelpHandler.bas:1200`) iterates through the same `AllMethods` list populated by `BuildMethods`. For each entry it:
+- Calls `GenerateVerbSection` to extract Verb, Link, Description, Params, Format, Body
+- Builds dynamic OpenAPI path parameters from `{id}` / `{category}` placeholders in the URL
+- Constructs `requestBody` schemas for POST/PUT endpoints with field names and types
+- Assembles the full OpenAPI 3.0 JSON root with `openapi`, `info`, and `paths` keys
+
+This means **any endpoint defined in BuildMethods automatically appears in both the interactive `/help` page and the Swagger UI `/swagger/` page**.
+
+### 5. Swagger UI Setup
 
 The `HelpHandler` serves OpenAPI 3.0 JSON at `/help?format=openapi`. To use Swagger UI:
 
@@ -293,6 +382,63 @@ WebApiUtils.RESPONSE_ELEMENT_RESULT  = "r"
 
 ---
 
+## `#hashtag` Comments (Deprecated)
+
+`HelpHandler` originally supported **`#hashtag` comments** in handler source files to provide endpoint metadata. These are parsed by `ReadHandlers` → `ParseHashtags` at runtime.
+
+> **⚠ Deprecated:** `#hashtag` parsing is **Debug mode only** (`#If Debug` in `ShowHelpPage`), requires the `.bas` source files to be present at runtime, and is fragile (can break from simple comment changes). **Use `BuildMethods` instead** — it works in both Debug and Release, doesn't depend on source files, and gives full control over all endpoint properties.
+
+### How ParseHashtags works
+
+`ReadHandlers` (`HelpHandler.bas:390`) scans each registered handler's `.bas` file line-by-line:
+
+1. Lines containing `Sub` with a verb prefix (`Get`, `Post`, `Put`, `Delete`) or `#VERB` override are picked up as endpoint entries
+2. Subsequent comment lines containing `#keyword=value` are passed to `ParseHashtags` which attaches metadata to the **last detected method**
+3. Boolean-only hashtags (`#hide`, `#noapi`) are set to `True` when present
+
+### Supported hashtag keywords
+
+| Keyword | Type | Example |
+|---------|------|---------|
+| `#name` | `=value` | `#name = Products` (URL path segment) |
+| `#desc` | `=value` | `#desc = List all products` (accordion header text) |
+| `#version` | `=value` | `#version = 2.0` (version suffix) |
+| `#elements` | `=value` | `#elements = ["{id}"]` (path elements as JSON array) |
+| `#body` | `=value` | `#body = {"key": ""}` (JSON body for editor) |
+| `#format` | `=value` | `#format = {"key": "value"}` (JSON format example) |
+| `#fileupload` | `=value` | `#fileupload = image` (shows upload UI) |
+| `#authenticate` | `=value` | `#authenticate = token` (shows auth badge) |
+| `#hide` | flag | hides the endpoint from the docs page |
+| `#noapi` | flag | endpoint is outside `/api/` path |
+
+### Example in source code
+
+```b4x
+'#POST /api/products
+' Creates a new product in the database
+'#desc = Add new Product
+'#authenticate = token
+'#elements = []
+'#body = {"category_id": 1, "product_code": "E001", "product_name": "Wireless Mouse", "product_price": 29.99}
+'#format = {"category_id": 3, "product_code": "CODE", "product_name": "Name", "product_price": 0}
+Private Sub PostProduct
+```
+
+For Release builds, convert to `BuildMethods`:
+
+```b4x
+Dim Method As Map = CreateMethodProperties("Products", "PostProduct")
+Method.Put("Desc", "Add new Product")
+Method.Put("Authenticate", "token")
+Dim FormatMap As Map = CreateMap("category_id": 3, "product_code": "E001", "product_name": "Wireless Mouse", "product_price": 29.99)
+Dim BodyMap As Map = CreateMap("category_id": 3, "product_code": "", "product_name": "", "product_price": 0)
+Method.Put("Format", FormatMap.As(JSON).ToString)
+Method.Put("Body", BodyMap.As(JSON).ToString)
+ReplaceMethod(Method)
+```
+
+---
+
 ## Creating a New API Handler
 
 Using the `Handler (Api).txt` snippet template in the IDE.
@@ -375,45 +521,31 @@ Private Sub GetEntities
     End If
     WebApiUtils.ReturnHttpResponse(HRM, Response)
 End Sub
-
-' Add #hashtag comments for HelpHandler discovery:
-Private Sub GetEntityById '#GET
-  '#authenticate = token
-  '#desc = List all entities
-  ...
-```
-Note: #hashtag comments only work when building /help page on debug mode.
-
-It is recommended to build the /help page on release mode using BuildMethods in HelpHandler by constructing Map for each endpoint/route without compiling on debug mode.
-
-Example:
-```b4x
-Dim Method As Map = CreateMethodProperties("Products", "PostProduct")
-Method.Put("Desc", "Add new Product")
-Dim FormatMap As Map = CreateMap("category_id": 3, "product_code": "E001", "product_name": "Wireless Mouse", "product_price": 29.99)
-Dim BodyMap As Map = CreateMap("category_id": 3, "product_code": "E001", "product_name": "Wireless Mouse", "product_price": 29.99)
-Method.Put("Format", FormatMap.As(JSON).ToString)
-Method.Put("Body", BodyMap.As(JSON).ToString)
-ReplaceMethod(Method)
 ```
 
 ### 3. Register in the server module
 
 ```b4x
-App.Rest("/api/products/*", ProductsApiHandler)
+App.Rest("/api/myentities/*", MyApiHandler)
 
 ' Or selectively:
-' App.Route("/api/products", ProductsApiHandler, Array("get", "post"))
-' App.Get("/api/products/*", ProductsApiHandler)
+' App.Route("/api/myentities", MyApiHandler, Array("get", "post"))
+' App.Get("/api/myentities/*", MyApiHandler)
 ' etc.
 ```
 
 ### 4. Register for HelpHandler discovery
 
-In `HelpHandler.Initialize`, add your handler name to the `Handlers` list:
+Add your handler name to the `Handlers` list in `HelpHandler.Initialize`, then define endpoint metadata in `BuildMethods`:
 
 ```b4x
+' In HelpHandler.Initialize
 Handlers.Add("MyApiHandler")
+
+' In HelpHandler.BuildMethods
+Dim Method As Map = RetrieveMethod("MyEntity", "GetEntities")
+Method.Put("Desc", "List all entities")
+ReplaceMethod(Method)
 ```
 
 ---
