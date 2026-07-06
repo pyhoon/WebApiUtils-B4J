@@ -2,7 +2,7 @@
 Group=Handlers
 ModulesStructureVersion=1
 Type=Class
-Version=10.3
+Version=10.5
 @EndOfDesignText@
 ' Products Api Handler class
 ' Version 6.96
