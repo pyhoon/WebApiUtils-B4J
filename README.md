@@ -69,7 +69,7 @@ Code Snippets (with Entity placeholders)
 3. **Edit swagger-initializer.js** by replacing the url of petstore:
 ```javascript
   window.ui = SwaggerUIBundle({
-      // Tell Swagger to request the raw OpenAPI JSON specification from HelpHandler
+    // Tell Swagger to request the raw OpenAPI JSON specification from HelpHandler
     //url: "https://petstore.swagger.io/v2/swagger.json",
     url: "../help?format=openapi", 
     dom_id: '#swagger-ui',
