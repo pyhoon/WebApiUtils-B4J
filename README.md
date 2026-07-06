@@ -47,8 +47,8 @@ Code Snippets (with Entity placeholders)
 
 ## Getting Started
 
-1. **Create a new Pakai Server Api** using the template.
-2. **Add WebApiUtils.b4xlib** from the `release/` folder to your B4J IDE.
+1. **Create a new Pakai Server Api project** using the template
+2. **Add WebApiUtils.b4xlib** from the `release/` folder to your B4J IDE
 3. **Configure** `config.ini` (copied from `config.example` on first run):
    ```ini
    PORT=8080
@@ -58,16 +58,15 @@ Code Snippets (with Entity placeholders)
    HOME_TITLE=My App
    APP_TITLE=MyApp
    ```
-4. **Add Help Handler** from menu **Project -> Add New Module -> Class Module -> Help Handler**.
-5. **Run** the project.
-6. The `HelpHandler` generates API handlers and serves documentation at `/help`.
+4. **Add Help Handler** from menu **Project -> Add New Module -> Class Module -> Help Handler**
+5. **Run** the project
+6. **HelpHandler** generates API handlers and serves documentation at `/help`
 
 ## Use Swagger-UI
 
-1. **Swagger-UI** is integrated inside HelpHandler.
-2. **Download swagger-ui** and copy `/dist` to `www` folder of the project.
-3. **Rename the folder /dist to /swagger**.
-4. **Edit swagger-initializer.js** by replacing the url of petstore:
+1. **Swagger-UI** is integrated inside HelpHandler
+2. **Download swagger-ui** and copy `/dist` to `www` folder of the project. Rename the folder `/dist` to `/swagger`
+3. **Edit swagger-initializer.js** by replacing the url of petstore:
 ```javascript
   window.ui = SwaggerUIBundle({
       // Tell Swagger to request the raw OpenAPI JSON specification from HelpHandler
@@ -85,8 +84,9 @@ Code Snippets (with Entity placeholders)
     layout: "StandaloneLayout"
   });
 ```
-5. **Navigate** to `http://127.0.0.1:8080/swagger`
-6. **HelpHandler** generates an **OpenAPI 3.0 Specification structure** json from endpoint `/help?format=openapi` to serve the UI.
+4. **Ready to use /swagger folder** is also available in `/source/Objects/www`
+5. **Run the project and navigate to** `http://127.0.0.1:8080/swagger`
+6. **HelpHandler** generates an **OpenAPI 3.0 Specification structure** json from endpoint `/help?format=openapi` to serve the UI
 
 ## Response Format
 
