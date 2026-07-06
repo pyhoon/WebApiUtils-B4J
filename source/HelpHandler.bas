@@ -1201,7 +1201,7 @@ Private Sub ServeOpenApiJson '(resp As ServletResponse)
 	' 1. Define OpenAPI Metadata
 	Dim InfoMap As Map = CreateMap( _
         "title": "Pakai Server v6 API", _
-        "version": "6.93", _
+        "version": "6.96", _
         "description": "Auto-compiled specification generated directly by HelpHandler" _
     )
     
@@ -1219,9 +1219,9 @@ Private Sub ServeOpenApiJson '(resp As ServletResponse)
 	BuildMethods
 	For Each Method As Map In AllMethods
 		Dim section As VerbSection = GenerateVerbSection(Method)
-		Dim verb As String = section.Verb.ToLowerCase 'Method.GetDefault("verb", "GET")
-		Dim path As String = section.Link.Replace("$SERVER_URL$", "") 'Method.GetDefault("path", "/")
-		Dim desc As String = section.Description 'Method.GetDefault("description", "API Endpoint")
+		Dim verb As String = section.Verb.ToLowerCase
+		Dim path As String = section.Link.Replace("$SERVER_URL$", "")
+		Dim desc As String = section.Description
 		Dim tag As String = Method.Get("Group")
 		Dim tags As List
 		tags.Initialize
@@ -1329,7 +1329,7 @@ Private Sub ServeOpenApiJson '(resp As ServletResponse)
 		' -------------------------------------
 
 		' Handle payload structure for data-modifying requests
-		If verb = "POST" Or verb = "PUT" Or verb = "PATCH" Then
+		If verb = "post" Or verb = "put" Then
 			' 1. Define the properties (fields) for the JSON body
 			Dim PropertiesMap As Map
 			PropertiesMap.Initialize
@@ -1340,7 +1340,27 @@ Private Sub ServeOpenApiJson '(resp As ServletResponse)
     
 			' --- DYNAMIC FIELD DEFINITION ENGINE ---
 			' Customize this logic based on your route definitions
-			
+			If path.StartsWith("/api/products") Then
+				PropertiesMap.Put("category_id", CreateMap("type": "integer", "example": 3))
+				PropertiesMap.Put("product_code", CreateMap("type": "string", "example": "E001"))
+				PropertiesMap.Put("product_name", CreateMap("type": "string", "example": "Wireless Mouse"))
+				PropertiesMap.Put("product_price", CreateMap("type": "number", "example": 29.99))
+        
+				RequiredFields.Add("product_code")
+				RequiredFields.Add("product_name")
+				RequiredFields.Add("category_id")
+			Else If path.StartsWith("/api/categories") Then
+				PropertiesMap.Put("category_name", CreateMap("type": "string", "example": "Electronics"))
+				
+				RequiredFields.Add("category_name")
+			Else if path.StartsWith("/api/find") Then
+				PropertiesMap.Put("keyword", CreateMap("type": "string", "example": "mouse"))
+				
+				RequiredFields.Add("keyword")
+			Else
+				' Fallback generic body placeholder if no route match is found
+				PropertiesMap.Put("payload", CreateMap("type": "string", "example": "value"))
+			End If
 			' ---------------------------------------
 			' 3. Assemble the complete schema definition
 			Dim SchemaMap As Map = CreateMap("type": "object", "properties": PropertiesMap)
@@ -1366,7 +1386,12 @@ Private Sub ServeOpenApiJson '(resp As ServletResponse)
 			'OperationMap.Put("requestBody", CreateMap("content": ContentMap))
 			OperationMap.Put("requestBody", CreateMap("required": True, "content": ContentMap))
 		End If
-        
+		
+		If verb = "post" Then
+			Dim newResponses As Map = OperationMap.Get("responses")
+			newResponses.Put("201", CreateMap("description": "Success resource creation by Pakai Engine"))
+		End If
+			
 		' Safely push to the global Paths Map framework
 		Dim PathMethods As Map
 		If PathsMap.ContainsKey(path) Then
