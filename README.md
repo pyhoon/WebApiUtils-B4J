@@ -417,11 +417,11 @@ WebApiUtils.RESPONSE_ELEMENT_RESULT  = "r"
 '#POST /api/products
 ' Creates a new product in the database
 Private Sub PostProduct
-'#desc = Add new Product
-'#authenticate = token
-'#elements = []
-'#body = {"category_id": 1, "product_code": "E001", "product_name": "Wireless Mouse", "product_price": 29.99}
-'#format = {"category_id": 3, "product_code": "CODE", "product_name": "Name", "product_price": 0}
+  '#desc = Add new Product
+  '#authenticate = token
+  '#elements = []
+  '#body = {"category_id": 1, "product_code": "E001", "product_name": "Wireless Mouse", "product_price": 29.99}
+  '#format = {"category_id": 3, "product_code": "CODE", "product_name": "Name", "product_price": 0}
 ```
 
 For Release builds, convert to `BuildMethods`:
