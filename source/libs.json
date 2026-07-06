@@ -1,29 +1,38 @@
 {
-    "Version": "5.55",
+    "Version": "6.96",
     "Libraries": [
         {
             "Name": "EndsMeet.b4xlib",
             "Platform": "B4J",
-            "Version": 1.80,
-            "Link": "https://github.com/pyhoon/EndsMeet/releases/download/v1.80/EndsMeet.b4xlib"
+            "Version": 2.20,
+            "Link": "https://github.com/pyhoon/EndsMeet/releases/download/v2.20/EndsMeet.b4xlib"
+        },
+        {
+            "Name": "MiniCSS.b4xlib",
+            "Platform": "B4X",
+            "Version": 0.30,
+            "Link": "https://github.com/pyhoon/MiniCSS-B4X/releases/download/v0.30/MiniCSS.b4xlib",
+            "Update": "https://github.com/pyhoon/MiniCSS-B4X/releases/download/v0.30/update.json"
+        },
+        {
+            "Name": "MiniHtml.b4xlib",
+            "Platform": "B4X",
+            "Version": 3.00,
+            "Link": "https://github.com/pyhoon/MiniHtml2-B4X/releases/download/v3.00/MiniHtml.b4xlib",
+            "Update": "https://github.com/pyhoon/MiniHtml2-B4X/releases/download/v3.00/update.json"
+        },
+        {
+            "Name": "MiniJS.b4xlib",
+            "Platform": "B4X",
+            "Version": 0.60,
+            "Link": "https://github.com/pyhoon/MiniJS-B4X/releases/download/v0.60/MiniJS.b4xlib",
+            "Update": "https://github.com/pyhoon/MiniJS-B4X/releases/download/v0.60/update.json"
         },
         {
             "Name": "MiniORMUtils.b4xlib",
             "Platform": "B4X",
-            "Version": 4.20,
-            "Link": "https://github.com/pyhoon/MiniORMUtils-B4X/releases/download/v4.20/MiniORMUtils.b4xlib"
-        },
-        {
-            "Name": "mysql-connector-j-9.3.0.jar",
-            "Platform": "B4J",
-            "Version": 9.30,
-            "Link": "https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/9.3.0/mysql-connector-j-9.3.0.jar"
-        },
-        {
-            "Name": "mariadb-java-client-3.5.6.jar",
-            "Platform": "B4J",
-            "Version": 3.56,
-            "Link": "https://dlm.mariadb.com/4461085/Connectors/java/connector-java-3.5.6/mariadb-java-client-3.5.6.jar"
-        }        
+            "Version": 6.00,
+            "Link": "https://github.com/pyhoon/MiniORMUtils-B4X/releases/download/v6.00/MiniORMUtils.b4xlib"
+        }
     ]
 }
