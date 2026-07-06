@@ -2,140 +2,91 @@
 Group=Handlers
 ModulesStructureVersion=1
 Type=Class
-Version=10.3
+Version=10.5
 @EndOfDesignText@
-'Api Handler class
-'Version: 6.30
+' Categories Api Handler class
+' Version 6.96
 Sub Class_Globals
-	Private DB As MiniORM
-	Private App As EndsMeet
+	Private Path As String
+	Private Method As String
 	Private Request As ServletRequest
 	Private Response As ServletResponse
 	Private HRM As HttpResponseMessage
-	Private Method As String
-	Private Elements() As String
-	Private ElementId As Int
+	Private Model As CategoriesModel
 End Sub
 
 Public Sub Initialize
-	DB = Main.DB
-	App = Main.App
-	HRM.Initialize
-	Main.SetApiMessage(HRM)
+	HRM = Main.HRM
+	Model.Initialize
 End Sub
 
 Sub Handle (req As ServletRequest, resp As ServletResponse)
 	Request = req
 	Response = resp
+	Path = Request.RequestURI
 	Method = Request.Method.ToUpperCase
-	Dim FullElements() As String = WebApiUtils.GetUriElements(Request.RequestURI)
-	Elements = WebApiUtils.CropElements(FullElements, 3) ' 3 For Api handler
-	If ElementMatch("") Then
-		If App.MethodAvailable2(Method, "/api/categories", Me) Then
-			Select Method
-				Case "GET"
-					GetCategories
-					Return
-				Case "POST"
-					CreateNewCategory
-					Return
-			End Select
-		End If
-		ReturnMethodNotAllow
-		Return
-	Else If ElementMatch("id") Then
-		If App.MethodAvailable2(Method, "/api/categories/*", Me) Then
-			Select Method
-				Case "GET"
-					GetCategoryById(ElementId)
-					Return
-				Case "PUT"
-					UpdateCategoryById(ElementId)
-					Return
-				Case "DELETE"
-					DeleteCategoryById(ElementId)
-					Return
-			End Select
-		End If
-		ReturnMethodNotAllow
-		Return
+	If Path = "/api/categories" And Method = "GET" Then
+		GetCategories
+	Else If Path = "/api/categories" And Method = "POST" Then
+		PostCategory
+	Else If Path.StartsWith("/api/categories/") And Method = "GET" Then
+		GetCategoryById
+	Else If Path.StartsWith("/api/categories/") And Method = "PUT" Then
+		PutCategoryById
+	Else If Path.StartsWith("/api/categories/") And Method = "DELETE" Then
+		DeleteCategoryById
+	Else
+		WebApiUtils.ReturnBadRequest(HRM, Response)
 	End If
-	ReturnBadRequest
-End Sub
-
-Private Sub ElementMatch (Pattern As String) As Boolean
-	Select Pattern
-		Case ""
-			If Elements.Length = 0 Then
-				Return True
-			End If
-		Case "id"
-			If Elements.Length = 1 Then
-				If IsNumber(Elements(0)) Then
-					ElementId = Elements(0)
-					Return True
-				End If
-			End If
-	End Select
-	Return False
-End Sub
-
-Private Sub ReturnApiResponse
-	WebApiUtils.ReturnHttpResponse(HRM, Response)
-End Sub
-
-Private Sub ReturnBadRequest
-	WebApiUtils.ReturnBadRequest(HRM, Response)
-End Sub
-
-Private Sub ReturnMethodNotAllow
-	WebApiUtils.ReturnMethodNotAllow(HRM, Response)
 End Sub
 
 Private Sub GetCategories
-	Log($"${Request.Method}: ${Request.RequestURI}"$)
-	DB.SQL = DB.Open
-	DB.Table = "tbl_categories"
-	DB.Query
-	If DB.Error.IsInitialized Then
+	Log($"${Method}: ${Path}"$)
+	Dim Data As List = Model.Read
+	If Model.Error.IsInitialized Then
 		HRM.ResponseCode = 422
-		HRM.ResponseError = DB.Error.Message
+		HRM.ResponseError = Model.Error.Message
 	Else
 		HRM.ResponseCode = 200
-		HRM.ResponseData = DB.Results2
+		HRM.ResponseData = Data
 	End If
-	ReturnApiResponse
-	DB.Close
+	WebApiUtils.ReturnHttpResponse(HRM, Response)
 End Sub
 
-Private Sub GetCategoryById (id As Int)
-	Log($"${Request.Method}: ${Request.RequestURI}"$)
-	DB.SQL = DB.Open
-	DB.Table = "tbl_categories"
-	DB.Find(id)
-	If DB.Error.IsInitialized Then
+Private Sub GetCategoryById
+	Log($"${Method}: ${Path}"$)
+	Try
+		Dim id As Int = Path.SubString("/api/categories/".Length)
+	Catch
+		HRM.ResponseCode = 400
+		HRM.ResponseError = "Invalid id value"
+		WebApiUtils.ReturnHttpResponse(HRM, Response)
+		Return
+	End Try
+	
+	Dim Row As Map = Model.GetRowById(id)
+	If Model.Error.IsInitialized Then
 		HRM.ResponseCode = 422
-		HRM.ResponseError = DB.Error.Message
+		HRM.ResponseError = Model.Error.Message
 	Else
-		If DB.Found Then
+		If Model.Found Then
 			HRM.ResponseCode = 200
-			HRM.ResponseObject = DB.First2
+			HRM.ResponseObject = Row
 		Else
 			HRM.ResponseCode = 404
 			HRM.ResponseError = "Category not found"
 		End If
 	End If
-	ReturnApiResponse
-	DB.Close
+	WebApiUtils.ReturnHttpResponse(HRM, Response)
 End Sub
 
-Private Sub CreateNewCategory
-	Log($"${Request.Method}: ${Request.RequestURI}"$)
+Private Sub PostCategory
+	Log($"${Method}: ${Path}"$)
 	Dim str As String = WebApiUtils.RequestDataText(Request)
 	If WebApiUtils.ValidateContent(str, HRM.PayloadType) = False Then
 		HRM.ResponseCode = 422
 		HRM.ResponseError = $"Invalid ${HRM.PayloadType} payload"$
-		ReturnApiResponse
+		WebApiUtils.ReturnHttpResponse(HRM, Response)
 		Return
 	End If
 	If HRM.PayloadType = WebApiUtils.MIME_TYPE_XML Then
@@ -143,63 +94,67 @@ Private Sub CreateNewCategory
 	Else
 		Dim data As Map = WebApiUtils.ParseJSON(str)	' JSON payload
 	End If
+	
 	' Check whether required keys are provided
 	Dim RequiredKeys As List = Array As String("category_name")
 	For Each requiredkey As String In RequiredKeys
 		If data.ContainsKey(requiredkey) = False Then
 			HRM.ResponseCode = 400
 			HRM.ResponseError = $"Key '${requiredkey}' not found"$
-			ReturnApiResponse
+			WebApiUtils.ReturnHttpResponse(HRM, Response)
 			Return
 		End If
 	Next
+	
 	' Check conflict category name
-	DB.SQL = DB.Open
-	DB.Table = "tbl_categories"
-	DB.Conditions = Array("category_name = ?")
-	DB.Parameters = Array(data.Get("category_name"))
-	DB.Query
-	If DB.Error.IsInitialized Then
+	Dim name As String = data.Get("category_name")
+	Dim Found As Boolean = Model.FindRowByName(name)
+	If Model.Error.IsInitialized Then
 		HRM.ResponseCode = 422
-		HRM.ResponseError = DB.Error.Message
-		ReturnApiResponse
-		DB.Close
+		HRM.ResponseError = Model.Error.Message
+		WebApiUtils.ReturnHttpResponse(HRM, Response)
 		Return
 	End If
-	If DB.Found Then
+	If Found Then
 		HRM.ResponseCode = 409
 		HRM.ResponseError = "Category already exist"
-		ReturnApiResponse
-		DB.Close
+		WebApiUtils.ReturnHttpResponse(HRM, Response)
 		Return
 	End If
+	
 	' Insert new row
-	DB.Reset
-	DB.Columns = Array("category_name", _
-	"created_date")
-	DB.Parameters = Array(data.Get("category_name"), _
-	data.GetDefault("created_date", WebApiUtils.CurrentDateTime))
-	DB.Save
-	If DB.Error.IsInitialized Then
+	Model.Create(name, Main.CurrentDateTime)
+	If Model.Error.IsInitialized Then
 		HRM.ResponseCode = 422
-		HRM.ResponseError = DB.Error.Message
-	Else
-		' Retrieve new row
-		HRM.ResponseCode = 201
-		HRM.ResponseObject = DB.First2
-		HRM.ResponseMessage = "Category created successfully"
+		HRM.ResponseError = Model.Error.Message
+		WebApiUtils.ReturnHttpResponse(HRM, Response)
+		Return
 	End If
-	ReturnApiResponse
-	DB.Close
+	
+	' Retrieve new row
+	HRM.ResponseCode = 201
+	HRM.ResponseObject = Model.First
+	HRM.ResponseMessage = "Category created successfully"
+	WebApiUtils.ReturnHttpResponse(HRM, Response)
 End Sub
 
-Private Sub UpdateCategoryById (id As Int)
-	Log($"${Request.Method}: ${Request.RequestURI}"$)
+Private Sub PutCategoryById
+	Log($"${Method}: ${Path}"$)
+	Try
+		Dim id As Int = Path.SubString("/api/categories/".Length)
+		
+	Catch
+		HRM.ResponseCode = 400
+		HRM.ResponseError = "Invalid id value"
+		WebApiUtils.ReturnHttpResponse(HRM, Response)
+		Return
+	End Try
+	
 	Dim str As String = WebApiUtils.RequestDataText(Request)
 	If WebApiUtils.ValidateContent(str, HRM.PayloadType) = False Then
 		HRM.ResponseCode = 422
 		HRM.ResponseError = $"Invalid ${HRM.PayloadType} payload"$
-		ReturnApiResponse
+		WebApiUtils.ReturnHttpResponse(HRM, Response)
 		Return
 	End If
 	If HRM.PayloadType = WebApiUtils.MIME_TYPE_XML Then
@@ -207,101 +162,97 @@ Private Sub UpdateCategoryById (id As Int)
 	Else
 		Dim data As Map = WebApiUtils.ParseJSON(str)	' JSON payload
 	End If
+	
 	' Check whether required keys are provided
 	If data.ContainsKey("category_name") = False Then
 		HRM.ResponseCode = 400
 		HRM.ResponseError = "Key 'category_name' not found"
-		ReturnApiResponse
+		WebApiUtils.ReturnHttpResponse(HRM, Response)
 		Return
 	End If
-	' Check conflict category name
-	DB.SQL = DB.Open
-	DB.Table = "tbl_categories"
-	DB.Conditions = Array("category_name = ?", "id <> ?")
-	DB.Parameters = Array(data.Get("category_name"), id)
-	DB.Query
-	If DB.Error.IsInitialized Then
+	
+	' Find row by id
+	Dim Found As Boolean = Model.FindRowById(id)
+	If Model.Error.IsInitialized Then
 		HRM.ResponseCode = 422
-		HRM.ResponseError = DB.Error.Message
-		ReturnApiResponse
-		DB.Close
+		HRM.ResponseError = Model.Error.Message
+		WebApiUtils.ReturnHttpResponse(HRM, Response)
 		Return
 	End If
-	If DB.Found Then
+	If Not(Found) Then
+		HRM.ResponseCode = 404
+		HRM.ResponseError = "Category not found"
+		WebApiUtils.ReturnHttpResponse(HRM, Response)
+		Return
+	End If
+	
+	' Check conflict category name
+	Dim name As String = data.Get("category_name")
+	Dim Found As Boolean = Model.FindRowByCategoryNameNotEqualId(name, id)
+	If Model.Error.IsInitialized Then
+		HRM.ResponseCode = 422
+		HRM.ResponseError = Model.Error.Message
+		WebApiUtils.ReturnHttpResponse(HRM, Response)
+		Return
+	End If
+	If Found Then
 		HRM.ResponseCode = 409
 		HRM.ResponseError = "Category already exist"
-		ReturnApiResponse
-		DB.Close
+		WebApiUtils.ReturnHttpResponse(HRM, Response)
 		Return
 	End If
-	' Find row by id
-	DB.Find(id)
-	If DB.Error.IsInitialized Then
-		HRM.ResponseCode = 422
-		HRM.ResponseError = DB.Error.Message
-		ReturnApiResponse
-		DB.Close
-		Return
-	End If
-	If DB.Found = False Then
-		HRM.ResponseCode = 404
-		HRM.ResponseError = "Category not found"
-		ReturnApiResponse
-		DB.Close
-		Return
-	End If
+	
 	' Update row by id
-	DB.Reset
-	DB.Columns = Array("category_name", _
-	"modified_date")
-	DB.Parameters = Array(data.Get("category_name"), _
-	data.GetDefault("created_date", WebApiUtils.CurrentDateTime))
-	DB.Id = id
-	DB.Save
-	If DB.Error.IsInitialized Then
+	Model.Update(id, name, Main.CurrentDateTime)
+	If Model.Error.IsInitialized Then
 		HRM.ResponseCode = 422
-		HRM.ResponseError = DB.Error.Message
-	Else
-		' Return updated row
-		HRM.ResponseCode = 200
-		HRM.ResponseMessage = "Category updated successfully"
-		HRM.ResponseObject = DB.First2
+		HRM.ResponseError = Model.Error.Message
+		WebApiUtils.ReturnHttpResponse(HRM, Response)
+		Return
 	End If
-	ReturnApiResponse
-	DB.Close
+
+	' Return updated row
+	HRM.ResponseCode = 200
+	HRM.ResponseMessage = "Category updated successfully"
+	HRM.ResponseObject = Model.First
+	WebApiUtils.ReturnHttpResponse(HRM, Response)
 End Sub
 
-Private Sub DeleteCategoryById (id As Int)
-	Log($"${Request.Method}: ${Request.RequestURI}"$)
-	DB.SQL = DB.Open
-	DB.Table = "tbl_categories"
+Private Sub DeleteCategoryById
+	Log($"${Method}: ${Path}"$)
+	Try
+		Dim id As Int = Path.SubString("/api/categories/".Length)
+	Catch
+		HRM.ResponseCode = 400
+		HRM.ResponseError = "Invalid id value"
+		WebApiUtils.ReturnHttpResponse(HRM, Response)
+		Return
+	End Try
+	
 	' Find row by id
-	DB.Find(id)
-	If DB.Error.IsInitialized Then
+	Dim Found As Boolean = Model.FindRowById(id)
+	If Model.Error.IsInitialized Then
 		HRM.ResponseCode = 422
-		HRM.ResponseError = DB.Error.Message
-		ReturnApiResponse
-		DB.Close
+		HRM.ResponseError = Model.Error.Message
+		WebApiUtils.ReturnHttpResponse(HRM, Response)
 		Return
 	End If
-	If DB.Found = False Then
+	If Not(Found) Then
 		HRM.ResponseCode = 404
 		HRM.ResponseError = "Category not found"
-		ReturnApiResponse
-		DB.Close
+		WebApiUtils.ReturnHttpResponse(HRM, Response)
 		Return
 	End If
+	
 	' Delete row
-	DB.Reset
-	DB.Id = id
-	DB.Delete
-	If DB.Error.IsInitialized Then
+	Model.Delete(id)
+	If Model.Error.IsInitialized Then
 		HRM.ResponseCode = 422
-		HRM.ResponseError = DB.Error.Message
-	Else
-		HRM.ResponseCode = 200
-		HRM.ResponseMessage = "Category deleted successfully"
+		HRM.ResponseError = Model.Error.Message
+		WebApiUtils.ReturnHttpResponse(HRM, Response)
+		Return
 	End If
-	ReturnApiResponse
-	DB.Close
+	HRM.ResponseCode = 200
+	HRM.ResponseMessage = "Category deleted successfully"
+	WebApiUtils.ReturnHttpResponse(HRM, Response)
 End Sub
