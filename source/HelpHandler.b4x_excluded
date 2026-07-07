@@ -1213,7 +1213,7 @@ Private Sub ServeOpenApiJson '(resp As ServletResponse)
 	' 1. Define OpenAPI Metadata
 	Dim InfoMap As Map = CreateMap( _
         "title": "Pakai Server v6 API", _
-        "version": "6.96", _
+        "version": "6.99", _
         "description": "Auto-compiled specification generated directly by HelpHandler" _
     )
     
