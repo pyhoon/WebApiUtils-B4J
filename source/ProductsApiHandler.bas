@@ -5,7 +5,7 @@ Type=Class
 Version=10.5
 @EndOfDesignText@
 ' Products Api Handler class
-' Version 6.96
+' Version 6.99
 Sub Class_Globals
 	Private Path As String
 	Private Method As String
