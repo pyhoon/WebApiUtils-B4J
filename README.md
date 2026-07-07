@@ -1,5 +1,5 @@
 # WebApiUtils
-Version: 6.96
+Version: 6.99
 
 A B4J library for building REST APIs with the [Pakai Server](https://github.com/pyhoon/pakai-server-b4j) framework. Provides HTTP request/response handling, JSON/XML parsing, cookie management, authentication, file uploads, HTML templating, and auto-generated OpenAPI 3.0 documentation with Swagger UI integration.
 
@@ -61,9 +61,9 @@ The library registers a **Custom Class Template** named `Help Handler` — you c
 ### 3. Using HelpHandler (auto-generated API docs)
 
 `HelpHandler` is a class that:
-- Reads `#hashtag` metadata comments from your handler modules
 - Builds an interactive HTML documentation page at `/help` (powered by Alpine.js + HTMX)
 - Serves an **OpenAPI 3.0 JSON specification** at `/help?format=openapi`
+- Generates **ready-to-use B4X client code snippets** at `/help?format=snippets` for every registered endpoint
 
 ```b4x
 ' In your main server module
@@ -169,17 +169,70 @@ The `ServeOpenApiJson` sub (`HelpHandler.bas:1200`) iterates through the same `A
 
 This means **any endpoint defined in BuildMethods automatically appears in both the interactive `/help` page and the Swagger UI `/swagger/` page**.
 
-### 5. Swagger UI Setup
+#### GenerateAppSnippet — B4X Client Code Generation
 
-The `HelpHandler` serves OpenAPI 3.0 JSON at `/help?format=openapi`. To use Swagger UI:
+The **`/help?format=snippets`** endpoint (`HelpHandler.bas:48`) generates ready-to-use B4X client subroutines. It iterates through `AllMethods` (built by `BuildMethods`) and calls `GenerateAppSnippet` for each one, returning plain text B4X code.
+
+`GenerateAppSnippet` (`HelpHandler.bas:1427`) builds a complete `HttpJob`-based subroutine for every endpoint:
+
+```b4x
+' --- SNIPPET FOR: [GET] /api/products ---
+' Description: Read all Products
+Public Sub GetProducts
+    Dim j As HttpJob
+    j.Initialize("", Me)
+    j.Download(BaseURL & "/api/products")
+    Wait For (j) JobDone(j As HttpJob)
+    If j.Success Then
+        Log(j.GetString)
+    End If
+    j.Release
+End Sub
+
+' --- SNIPPET FOR: [POST] /api/products ---
+' Description: Add new Product
+Public Sub PostProduct (JsonBody As String)
+    Dim j As HttpJob
+    j.Initialize("", Me)
+    j.PostString(BaseURL & "/api/products", JsonBody)
+    j.GetRequest.SetContentType("application/json")
+    Wait For (j) JobDone(j As HttpJob)
+    If j.Success Then
+        Log(j.GetString)
+    End If
+    j.Release
+End Sub
+```
+
+The snippet generator reads the same Method Map properties from `BuildMethods`:
+
+| Map Key | Effect on generated snippet |
+|---------|----------------------------|
+| `Group` | Categories endpoints into groups (comment header) |
+| `Desc` | Becomes a `' Description:` comment |
+| `Verb` | Determines `j.Download` (GET) vs `j.PostString` (POST/PUT) |
+| `Elements` | Path variables like `{id}` become subroutine parameters |
+| `Authenticate` | When `"token"`, adds `AuthToken As String` parameter and `Authorization: Bearer` header |
+| `Name` | URL path segment used in the generated URL |
+
+To use the generated code in a B4J/B4A client app:
+1. Visit `/help?format=snippets` in a browser
+2. Copy the generated subroutines
+3. Paste into your client project (replace `BaseURL` with your server URL)
+
+### 5. Swagger UI Setup with B4X Snippet Sidebar
+
+The `HelpHandler` serves OpenAPI 3.0 JSON at `/help?format=openapi` and B4X client code snippets at `/help?format=snippets`. The Swagger UI is configured as a **split-pane layout** with the interactive API explorer on the left and a live B4X code snippet panel on the right.
+
+To set it up:
 
 1. Download the [Swagger UI dist folder](https://github.com/swagger-api/swagger-ui/tree/master/dist)
 2. Place it in your project at `Objects/www/swagger/`
-3. Modify `swagger-initializer.js` to point to the HelpHandler endpoint:
+3. Use the modified `swagger-initializer.js`:
 
 ```js
-window.onload = function() {
-  window.ui = SwaggerUIBundle({
+window.onload = function () {
+  const ui = SwaggerUIBundle({
     url: "../help?format=openapi",
     dom_id: '#swagger-ui',
     deepLinking: true,
@@ -192,10 +245,37 @@ window.onload = function() {
     ],
     layout: "StandaloneLayout"
   });
+  window.ui = ui;
+
+  // Fetch B4X code snippets from HelpHandler
+  setTimeout(injectDesktopToggleButton, 1000);
+  refreshB4XCode();
 };
 ```
 
-4. Navigate to `/swagger/` to access the Swagger UI explorer
+4. Use the modified `index.html` which provides:
+   - **Left pane** — Standard Swagger UI interactive console
+   - **Right sidebar** — Live B4X code snippets fetched from `../help?format=snippets`
+   - **Sync button** — Refreshes snippets from the server
+   - **Copy All button** — Copies all snippets to clipboard
+   - **Toggle button** — Shows/hides the snippet sidebar (desktop: inline toggle, mobile: slide-out drawer)
+   - **Dark mode toggle** — Moon/sun button for mobile
+
+```html
+<!-- The split-pane layout structure -->
+<div style="display: flex; height: 100vh; width: 100vw;">
+  <!-- LEFT: Swagger Console -->
+  <div style="flex: 1; overflow-y: auto;">
+    <div id="swagger-ui"></div>
+  </div>
+  <!-- RIGHT: B4X Snippet Sidebar -->
+  <div id="b4x-sidebar" style="width: 480px; background: #282c34;">
+    <pre><code id="b4x-code-box">Syncing network templates...</code></pre>
+  </div>
+</div>
+```
+
+5. Navigate to `/swagger/` to access the Swagger UI explorer with the B4X snippet sidebar
 
 ---
 
