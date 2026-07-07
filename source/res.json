@@ -1,0 +1,41 @@
+{
+    "Version": "6.99",
+    "Resources": [
+        {
+            "File": "www\\assets\\css\\bootstrap.min.css",
+            "Link": "https://raw.githubusercontent.com/pyhoon/pakai-server-b4j/refs/heads/main/source/Objects/www/assets/css/bootstrap.min.css"
+        },
+        {
+            "File": "www\\assets\\css\\bootstrap-icons.min.css",
+            "Link": "https://raw.githubusercontent.com/pyhoon/pakai-server-b4j/refs/heads/main/source/Objects/www/assets/css/bootstrap-icons.min.css"
+        },
+        {
+            "File": "www\\assets\\css\\fonts\\bootstrap-icons.woff",
+            "Link": "https://github.com/pyhoon/pakai-server-b4j/raw/refs/heads/main/source/Objects/www/assets/css/fonts/bootstrap-icons.woff"
+        },
+        {
+            "File": "www\\assets\\css\\fonts\\bootstrap-icons.woff2",
+            "Link": "https://github.com/pyhoon/pakai-server-b4j/raw/refs/heads/main/source/Objects/www/assets/css/fonts/bootstrap-icons.woff2"
+        },
+        {
+            "File": "www\\assets\\css\\LICENSE\\bootstrap\\LICENSE.txt",
+            "Link": "https://raw.githubusercontent.com/pyhoon/pakai-server-b4j/refs/heads/main/source/Objects/www/assets/css/LICENSE/bootstrap/LICENSE.txt"
+        },
+        {
+            "File": "www\\assets\\js\\bootstrap.min.js",
+            "Link": "https://raw.githubusercontent.com/pyhoon/pakai-server-b4j/refs/heads/main/source/Objects/www/assets/js/bootstrap.min.js"
+        },
+        {
+            "File": "www\\assets\\js\\bootstrap.min.js.map",
+            "Link": "https://raw.githubusercontent.com/pyhoon/pakai-server-b4j/refs/heads/main/source/Objects/www/assets/js/bootstrap.min.js.map"
+        },
+        {
+            "File": "www\\assets\\js\\cdn.min.js",
+            "Link": "https://raw.githubusercontent.com/pyhoon/pakai-server-b4j/refs/heads/main/source/Objects/www/assets/js/cdn.min.js"
+        },
+        {
+            "File": "www\\assets\\js\\htmx.min.js",
+            "Link": "https://raw.githubusercontent.com/pyhoon/pakai-server-b4j/refs/heads/main/source/Objects/www/assets/js/htmx.min.js"
+        }
+    ]
+}
