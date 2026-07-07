@@ -5,7 +5,7 @@ Type=Class
 Version=10.5
 @EndOfDesignText@
 ' Help Handler class
-' Version 6.96
+' Version 6.99
 Sub Class_Globals
 	Private AllGroups 	As Map
 	Private AllMethods 	As List
@@ -41,12 +41,29 @@ Sub Handle (req As ServletRequest, resp As ServletResponse)
 	Response = resp
 	
 	Dim FormatParam As String = req.GetParameter("format")
-    ' Intercept to serve raw OpenAPI JSON spec
-    If FormatParam.ToLowerCase = "openapi" Then
-        ServeOpenApiJson
-        Return
-    End If
+	If FormatParam.ToLowerCase = "openapi" Then
+		' Intercept to serve raw OpenAPI JSON spec
+		ServeOpenApiJson
+		Return
+	Else If FormatParam.ToLowerCase = "snippets" Then
+		' Generate the code blocks for all endpoints
+		Dim AllCode As StringBuilder
+		AllCode.Initialize
+    	
+		'Build all methods first
+		BuildMethods
 		
+		' Loops directly over the native collection built by WebApiUtils!
+		For Each SingleMethod As Map In AllMethods
+			AllCode.Append(GenerateAppSnippet(SingleMethod)).Append(CRLF).Append(CRLF)
+		Next
+    
+		' Print clean text lines straight to the browser
+		resp.ContentType = "text/plain;charset=UTF-8"
+		resp.Write(AllCode.ToString)
+		Return
+	End If
+
 	ShowHelpPage
 End Sub
 
@@ -340,6 +357,7 @@ Private Sub BuildMethods 'ignore
 	Dim BodyMap As Map = CreateMap("category_id": 1, "product_code": "", "product_name": "", "product_price": 0)
 	Method.Put("Format", FormatMap.As(JSON).ToString)
 	Method.Put("Body", BodyMap.As(JSON).ToString)
+	Method.Put("Authenticate", "token") '<-- Tells Pakai this route is protected (test)
 	ReplaceMethod(Method)
 	
 	Dim Method As Map = RetrieveMethod("Products", "PutProductById (id As Int)")
@@ -1214,8 +1232,6 @@ Private Sub ServeOpenApiJson '(resp As ServletResponse)
 	PathsMap.Initialize
     
 	' 2. Parse Pakai v6 Endpoints (Modify 'APIList' to match your internal routes variable)
-	' In Pakai v6, routes are typically structured in lists or maps inside WebApiUtils / Main Router
-	'Dim Routes As List = WebApiUtils.GetRegisteredRoutes ' Example accessor name depending on your precise setup
 	BuildMethods
 	For Each Method As Map In AllMethods
 		Dim section As VerbSection = GenerateVerbSection(Method)
@@ -1369,12 +1385,6 @@ Private Sub ServeOpenApiJson '(resp As ServletResponse)
 			If RequiredFields.Size > 0 Then
 				SchemaMap.Put("required", RequiredFields)
 			End If
-		    
-			'Dim ContentMap As Map = CreateMap( _
-			'    "application/json": CreateMap( _
-			'        "schema": CreateMap("type": "object") _
-			'    ) _
-			')
 			
 			' 4. Wrap everything into the standard OpenAPI requestBody hierarchy
 			Dim ContentMap As Map = CreateMap( _
@@ -1383,7 +1393,6 @@ Private Sub ServeOpenApiJson '(resp As ServletResponse)
 		        ) _
 		    )
 			
-			'OperationMap.Put("requestBody", CreateMap("content": ContentMap))
 			OperationMap.Put("requestBody", CreateMap("required": True, "content": ContentMap))
 		End If
 		
@@ -1412,4 +1421,93 @@ Private Sub ServeOpenApiJson '(resp As ServletResponse)
     
 	Response.ContentType = "application/json;charset=UTF-8"
 	Response.Write(Generator.ToString)
+End Sub
+
+' Add this at the bottom of HelpHandler.bas
+Private Sub GenerateAppSnippet (MethodMap As Map) As String
+    ' Extract properties already configured by you in BuildMethods
+    Dim Group As String = MethodMap.GetDefault("Group", "Core")
+    Dim SubName As String = MethodMap.GetDefault("Method", "ApiCall")
+    Dim Summary As String = MethodMap.GetDefault("Desc", "API Endpoint Call")
+    Dim Verb As String = MethodMap.GetDefault("Verb", "GET").As(String).ToUpperCase
+    Dim ElementsJson As String = MethodMap.GetDefault("Elements", "[]")
+    Dim AuthType As String = MethodMap.GetDefault("Authenticate", "")
+    Dim BasePathName As String = MethodMap.GetDefault("Name", Group).As(String).ToLowerCase
+	
+    ' Build a clean name for your client app subroutine
+    Dim CleanSubName As String = SubName
+    CleanSubName = CleanSubName.Replace(" ", "_").Replace("(", "").Replace(")", "")
+
+    Dim Sb As StringBuilder
+    Sb.Initialize
+    
+    Sb.Append($"' --- SNIPPET FOR: [${Verb}] /api/${BasePathName} ---"$).Append(CRLF)
+    Sb.Append($"' Description: ${Summary}"$).Append(CRLF)
+
+    ' Read URL elements natively stored by WebApiUtils (e.g. ["{id}"])
+    Dim JSON As JSONParser
+    JSON.Initialize(ElementsJson)
+    Dim PathElements As List = JSON.NextArray
+    
+    ' Track parameter inputs and URL structures
+    Dim ParamSignature As String = ""
+    Dim UrlBuilder As String = $"BaseURL & "/api/${BasePathName}""$
+    
+    For Each Element As String In PathElements
+        If Element.StartsWith("{") And Element.EndsWith("}") Then
+            Dim VarName As String = Element.Replace("{", "").Replace("}", "")
+            ParamSignature = ParamSignature & VarName & " As String, "
+            UrlBuilder = UrlBuilder & " & ""/"" & " & VarName
+        Else
+            UrlBuilder = UrlBuilder & " & ""/" & Element & """"
+        End If
+    Next
+	
+    ' Inject authentication field if required by WebApiUtils configuration
+    If AuthType = "token" Then
+        ParamSignature = ParamSignature & "AuthToken As String, "
+    End If
+	
+	' Trim trailing space and comma from your parameter signature if it exists
+    ParamSignature = ParamSignature.Trim
+    If ParamSignature.EndsWith(",") Then
+        ParamSignature = ParamSignature.SubString2(0, ParamSignature.Length - 1)
+    End If
+	
+    ' Output exact B4X client code based on the Request type
+    If Verb = "POST" Or Verb = "PUT" Then
+		' If there are existing path or auth parameters, add a trailing comma before JsonBody
+        Dim FormattedParams As String = ""
+        If ParamSignature <> "" Then FormattedParams = ParamSignature & ", "
+		
+        Sb.Append($"Public Sub ${CleanSubName} (${FormattedParams}JsonBody As String)"$).Append(CRLF)
+        Sb.Append($"    Dim j As HttpJob"$).Append(CRLF)
+        Sb.Append($"    j.Initialize("", Me)"$).Append(CRLF)
+        Sb.Append($"    j.PostString(${UrlBuilder}, JsonBody)"$).Append(CRLF)
+        Sb.Append($"    j.GetRequest.SetContentType("application/json")"$).Append(CRLF)
+    Else
+		' For GET requests, if there are no parameters, output directly without empty spaces inside parens
+        If ParamSignature = "" Then
+            Sb.Append($"Public Sub ${CleanSubName}"$).Append(CRLF)
+        Else
+            Sb.Append($"Public Sub ${CleanSubName} (${ParamSignature})"$).Append(CRLF)
+        End If
+		
+        Sb.Append($"    Dim j As HttpJob"$).Append(CRLF)
+        Sb.Append($"    j.Initialize("", Me)"$).Append(CRLF)
+        Sb.Append($"    j.Download(${UrlBuilder})"$).Append(CRLF)
+    End If
+    
+    ' Inject the HTTP header for your JWT bearer authentication token automatically
+    If AuthType = "token" Then
+        Sb.Append($"    j.GetRequest.SetHeader("Authorization", "Bearer " & AuthToken)"$).Append(CRLF)
+    End If
+    
+	Sb.Append($"    Wait For (j) JobDone(j As HttpJob)"$).Append(CRLF)
+	Sb.Append($"    If j.Success Then"$).Append(CRLF)
+	Sb.Append($"        Log(j.GetString)"$).Append(CRLF).Append(CRLF)
+	Sb.Append($"    End If"$).Append(CRLF)
+    Sb.Append($"    j.Release"$).Append(CRLF)
+    Sb.Append($"End Sub"$).Append(CRLF)
+    Return Sb.ToString
 End Sub
