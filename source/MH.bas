@@ -214,15 +214,15 @@ Public Sub Toast (id As String, table1 As MiniHtml, info As ToastInfo) As String
 	div1.attr("id", id)
 	div1.attr("hx-swap-oob", "true")
 	table1.up(div1)
-	Dim script1 As MiniJs
-	script1.Initialize
-	script1.AddCustomEventDispatch("entity:changed", _
+	Dim s1 As MiniJs
+	s1.Initialize
+	s1.AddCustomEventDispatch("entity:changed", _
 	CreateMap( _
 	"entity": info.Entity, _
 	"action": info.Action, _
 	"message": info.Message, _
 	"status": info.Status))
-	Return div1.build & CRLF & script1.Generate
+	Return div1.build & CRLF & s1.Generate
 End Sub
 
 Public Sub NavLinkItem (text As String, href As String, icon_cls As String, icon_title As String) As MiniHtml
