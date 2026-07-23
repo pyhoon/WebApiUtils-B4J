@@ -1005,208 +1005,208 @@ Private Sub GetStyles As String
 End Sub
 
 Private Sub AlpineHtmx As String
-	Dim script1 As MiniJs
-	script1.Initialize
-	script1.IncreaseIndent
-	script1.AddComment("1. THE EXTENSION: This tells HTMX how to get the body content")
-	script1.AddComment("This runs INSTEAD of HTMX's default form-encoding logic.")
-	script1.AddLine("htmx.defineExtension('raw-body', {")
-	script1.IncreaseIndent
-	script1.AddLine("encodeParameters: function (xhr, parameters, elt) {")
-	script1.IncreaseIndent
-	script1.DeclareVariable("apiId", "elt.getAttribute('data-api-id')", True)
-	script1.DeclareVariable("bodyValue", $"document.getElementById('body-' + apiId)?.value || """$, True)
-	script1.AddLine("")
-	script1.AddComment("Return the raw string. HTMX will call xhr.send(bodyValue) for you.")
-	script1.AddLine("return bodyValue;")
-	script1.DecreaseIndent
-	script1.AddLine("}")
-	script1.DecreaseIndent
-	script1.AddLine("});")
-	script1.AddLine("")
-	script1.AddEventListener("alpine:init", "")
-	script1.IncreaseIndent
-	script1.AddLine("Alpine.data('apiApp', () => ({")
-	script1.IncreaseIndent
-	script1.AddLine("resetUI(apiId) {")
-	script1.IncreaseIndent
-	script1.AddComment("1. Clear the textarea")
-	script1.DeclareVariable("respEl", "document.getElementById(`response-${apiId}`)", True)
-	script1.AddConditionalCall("respEl", "respEl.value = '';")
-	script1.AddLine("")
-	script1.AddComment("2. Hide the alert")
-	script1.StartIf("this.alerts[apiId]")
-	script1.AddLine("this.alerts[apiId].show = false;")
-	script1.EndIf
-	script1.DecreaseIndent
-	script1.AddLine("},")
-	script1.AddLine("")
-	script1.AddComment("Start with an empty object")
-	script1.AddLine("alerts: {},")
-	script1.AddLine("")
-	script1.AddLine("handleResponse(evt, apiId) {")
-	script1.IncreaseIndent
-	script1.DeclareVariable("xhr", "evt.detail.xhr", True)
-	script1.DeclareVariable("contentType", $"xhr.getResponseHeader("Content-Type") || """$, True)
-	'script1.ConsoleLog("contentType")
-	script1.DeclareVariable("contentToShow", "xhr.responseText", False)
-	'script1.ConsoleLog("contentToShow")
-	script1.DeclareVariable("m", "", False)
-	script1.DeclareVariable("a", "", False)
-	script1.DeclareVariable("s", "", False)
-	script1.DeclareVariable("t", "", False)
-	script1.DeclareVariable("e", "", False)
-	script1.DeclareVariable("r", "", False)	
-	script1.DeclareVariable("isSuccess", "xhr.status >= 200 && xhr.status < 300", False)
-	script1.AddLine("")
-	script1.StartIf($"contentType.includes("xml")"$)
-	script1.AddComment("1. Parse the string into an XML Document")
-	script1.DeclareVariable("parser", "new DOMParser()", True)
-	script1.DeclareVariable("xmlDoc", $"parser.parseFromString(xhr.responseText, "text/xml")"$, True)
-	script1.AddLine("")
-	script1.AddComment("2. Extract values using tags")
-	script1.AddLine($"m = xmlDoc.getElementsByTagName("${RESPONSE_ELEMENT_MESSAGE}")[0]?.textContent;"$)
-	script1.AddLine($"a = xmlDoc.getElementsByTagName("${RESPONSE_ELEMENT_CODE}")[0]?.textContent;"$)
-	script1.AddLine($"s = xmlDoc.getElementsByTagName("${RESPONSE_ELEMENT_STATUS}")[0]?.textContent;"$)
-	script1.AddLine($"t = contentType;"$)
-	script1.AddLine($"e = xmlDoc.getElementsByTagName("${RESPONSE_ELEMENT_ERROR}")[0]?.textContent;"$)
-	script1.AddLine($"r = xmlDoc.getElementsByTagName("${RESPONSE_ELEMENT_RESULT}")[0];"$)
-	script1.AddCode(" ") ' leave a space
-	script1.AppendComment("The data node")
-	'script1.ConsoleLog("m, a, s, t, e, r")
-	script1.AddLine("")
-	script1.AddComment("3. Logic check")
-	script1.AddConditionalCall("s && s !== 'ok' && s !== 'success'", "isSuccess = false;")
-	script1.AddLine("")
-	script1.AddComment("4. Extract token if present in r")
-	script1.StartIf("r")
-	script1.AddComment("We use r.querySelector instead of xmlDoc to be specific")
-	script1.DeclareVariable("token", $"r.getElementsByTagName("access_token")[0]?.textContent;"$, True)
-	script1.StartIf("token")
-	script1.AddConditionalCall("token", $"localStorage.setItem("access_token", token);"$)
-	script1.EndIf
-	script1.EndIf
-	script1.AddElse
-	script1.StartTry
-	script1.AddComment("1. Standard JSON Parsing")
-	script1.DeclareVariable("parsed", "JSON.parse(xhr.responseText)", True)
-	script1.AddComment("2. Extract values using keys")
-	script1.AddLine($"m = parsed.${RESPONSE_ELEMENT_MESSAGE};"$)
-	script1.AddLine($"a = parsed.${RESPONSE_ELEMENT_CODE};"$)
-	script1.AddLine($"s = parsed.${RESPONSE_ELEMENT_STATUS};"$)
-	script1.AddLine($"t = contentType;"$)
-	script1.AddLine($"e = parsed.${RESPONSE_ELEMENT_ERROR};"$)
-	script1.AddLine($"r = parsed.${RESPONSE_ELEMENT_RESULT};"$)
-	script1.AddLine("contentToShow = JSON.stringify(parsed, null, 2);")
-	script1.AddLine("")
-	script1.AddComment("3. Logic check")
-	script1.AddConditionalCall("s && s !== 'ok' && s !== 'success'", "isSuccess = false;")
-	script1.AddLine("")
-	script1.AddComment("4. Extract token if present in r")
+	Dim s1 As MiniJs
+	s1.Initialize
+	s1.IncreaseIndent
+	s1.AddComment("1. THE EXTENSION: This tells HTMX how to get the body content")
+	s1.AddComment("This runs INSTEAD of HTMX's default form-encoding logic.")
+	s1.AddLine("htmx.defineExtension('raw-body', {")
+	s1.IncreaseIndent
+	s1.AddLine("encodeParameters: function (xhr, parameters, elt) {")
+	s1.IncreaseIndent
+	s1.DeclareVariable("apiId", "elt.getAttribute('data-api-id')", True)
+	s1.DeclareVariable("bodyValue", $"document.getElementById('body-' + apiId)?.value || """$, True)
+	s1.AddLine("")
+	s1.AddComment("Return the raw string. HTMX will call xhr.send(bodyValue) for you.")
+	s1.AddLine("return bodyValue;")
+	s1.DecreaseIndent
+	s1.AddLine("}")
+	s1.DecreaseIndent
+	s1.AddLine("});")
+	s1.AddLine("")
+	s1.AddEventListener("alpine:init", "")
+	s1.IncreaseIndent
+	s1.AddLine("Alpine.data('apiApp', () => ({")
+	s1.IncreaseIndent
+	s1.AddLine("resetUI(apiId) {")
+	s1.IncreaseIndent
+	s1.AddComment("1. Clear the textarea")
+	s1.DeclareVariable("respEl", "document.getElementById(`response-${apiId}`)", True)
+	s1.AddConditionalCall("respEl", "respEl.value = '';")
+	s1.AddLine("")
+	s1.AddComment("2. Hide the alert")
+	s1.StartIf("this.alerts[apiId]")
+	s1.AddLine("this.alerts[apiId].show = false;")
+	s1.EndIf
+	s1.DecreaseIndent
+	s1.AddLine("},")
+	s1.AddLine("")
+	s1.AddComment("Start with an empty object")
+	s1.AddLine("alerts: {},")
+	s1.AddLine("")
+	s1.AddLine("handleResponse(evt, apiId) {")
+	s1.IncreaseIndent
+	s1.DeclareVariable("xhr", "evt.detail.xhr", True)
+	s1.DeclareVariable("contentType", $"xhr.getResponseHeader("Content-Type") || """$, True)
+	's1.ConsoleLog("contentType")
+	s1.DeclareVariable("contentToShow", "xhr.responseText", False)
+	's1.ConsoleLog("contentToShow")
+	s1.DeclareVariable("m", "", False)
+	s1.DeclareVariable("a", "", False)
+	s1.DeclareVariable("s", "", False)
+	s1.DeclareVariable("t", "", False)
+	s1.DeclareVariable("e", "", False)
+	s1.DeclareVariable("r", "", False)	
+	s1.DeclareVariable("isSuccess", "xhr.status >= 200 && xhr.status < 300", False)
+	s1.AddLine("")
+	s1.StartIf($"contentType.includes("xml")"$)
+	s1.AddComment("1. Parse the string into an XML Document")
+	s1.DeclareVariable("parser", "new DOMParser()", True)
+	s1.DeclareVariable("xmlDoc", $"parser.parseFromString(xhr.responseText, "text/xml")"$, True)
+	s1.AddLine("")
+	s1.AddComment("2. Extract values using tags")
+	s1.AddLine($"m = xmlDoc.getElementsByTagName("${RESPONSE_ELEMENT_MESSAGE}")[0]?.textContent;"$)
+	s1.AddLine($"a = xmlDoc.getElementsByTagName("${RESPONSE_ELEMENT_CODE}")[0]?.textContent;"$)
+	s1.AddLine($"s = xmlDoc.getElementsByTagName("${RESPONSE_ELEMENT_STATUS}")[0]?.textContent;"$)
+	s1.AddLine($"t = contentType;"$)
+	s1.AddLine($"e = xmlDoc.getElementsByTagName("${RESPONSE_ELEMENT_ERROR}")[0]?.textContent;"$)
+	s1.AddLine($"r = xmlDoc.getElementsByTagName("${RESPONSE_ELEMENT_RESULT}")[0];"$)
+	s1.AddCode(" ") ' leave a space
+	s1.AppendComment("The data node")
+	's1.ConsoleLog("m, a, s, t, e, r")
+	s1.AddLine("")
+	s1.AddComment("3. Logic check")
+	s1.AddConditionalCall("s && s !== 'ok' && s !== 'success'", "isSuccess = false;")
+	s1.AddLine("")
+	s1.AddComment("4. Extract token if present in r")
+	s1.StartIf("r")
+	s1.AddComment("We use r.querySelector instead of xmlDoc to be specific")
+	s1.DeclareVariable("token", $"r.getElementsByTagName("access_token")[0]?.textContent;"$, True)
+	s1.StartIf("token")
+	s1.AddConditionalCall("token", $"localStorage.setItem("access_token", token);"$)
+	s1.EndIf
+	s1.EndIf
+	s1.AddElse
+	s1.StartTry
+	s1.AddComment("1. Standard JSON Parsing")
+	s1.DeclareVariable("parsed", "JSON.parse(xhr.responseText)", True)
+	s1.AddComment("2. Extract values using keys")
+	s1.AddLine($"m = parsed.${RESPONSE_ELEMENT_MESSAGE};"$)
+	s1.AddLine($"a = parsed.${RESPONSE_ELEMENT_CODE};"$)
+	s1.AddLine($"s = parsed.${RESPONSE_ELEMENT_STATUS};"$)
+	s1.AddLine($"t = contentType;"$)
+	s1.AddLine($"e = parsed.${RESPONSE_ELEMENT_ERROR};"$)
+	s1.AddLine($"r = parsed.${RESPONSE_ELEMENT_RESULT};"$)
+	s1.AddLine("contentToShow = JSON.stringify(parsed, null, 2);")
+	s1.AddLine("")
+	s1.AddComment("3. Logic check")
+	s1.AddConditionalCall("s && s !== 'ok' && s !== 'success'", "isSuccess = false;")
+	s1.AddLine("")
+	s1.AddComment("4. Extract token if present in r")
 	' Verbose
-	'script1.DeclareVariable("token", "parsed.r?.[0]?.access_token", True)
-	script1.DeclareVariable("token", "parsed.r?.access_token", True)
-	script1.AddConditionalCall("token", $"localStorage.setItem("access_token", token);"$)
-	script1.AddCatch("err")
-	script1.AddComment("Not JSON, leave as raw")
-	script1.EndTry
-	script1.EndIf
-	script1.AddLine("")
-	script1.AddComment("Dynamic Alert Assignment")
-	script1.AddLine("this.alerts[apiId] = {")
-	script1.IncreaseIndent
-	script1.AddLine("show: true,")
+	's1.DeclareVariable("token", "parsed.r?.[0]?.access_token", True)
+	s1.DeclareVariable("token", "parsed.r?.access_token", True)
+	s1.AddConditionalCall("token", $"localStorage.setItem("access_token", token);"$)
+	s1.AddCatch("err")
+	s1.AddComment("Not JSON, leave as raw")
+	s1.EndTry
+	s1.EndIf
+	s1.AddLine("")
+	s1.AddComment("Dynamic Alert Assignment")
+	s1.AddLine("this.alerts[apiId] = {")
+	s1.IncreaseIndent
+	s1.AddLine("show: true,")
 	If Verbose Then
-		script1.AddLine("status: a,")
-		script1.AddLine("message: a + ' ' + (e && e != 'null' ? e : m),")
+		s1.AddLine("status: a,")
+		s1.AddLine("message: a + ' ' + (e && e != 'null' ? e : m),")
 	Else
-		script1.AddLine("status: a,")
-		script1.AddTernary("message: isSuccess", "`${a} Success`", "`${a} Error`,")
+		s1.AddLine("status: a,")
+		s1.AddTernary("message: isSuccess", "`${a} Success`", "`${a} Error`,")
 	End If
-	script1.AddTernary("type: isSuccess", "'bg-success'", "'bg-danger'")
-	script1.DecreaseIndent
-	script1.AddLine("};")
-	script1.AddLine("")
-	script1.AddComment("Use .value for Textareas (textContent is for <div> or <pre>)")
-	script1.DeclareVariable("responseEl", "document.getElementById(`response-${apiId}`)", True)
-	script1.StartIf("responseEl")
-	script1.AddLine("responseEl.value = contentToShow;")
-	script1.EndIf
-	script1.DecreaseIndent
-	script1.AddLine("}")
-	script1.DecreaseIndent
-	script1.AddLine("}));")
-	script1.DecreaseIndent
-	script1.AddLine("});")
-	script1.AddLine("")
-	script1.AddComment("2. THE BRAIN: Handles Headers and URL")
-	script1.AddEventListener("htmx:configRequest", "evt")
-	script1.IncreaseIndent
-	script1.DeclareVariable("el", "evt.detail.elt", True)
-	script1.DeclareVariable("apiId", "el.getAttribute('data-api-id')", True)
-	script1.AddConditionalCall("!apiId", "return;")
-	script1.AddLine("")
-	script1.AddComment("Update URL")
-	script1.DeclareVariable("pathVal", "document.getElementById(`path-${apiId}`)?.value", True)
-	'script1.ConsoleLog("'pathVal='+pathVal")
-	script1.AddConditionalCall("pathVal", "evt.detail.path = pathVal;")
-	script1.AddLine("")
-	script1.AddLine("evt.detail.headers['Accept'] = 'application/json, application/xml';")
-	script1.AddLine("")
-	script1.AddComment("Auth Logic")
-	script1.StartIf("el.classList.contains('basic')")
-	script1.DeclareVariable("creds", "btoa(`${localStorage.getItem('client_id')}:${localStorage.getItem('client_secret')}`)", True)
-	script1.AddLine("evt.detail.headers['Authorization'] = `Basic ${creds}`;")
-	script1.ElseIf("el.classList.contains('token')")
-	'script1.ConsoleLog("'access_token', localStorage.getItem('access_token')")
-	script1.AddLine("evt.detail.headers['Authorization'] = `Bearer ${localStorage.getItem('access_token')}`;")
-	script1.ElseIf("el.classList.contains('apikey')")
-	'script1.ConsoleLog("'api-key', localStorage.getItem('api-key')")
-	script1.AddLine("evt.detail.headers['X-API-KEY'] = `${localStorage.getItem('api-key')}`;")
-	script1.EndIf
-	script1.DecreaseIndent
-	script1.AddLine("});")
-	script1.DecreaseIndent
-	script1.AddLine("});")
-	Return script1.Generate2
+	s1.AddTernary("type: isSuccess", "'bg-success'", "'bg-danger'")
+	s1.DecreaseIndent
+	s1.AddLine("};")
+	s1.AddLine("")
+	s1.AddComment("Use .value for Textareas (textContent is for <div> or <pre>)")
+	s1.DeclareVariable("responseEl", "document.getElementById(`response-${apiId}`)", True)
+	s1.StartIf("responseEl")
+	s1.AddLine("responseEl.value = contentToShow;")
+	s1.EndIf
+	s1.DecreaseIndent
+	s1.AddLine("}")
+	s1.DecreaseIndent
+	s1.AddLine("}));")
+	s1.DecreaseIndent
+	s1.AddLine("});")
+	s1.AddLine("")
+	s1.AddComment("2. THE BRAIN: Handles Headers and URL")
+	s1.AddEventListener("htmx:configRequest", "evt")
+	s1.IncreaseIndent
+	s1.DeclareVariable("el", "evt.detail.elt", True)
+	s1.DeclareVariable("apiId", "el.getAttribute('data-api-id')", True)
+	s1.AddConditionalCall("!apiId", "return;")
+	s1.AddLine("")
+	s1.AddComment("Update URL")
+	s1.DeclareVariable("pathVal", "document.getElementById(`path-${apiId}`)?.value", True)
+	's1.ConsoleLog("'pathVal='+pathVal")
+	s1.AddConditionalCall("pathVal", "evt.detail.path = pathVal;")
+	s1.AddLine("")
+	s1.AddLine("evt.detail.headers['Accept'] = 'application/json, application/xml';")
+	s1.AddLine("")
+	s1.AddComment("Auth Logic")
+	s1.StartIf("el.classList.contains('basic')")
+	s1.DeclareVariable("creds", "btoa(`${localStorage.getItem('client_id')}:${localStorage.getItem('client_secret')}`)", True)
+	s1.AddLine("evt.detail.headers['Authorization'] = `Basic ${creds}`;")
+	s1.ElseIf("el.classList.contains('token')")
+	's1.ConsoleLog("'access_token', localStorage.getItem('access_token')")
+	s1.AddLine("evt.detail.headers['Authorization'] = `Bearer ${localStorage.getItem('access_token')}`;")
+	s1.ElseIf("el.classList.contains('apikey')")
+	's1.ConsoleLog("'api-key', localStorage.getItem('api-key')")
+	s1.AddLine("evt.detail.headers['X-API-KEY'] = `${localStorage.getItem('api-key')}`;")
+	s1.EndIf
+	s1.DecreaseIndent
+	s1.AddLine("});")
+	s1.DecreaseIndent
+	s1.AddLine("});")
+	Return s1.Generate2
 End Sub
 
 Private Sub SaveToken As String
-	Dim script1 As MiniJs
-	script1.Initialize
-	script1.IncreaseIndent
-	script1.IncreaseIndent
-	script1.IncreaseIndent
-	script1.AddLine("{")
-	script1.IncreaseIndent
-	script1.AddLine("accessToken: localStorage.getItem('access_token'),")
-	script1.AddLine("saveToken(xhr) {")
-	script1.IncreaseIndent
-	script1.StartTry
-	script1.DeclareVariable("contentType", $"xhr.getResponseHeader('Content-Type') || ''"$, True)
-	'script1.ConsoleLog("contentType")
-	script1.StartIf($"contentType.includes('xml')"$)
-	script1.DeclareVariable("parser", "new DOMParser()", True)
-	script1.DeclareVariable("xmlDoc", $"parser.parseFromString(xhr.responseText, 'text/xml')"$, True)
-	'script1.DeclareVariable("resp", $"xmlDoc.getElementsByTagName('r')[0]"$, True)
-	script1.DeclareVariable("token", $"xmlDoc.getElementsByTagName('r')[0].access_token"$, True)
-	script1.AddElse
-	script1.DeclareVariable("resp", "JSON.parse(xhr.responseText)", True)
-	script1.DeclareVariable("token", "resp.r?.[0]?.access_token", True)
-	script1.EndIf
-	script1.StartIf("token")
-	script1.AddLine("localStorage.setItem('access_token', token);")
-	script1.AddLine("this.accessToken = token;")
-	script1.AddLine("console.log('Access token stored!');")
-	script1.EndIf
-	script1.DecreaseIndent
-	script1.AddLine("} catch(err) { console.log(err) }")
-	script1.EndFunction
-	script1.DecreaseIndent
-	script1.AddLine("}")
-	script1.IncreaseIndent
-	script1.AddLine("}")
-	Return script1.Generate2
+	Dim s1 As MiniJs
+	s1.Initialize
+	s1.IncreaseIndent
+	s1.IncreaseIndent
+	s1.IncreaseIndent
+	s1.AddLine("{")
+	s1.IncreaseIndent
+	s1.AddLine("accessToken: localStorage.getItem('access_token'),")
+	s1.AddLine("saveToken(xhr) {")
+	s1.IncreaseIndent
+	s1.StartTry
+	s1.DeclareVariable("contentType", $"xhr.getResponseHeader('Content-Type') || ''"$, True)
+	's1.ConsoleLog("contentType")
+	s1.StartIf($"contentType.includes('xml')"$)
+	s1.DeclareVariable("parser", "new DOMParser()", True)
+	s1.DeclareVariable("xmlDoc", $"parser.parseFromString(xhr.responseText, 'text/xml')"$, True)
+	's1.DeclareVariable("resp", $"xmlDoc.getElementsByTagName('r')[0]"$, True)
+	s1.DeclareVariable("token", $"xmlDoc.getElementsByTagName('r')[0].access_token"$, True)
+	s1.AddElse
+	s1.DeclareVariable("resp", "JSON.parse(xhr.responseText)", True)
+	s1.DeclareVariable("token", "resp.r?.[0]?.access_token", True)
+	s1.EndIf
+	s1.StartIf("token")
+	s1.AddLine("localStorage.setItem('access_token', token);")
+	s1.AddLine("this.accessToken = token;")
+	s1.AddLine("console.log('Access token stored!');")
+	s1.EndIf
+	s1.DecreaseIndent
+	s1.AddLine("} catch(err) { console.log(err) }")
+	s1.EndFunction
+	s1.DecreaseIndent
+	s1.AddLine("}")
+	s1.IncreaseIndent
+	s1.AddLine("}")
+	Return s1.Generate2
 End Sub
 
 Private Sub ServeOpenApiJson '(resp As ServletResponse)
