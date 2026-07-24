@@ -43,8 +43,8 @@ Version=10.5
 @EndOfDesignText@
 #Region  Project Attributes
 '================================================
-'Template:  Pakai Server
-'Version:   6.99
+'Library:   WebApiUtils
+'Version:   7.00
 'License:   MIT License
 'Developer: Poon Yip Hoon (Aeric)
 '================================================
@@ -66,10 +66,10 @@ Version=10.5
 #End If
 #Region  Macros
 #Macro: Title, Class Templates, ide://run?File=%PROJECT%\create_excluded.bat&Args=..\HelpHandler.bas
-#Macro: Title, Update Manifest, ide://run?File=%ADDITIONAL%\..\B4X\manifest-writer.jar&Args=%PROJECT%&Args=%PROJECT%&Args=Author&Args=Aeric&Args=Version&Args=6.99&Args=B4J.DependsOn&Args=JavaObject,+Json,+jStringUtils,+Xml2Map&Args=CustomClassTemplates&Args=Help+Handler|HelpHandler&Args=Supported+Platforms&Args=B4J
+#Macro: Title, Update Manifest, ide://run?File=%ADDITIONAL%\..\B4X\manifest-writer.jar&Args=%PROJECT%&Args=%PROJECT%&Args=Author&Args=Aeric&Args=Version&Args=7.00&Args=B4J.DependsOn&Args=JavaObject,+Json,+jStringUtils,+Xml2Map&Args=CustomClassTemplates&Args=Help+Handler|HelpHandler&Args=Supported+Platforms&Args=B4J
 #Macro: Title, Create B4X Lib, ide://run?File=%JAVABIN%\jar.exe&WorkingDirectory=..&Args=-cMf&Args=..\release\%PROJECT_NAME%.b4xlib&Args=Snippets&Args=%PROJECT_NAME%.bas&Args=HelpHandler.b4x_excluded&Args=manifest.txt&Args=LICENSE
-#Macro: Title, Release folder, ide://run?File=%WINDIR%\SysWOW64\explorer.exe&Args=%PROJECT%\..\release
 #Macro: Title, Copy to AddLibs, ide://run?File=%COMSPEC%&Args=/c&Args=copy&Args=%PROJECT%\..\release\*.b4xlib&Args=%ADDITIONAL%
+#Macro: Title, Release folder, ide://run?File=%WINDIR%\SysWOW64\explorer.exe&Args=%PROJECT%\..\release
 '#Macro: Title, GetLibraries, ide://run?File=%ADDITIONAL%\libget.jar&args=%PROJECT%&args=false
 '#Macro: Title, GetResources, ide://run?File=%ADDITIONAL%\resget.jar&args=%PROJECT%&args=true
 #End Region
