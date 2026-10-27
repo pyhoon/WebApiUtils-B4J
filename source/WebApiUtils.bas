@@ -1,11 +1,11 @@
 ﻿B4J=true
-Group=Modules
+Group=App
 ModulesStructureVersion=1
 Type=StaticCode
 Version=10.3
 @EndOfDesignText@
 'Web API Utility
-'Version: 6.99 rev1
+'Version: 7.00
 Sub Process_Globals
 	Public Const MIME_TYPE_HTML As String = "text/html"
 	Public Const MIME_TYPE_JSON As String = "application/json"
@@ -22,6 +22,7 @@ Sub Process_Globals
 	Type HttpResponseMessage (ResponseMessage As String, ResponseCode As Int, ResponseStatus As String, ResponseType As String, ResponseError As Object, ResponseData As List, ResponseObject As Map, ResponseBody As Object, PayloadType As String, ContentType As String, XmlRoot As String, XmlElement As String, VerboseMode As Boolean, OrderedKeys As Boolean, ResponseKeys As List, ResponseKeysAlias As List)
 End Sub
 
+'Deprecated
 Public Sub CheckMaxElements (Elements() As String, Max_Elements As Int) As Boolean
 	If Elements.Length > Max_Elements Or Elements.Length = 0 Then
 		Return False
@@ -46,16 +47,19 @@ Public Sub CheckInteger (Value As Object) As Boolean
 	End Try
 End Sub
 
+'Deprecated
 Public Sub GetApiPathElements (Path As String) As String()
 	Dim element() As String = Regex.Split("\/", Path)
 	Return element
 End Sub
 
+'Deprecated
 Public Sub GetUriElements (Uri As String) As String()
 	Dim element() As String = Regex.Split("\/", Uri)
 	Return element
 End Sub
 
+'Deprecated
 ' Use the following code sample if your API URL pattern looks like this:
 ' Web = /products
 ' Api = /api/products
@@ -77,18 +81,21 @@ Public Sub CropElements (FullElements() As String, StartingElementIndex As Int) 
 	Return NewArray
 End Sub
 
+'Deprecated
 Public Sub BuildHtml (strHTML As String, Settings As Map) As String
 	' Replace $KEY$ tag with new content from Map
 	strHTML = ReplaceMap(strHTML, Settings)
 	Return strHTML
 End Sub
 
+'Deprecated
 Public Sub BuildView (strHTML As String, View As String) As String
 	' Replace @VIEW@ tag with new content
 	strHTML = strHTML.Replace("@VIEW@", View)
 	Return strHTML
 End Sub
 
+'Deprecated
 Public Sub BuildCsrfToken (strHTML As String, Content As String) As String
 	' Replace meta name="csrf-token" tag with new content
 	Dim strMetaTag As String = $"<meta name="csrf-token" content="${Content}">"$
@@ -96,24 +103,28 @@ Public Sub BuildCsrfToken (strHTML As String, Content As String) As String
 	Return strHTML
 End Sub
 
+'Deprecated
 Public Sub BuildTag (strHTML As String, Key As String, Value As String) As String
 	' Replace @KEY@ keyword with new content
 	strHTML = strHTML.Replace("@" & Key & "@", Value)
 	Return strHTML
 End Sub
 
+'Deprecated
 Public Sub BuildDocView (strHTML As String, View As String) As String
 	' Replace @DOCVIEW@ tag with new content
 	strHTML = strHTML.Replace("@DOCVIEW@", View)
 	Return strHTML
 End Sub
 
+'Deprecated
 Public Sub BuildScript (strHTML As String, Script As String) As String
 	' Replace @SCRIPT@ tag with new content
 	strHTML = strHTML.Replace("@SCRIPT@", Script)
 	Return strHTML
 End Sub
 
+'Deprecated
 ' Insert inline JavaScript
 Public Sub BuildScript2 (strHTML As String, Script As String, Settings As Map) As String
 	' Replace @SCRIPT@ tag with new content
@@ -125,58 +136,69 @@ Public Sub BuildScript2 (strHTML As String, Script As String, Settings As Map) A
 	Return strHTML
 End Sub
 
+'Deprecated
 Public Sub ReadMapFile (FileDir As String, FileName As String) As Map
 	Dim strPath As String = File.Combine(FileDir, FileName)
 	Log($"Reading file (${strPath})..."$)
 	Return File.ReadMap(FileDir, FileName)
 End Sub
 
+'Deprecated
 'Read text file from File.DirAssets
 Public Sub ReadTextFile (FileName As String) As String
 	Return File.ReadString(File.DirAssets, FileName)
 End Sub
 
+'Deprecated
 'Write file to File.DirApp
 Public Sub WriteTextFile (FileName As String, Contents As String)
 	File.WriteString(File.DirApp, FileName, Contents)
 End Sub
 
+'Deprecated
 'Write file to www directory
 Public Sub WriteAssetFile (FileName As String, Contents As String)
 	File.WriteString(File.Combine(File.DirApp, "www"), FileName, Contents)
 End Sub
 
+'Deprecated
 'Delete file inside www directory
 Public Sub DeleteAssetFile (FileName As String)
 	File.Delete(File.Combine(File.DirApp, "www"), FileName)
 End Sub
 
+'Deprecated
 'Check file exists inside www directory
 Public Sub AssetFileExist (FileName As String) As Boolean
 	Return File.Exists(File.Combine(File.DirApp, "www"), FileName)
 End Sub
 
+'Deprecated
 Public Sub Object2Json (O As Object) As String
 	Return O.As(JSON).ToString
 End Sub
 
+'Deprecated
 Private Sub List2PrettyJson (L As List) As String 'ignore
 	Dim JG As JSONGenerator
 	JG.Initialize2(L)
 	Return JG.ToPrettyString(2)
 End Sub
 
+'Deprecated
 Private Sub Map2PrettyJson (M As Map) As String 'ignore
 	Dim JG As JSONGenerator
 	JG.Initialize(M)
 	Return JG.ToPrettyString(2)
 End Sub
 
+'Deprecated
 Public Sub GetCurrentTimezone As String
 	Dim CurrentTimezone As Double = DateTime.GetTimeZoneOffsetAt(DateTime.Now)
 	Return CurrentTimezone
 End Sub
 
+'Deprecated
 Public Sub CurrentDateTime As String
 	Dim CurrentDateFormat As String = DateTime.DateFormat
 	DateTime.DateFormat = "yyyy-MM-dd HH:mm:ss"
@@ -274,6 +296,7 @@ Public Sub ParseJSON (Text As String) As Map
 	Return Text.As(JSON).ToMap
 End Sub
 
+' Return first item of the list as Part
 Public Sub RequestMultiPart (Request As ServletRequest, Folder As String, MaxSize As Long) As Part
 	Dim part As Part
 	Dim config As JavaObject
@@ -291,6 +314,7 @@ Public Sub RequestMultiPart (Request As ServletRequest, Folder As String, MaxSiz
 	Return part
 End Sub
 
+' Return list of Part
 Public Sub RequestMultipartList (Request As ServletRequest, Folder As String, MaxSize As Long) As List
 	Dim config As JavaObject
 	config.InitializeNewInstance("jakarta.servlet.MultipartConfigElement", Array(Folder, MaxSize, MaxSize, 81920))
@@ -331,8 +355,8 @@ Public Sub RequestMultipartData (Request As ServletRequest, Folder As String, Ma
 	Return Data
 End Sub
 
-Public Sub RequestBasicAuth (Auths As List) As Map
-	Dim Client As Map = CreateMap("CLIENT_ID": "", "CLIENT_SECRET": "")
+' With optional Map
+Public Sub RequestBasicAuth (Auths As List, Client As Map = CreateMap("CLIENT_ID": "", "CLIENT_SECRET": "")) As Map
 	If Auths.Size > 0 Then
 		Dim Auth As String = Auths.Get(0)
 		If Auth.StartsWith("Basic") Then
@@ -370,6 +394,12 @@ Public Sub DecodeURL (Str As String) As String
 	Return SU.DecodeUrl(Str, "UTF8")
 End Sub
 
+' Return Authorization list of String
+Public Sub RequestAuthorization (Request As ServletRequest) As List
+	Dim Auths As List = Request.GetHeaders("Authorization")
+	Return Auths
+End Sub
+
 ' Get Access Token from Header
 Public Sub RequestAccessToken (Request As ServletRequest) As String
 	Dim Token As String
@@ -399,15 +429,36 @@ Public Sub RequestApiKey (req As ServletRequest) As String
 	Return ""
 End Sub
 
-' max_age = number of seconds the cookie is valid, 0 to expire immediately
-Public Sub ReturnCookie (Key As String, Value As String, MaxAge As Int, HttpOnly As Boolean, Response As ServletResponse)
-	Dim session_cookie As Cookie
-	session_cookie.Initialize(Key, Value)
-	session_cookie.MaxAge = MaxAge
-	session_cookie.HttpOnly = HttpOnly
-	Response.AddCookie(session_cookie)
+Public Sub ResponseCookie (Response As ServletResponse, Key As String = "", Value As String = "", MaxAge As Int = 0, HttpOnly As Boolean = False, Path As String = "/", SameSite As String = "Lax", Secure As Boolean = False)
+	Dim cookie As Cookie
+	cookie.Initialize(Key, Value)
+	cookie.MaxAge = MaxAge
+	cookie.HttpOnly = HttpOnly
+	Dim jo As JavaObject = cookie
+	jo.RunMethod("setPath", Array(Path))
+	jo.RunMethod("setAttribute", Array("SameSite", SameSite))
+	jo.RunMethod("setSecure", Array(Secure))
+	'Log(jo.RunMethod("getPath"))
+	'Log(jo.RunMethod("getAttribute", Array("SameSite")))
+	'Log(jo.RunMethod("getSecure"))
+	Response.AddCookie(cookie)
 End Sub
 
+Public Sub ResponseLocation (Response As ServletResponse, Location As String = "")
+	Response.SendRedirect(Location)
+End Sub
+
+'Deprecated
+' max_age = number of seconds the cookie is valid, 0 to expire immediately
+Public Sub ReturnCookie (Key As String, Value As String, MaxAge As Int, HttpOnly As Boolean, Response As ServletResponse)
+	Dim cookie As Cookie
+	cookie.Initialize(Key, Value)
+	cookie.MaxAge = MaxAge
+	cookie.HttpOnly = HttpOnly
+	Response.AddCookie(cookie)
+End Sub
+
+'Deprecated
 Public Sub ReturnCookie2 (Key As String, Value As String, Path As String, SameSite As String, MaxAge As Int, HttpOnly As Boolean, Secure As Boolean, Response As ServletResponse)
 	Dim CookieBuilder As StringBuilder
 	CookieBuilder.Initialize
@@ -420,16 +471,19 @@ Public Sub ReturnCookie2 (Key As String, Value As String, Path As String, SameSi
 	Response.SetHeader("Set-Cookie", CookieBuilder.ToString)
 End Sub
 
+'Deprecated
 Public Sub ReturnLocation (Location As String, Response As ServletResponse) ' Code = 302
 	Response.SendRedirect(Location)
 End Sub
 
+'Deprecated
 Public Sub ReturnConnect (Message As HttpResponseMessage, Response As ServletResponse)
 	Message.ResponseCode = 200
 	Message.ResponseObject = CreateMap("connect": True)
 	ReturnHttpResponse(Message, Response)
 End Sub
 
+'Deprecated
 Public Sub ReturnError (Message As HttpResponseMessage, Response As ServletResponse, Code As Int, Error As String)
 	If Error = "" Then Error = "Bad Request"
 	Message.ResponseCode = Code
@@ -438,6 +492,7 @@ Public Sub ReturnError (Message As HttpResponseMessage, Response As ServletRespo
 	ReturnHttpResponse(Message, Response)
 End Sub
 
+'Deprecated
 Public Sub ReturnSuccess (Message As HttpResponseMessage, Response As ServletResponse, Code As Int, Data As Map)
 	If Code = 0 Then Code = 200
 	Message.ResponseCode = Code
@@ -445,47 +500,55 @@ Public Sub ReturnSuccess (Message As HttpResponseMessage, Response As ServletRes
 	ReturnHttpResponse(Message, Response)
 End Sub
 
+'Deprecated
 Public Sub ReturnBadRequest (Message As HttpResponseMessage, Response As ServletResponse)
 	Message.ResponseCode = 400
 	ReturnHttpResponse(Message, Response)
 End Sub
 
+'Deprecated
 Public Sub ReturnAuthorizationRequired (Message As HttpResponseMessage, Response As ServletResponse)
 	Message.ResponseCode = 401
 	Message.ResponseError = "Authentication required"
 	ReturnHttpResponse(Message, Response)
 End Sub
 
+'Deprecated
 Public Sub ReturnTokenExpired (Message As HttpResponseMessage, Response As ServletResponse)
 	Message.ResponseCode = 401
 	Message.ResponseError = "Token Expired"
 	ReturnHttpResponse(Message, Response)
 End Sub
 
+'Deprecated
 Public Sub ReturnMethodNotAllow (Message As HttpResponseMessage, Response As ServletResponse)
 	Message.ResponseCode = 405
 	Message.ResponseError = "Method Not Allowed"
 	ReturnHttpResponse(Message, Response)
 End Sub
 
+'Deprecated
 Public Sub ReturnErrorUnprocessableEntity (Message As HttpResponseMessage, Response As ServletResponse)
 	Message.ResponseCode = 422
 	Message.ResponseError = "Unprocessable Entity"
 	ReturnHttpResponse(Message, Response)
 End Sub
 
+'Deprecated
 Public Sub ReturnErrorCredentialNotProvided (Message As HttpResponseMessage, Response As ServletResponse)
 	Message.ResponseCode = 400
 	Message.ResponseError = "Credential Not Provided"
 	ReturnHttpResponse(Message, Response)
 End Sub
 
+'Deprecated
 Public Sub ReturnErrorExecuteQuery (Message As HttpResponseMessage, Response As ServletResponse)
 	Message.ResponseCode = 422
 	Message.ResponseError = "Execute Query"
 	ReturnHttpResponse(Message, Response)
 End Sub
 
+'Deprecated
 Public Sub ProcessOrderedJsonFromList (L As List, Indent As String, Indentation As String) As String
 	Dim SB As StringBuilder
 	SB.Initialize
@@ -521,6 +584,7 @@ Public Sub ProcessOrderedJsonFromList (L As List, Indent As String, Indentation 
 	Return SB.ToString
 End Sub
 
+'Deprecated
 Public Sub ProcessOrderedJsonFromMap (M As Map, Indent As String, Indentation As String, ParentIsList As Boolean) As String
 	'If M.ContainsKey("__order") = False Then Return M.As(JSON).ToString
 	If M.ContainsKey("__order") = False Then Return Map2PrettyJson(M)
@@ -566,6 +630,7 @@ Public Sub ProcessOrderedJsonFromMap (M As Map, Indent As String, Indentation As
 	Return SB.ToString
 End Sub
 
+'Deprecated
 Public Sub ProcessOrderedXmlFromList (Tag As String, L As List, Indent As String, Indentation As String) As String
 	Dim SB As StringBuilder
 	SB.Initialize
@@ -599,6 +664,7 @@ Public Sub ProcessOrderedXmlFromList (Tag As String, L As List, Indent As String
 	Return SB.ToString
 End Sub
 
+'Deprecated
 Public Sub ProcessOrderedXmlFromMap (Tag As String, M As Map, Indent As String, Indentation As String) As String
 	Dim SB As StringBuilder
 	SB.Initialize
@@ -683,6 +749,7 @@ End Sub
 
 ' Current version only show xmlelement "item" if OrderedKeys = True
 
+'Deprecated
 ' To initialize: <code>
 ' App = Main.app
 ' HRM.Initialize
@@ -710,7 +777,7 @@ Public Sub ReturnHttpResponse (Message As HttpResponseMessage, Response As Servl
 		If Message.ResponseCode = 0 Then Message.ResponseCode = 400
 		If Message.ResponseType = "" Then Message.ResponseType = "ERROR"
 		If Message.ResponseStatus = "" Then Message.ResponseStatus = "error"
-		If GetType(Message.ResponseError) = "java.lang.Object" Then
+		If NotInitialized(Message.ResponseError) Or GetType(Message.ResponseError) = "java.lang.Object" Then
 			Message.ResponseError = "Bad Request"
 			If Message.ResponseCode = 404 Then Message.ResponseError = "Not Found"
 			If Message.ResponseCode = 405 Then Message.ResponseError = "Method Not Allowed"
@@ -887,39 +954,47 @@ Public Sub ReturnHttpResponse (Message As HttpResponseMessage, Response As Servl
 	ReturnContent(SB.ToString.Trim, Message.ContentType, Response)
 End Sub
 
+'Deprecated
 Public Sub ReturnContent (Content As Object, ContentType As String, Response As ServletResponse)
 	Response.ContentType = ContentType
 	Response.Write(Content)
 End Sub
 
-Public Sub ReturnHtml (Str As String, Response As ServletResponse)
-	ReturnContent(Str, MIME_TYPE_HTML, Response)
+'Deprecated
+Public Sub ReturnHtml (Text As String, Response As ServletResponse)
+	ReturnContent(Text, MIME_TYPE_HTML, Response)
 End Sub
 
-Public Sub ReturnHtmlBody (Cont As HttpResponseContent, Response As ServletResponse)
-	ReturnContent(Cont.ResponseBody, MIME_TYPE_HTML, Response)
+'Deprecated
+Public Sub ReturnHtmlBody (Content As HttpResponseContent, Response As ServletResponse)
+	ReturnContent(Content.ResponseBody, MIME_TYPE_HTML, Response)
 End Sub
 
+'Deprecated
 Public Sub ReturnHtmlPageNotFound (Response As ServletResponse)
 	Dim Str As String = $"<h1>404 Page Not Found</h1>"$
 	ReturnHtml(Str, Response)
 End Sub
 
+'Deprecated
 Public Sub ReturnHtmlBadRequest (Response As ServletResponse)
 	Dim Str As String = $"<h1>400 Bad Request</h1>"$
 	ReturnHtml(Str, Response)
 End Sub
 
+'Deprecated
 Public Sub ReturnHtmlMethodNotAllowed (Response As ServletResponse)
 	Dim Str As String = $"<h1>405 Method Not Allowed</h1>"$
 	ReturnHtml(Str, Response)
 End Sub
 
+'Deprecated
 Public Sub ReturnOutputStream (Ins As InputStream, Response As ServletResponse)
 	File.Copy2(Ins, Response.OutputStream)
 	Response.OutputStream.Close
 End Sub
 
+'Deprecated
 ' Response.ContentType = "application/pdf"
 ' Response.SetHeader("Content-Disposition", "inline;filename=temp.pdf")
 Public Sub ReturnFileInline (Ins As InputStream, FileName As String, Response As ServletResponse)
@@ -928,6 +1003,7 @@ Public Sub ReturnFileInline (Ins As InputStream, FileName As String, Response As
 	ReturnOutputStream(Ins, Response)
 End Sub
 
+'Deprecated
 ' Response.ContentType = "application/pdf"
 ' Response.SetHeader("Content-Disposition", "attachment;filename=temp.pdf")
 Public Sub ReturnFileAttachment (Ins As InputStream, FileName As String, Response As ServletResponse)
@@ -936,6 +1012,7 @@ Public Sub ReturnFileAttachment (Ins As InputStream, FileName As String, Respons
 	ReturnOutputStream(Ins, Response)
 End Sub
 
+'Deprecated
 ' // Source: http://www.b4x.com/android/forum/threads/validate-a-correctly-formatted-email-address.39803/
 Public Sub Validate_Email (EmailAddress As String) As Boolean
 	Dim MatchEmail As Matcher = Regex.Matcher("^(?i)[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])$", EmailAddress)
@@ -949,6 +1026,7 @@ Public Sub Validate_Email (EmailAddress As String) As Boolean
 	End If
 End Sub
 
+'Deprecated
 ' Check anti csrf-token variable sent from client in request header is same as variable stored in server session  
 Public Sub ValidateCsrfToken (SessionName As String, HeaderName As String, Request As ServletRequest) As Boolean
 	Dim headers As List = Request.GetHeaders(HeaderName)
