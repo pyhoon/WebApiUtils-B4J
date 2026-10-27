@@ -1,5 +1,5 @@
 # WebApiUtils
-Version: 6.99
+Version: 7.00
 
 A B4J library for building REST APIs with the [Pakai Server](https://github.com/pyhoon/pakai-server-b4j) framework. Provides HTTP request/response handling, JSON/XML parsing, cookie management, authentication, file uploads, HTML templating, and auto-generated OpenAPI 3.0 documentation with Swagger UI integration.
 
@@ -43,6 +43,19 @@ The `WebApiUtils.b4xlib` contains:
 - **Auto-Generated API Documentation** — Interactive API console served by `HelpHandler` with OpenAPI 3.0 JSON spec
 - **Swagger UI Integration** — Works with the Swagger UI distribution for a full OpenAPI explorer
 - **Code Snippets** — Template files for rapidly scaffolding new API and Web handlers
+- **MiniHtml Helpers** — The Pakai Server example adds Bootstrap, form, navigation, and HTMX helpers in `MH.bas`
+- **Cache Management** — Clear individual or matching entries using the example project's `MC` module
+
+### What's New in v7.00
+
+- Added flexible `ResponseCookie`, `ResponseLocation`, and `RequestAuthorization` helpers; Basic Auth parsing accepts an optional caller-provided client map.
+- Improved handling of uninitialized response error values.
+- Generated B4X client snippets now select the corresponding HTTP method for GET, POST, PUT, and DELETE.
+- Expanded the Pakai Server example's MiniHtml helpers and cache controls, and refreshed its page layout and configuration/resource setup.
+- Renamed the IDE custom class template to **Server Handler (Help)**.
+- Added `release/swagger.zip` containing the customized Swagger UI distribution.
+
+> **Deprecation:** A number of legacy `WebApiUtils` methods are now marked deprecated but remain available for compatibility. See the API sections below; new code should use the current replacements where provided.
 
 ---
 
@@ -56,7 +69,7 @@ Use the Pakai Server B4J template or create a new B4J server project.
 
 Copy `release/WebApiUtils.b4xlib` to your B4J additional libraries folder, or use the IDE's library manager.
 
-The library registers a **Custom Class Template** named `Help Handler` — you can add `HelpHandler` to any project via `Project → Add New Module → Help Handler`.
+The library registers a **Custom Class Template** named `Server Handler (Help)` — add `HelpHandler` via `Project → Add New Module → Server Handler (Help)`.
 
 ### 3. Using HelpHandler (auto-generated API docs)
 
@@ -83,7 +96,7 @@ End Sub
 
 ### 4. Customizing API Documentation with BuildMethods
 
-The `BuildMethods` sub (`HelpHandler.bas:307`) is the **recommended way** to define endpoint metadata for both the interactive `/help` page and the OpenAPI 3.0 JSON spec at `/help?format=openapi`. Unlike `ReadHandlers` which parses `#hashtag` comments from source code at compile time (Debug mode only), `BuildMethods` constructs endpoint properties programmatically and works in **both Debug and Release modes** without source file access.
+The `BuildMethods` sub (`HelpHandler.bas`) is the **recommended way** to define endpoint metadata for both the interactive `/help` page and the OpenAPI 3.0 JSON spec at `/help?format=openapi`. Unlike `ReadHandlers`, which parses `#hashtag` comments from source files at runtime and is used only in Debug mode, `BuildMethods` constructs endpoint properties programmatically and works in **both Debug and Release modes** without source-file access.
 
 #### How BuildMethods works
 
@@ -210,7 +223,7 @@ The snippet generator reads the same Method Map properties from `BuildMethods`:
 |---------|----------------------------|
 | `Group` | Categories endpoints into groups (comment header) |
 | `Desc` | Becomes a `' Description:` comment |
-| `Verb` | Determines `j.Download` (GET) vs `j.PostString` (POST/PUT) |
+| `Verb` | Selects the matching `HttpJob` call: `Download` (GET), `PostString` (POST), `PutString` (PUT), or `Delete` (DELETE) |
 | `Elements` | Path variables like `{id}` become subroutine parameters |
 | `Authenticate` | When `"token"`, adds `AuthToken As String` parameter and `Authorization: Bearer` header |
 | `Name` | URL path segment used in the generated URL |
@@ -226,9 +239,8 @@ The `HelpHandler` serves OpenAPI 3.0 JSON at `/help?format=openapi` and B4X clie
 
 To set it up:
 
-1. Download the [Swagger UI dist folder](https://github.com/swagger-api/swagger-ui/tree/master/dist)
-2. Place it in your project at `Objects/www/swagger/`
-3. Use the modified `swagger-initializer.js`:
+1. Extract `release/swagger.zip` into your project's `Objects/www/swagger/` directory. It contains the customized Swagger UI distribution. Alternatively, download the [Swagger UI dist folder](https://github.com/swagger-api/swagger-ui/tree/master/dist) and apply the project's `index.html` and `swagger-initializer.js` customizations.
+2. The modified `swagger-initializer.js` points Swagger UI at the local OpenAPI endpoint:
 
 ```js
 window.onload = function () {
@@ -253,7 +265,7 @@ window.onload = function () {
 };
 ```
 
-4. Use the modified `index.html` which provides:
+3. The modified `index.html` provides:
    - **Left pane** — Standard Swagger UI interactive console
    - **Right sidebar** — Live B4X code snippets fetched from `../help?format=snippets`
    - **Sync button** — Refreshes snippets from the server
@@ -275,7 +287,11 @@ window.onload = function () {
 </div>
 ```
 
-5. Navigate to `/swagger/` to access the Swagger UI explorer with the B4X snippet sidebar
+4. Navigate to `/swagger/` to access the Swagger UI explorer with the B4X snippet sidebar
+
+### Pakai Server Example Updates in v7.00
+
+The sample server no longer bundles the old static page templates (`index.html`, `main.html`, `category.html`, and `help.html`); its views are composed using MiniHtml. The example startup now uses `App.ApplyConfig` and `App.StartupMessage`, with SSL settings demonstrated in the Release build configuration. Review `source/Files/config.example` and your local config when upgrading the sample project.
 
 ---
 
@@ -308,6 +324,27 @@ WebApiUtils.ReturnHtmlMethodNotAllowed(Response)                    ' HTML 405 p
 WebApiUtils.ReturnOutputStream(Ins, Response)                       ' Binary stream
 WebApiUtils.ReturnFileInline(Ins, FileName, Response)               ' Inline file
 WebApiUtils.ReturnFileAttachment(Ins, FileName, Response)           ' Download attachment
+```
+
+Several legacy response helpers remain for compatibility and are marked deprecated. For cookies and redirects, prefer the current response-oriented helpers:
+
+```b4x
+' Read all Authorization header values
+Dim authorization As List = WebApiUtils.RequestAuthorization(Request)
+
+' Set a cookie with configurable attributes
+WebApiUtils.ResponseCookie(Response, Key:="session", Value:=token, _
+    MaxAge:=3600, HttpOnly:=True, Path:="/", SameSite:="Lax", Secure:=True)
+
+' Redirect the response
+WebApiUtils.ResponseLocation(Response, "/login")
+```
+
+`RequestBasicAuth` can optionally receive a map to populate with the decoded client credentials:
+
+```b4x
+Dim client As Map = CreateMap("CLIENT_ID": "", "CLIENT_SECRET": "")
+Dim credentials As Map = WebApiUtils.RequestBasicAuth(authorization, client)
 ```
 
 ### HttpResponseMessage Structure
@@ -366,11 +403,12 @@ Dim accessToken As String = WebApiUtils.RequestAccessToken(Request) ' Authorizat
 ### Cookie Writing
 
 ```b4x
-' Simple cookie
+' Legacy cookie helpers (deprecated)
 WebApiUtils.ReturnCookie(Key, Value, MaxAge, HttpOnly, Response)
-
-' Full control
 WebApiUtils.ReturnCookie2(Key, Value, Path, SameSite, MaxAge, HttpOnly, Secure, Response)
+
+' Current helper with cookie attributes
+WebApiUtils.ResponseCookie(Response, Key, Value, MaxAge, HttpOnly, Path, SameSite, Secure)
 ```
 
 ### URL / Encoding
@@ -458,6 +496,42 @@ WebApiUtils.RESPONSE_ELEMENT_STATUS  = "s"
 WebApiUtils.RESPONSE_ELEMENT_TYPE    = "t"
 WebApiUtils.RESPONSE_ELEMENT_ERROR   = "e"
 WebApiUtils.RESPONSE_ELEMENT_RESULT  = "r"
+```
+
+### Deprecated WebApiUtils methods
+
+Methods marked `'Deprecated` in `WebApiUtils.bas` remain in the library for compatibility. This includes older path/template/file helpers, date and JSON formatting utilities, legacy cookie/redirect and response wrappers, ordered JSON/XML writers, and validation helpers. Avoid introducing new dependencies on these methods; where available, use the newer APIs such as `ResponseCookie`, `ResponseLocation`, and the standard JSON/XML serializers. Existing projects can continue to call the deprecated methods while migrating incrementally.
+
+`RequestMultiPart` remains available and returns the first uploaded `Part`; use `RequestMultipartList` when a request may contain multiple uploaded files.
+
+---
+
+## MiniHtml Helpers and View Cache (Pakai Server Example)
+
+The Pakai Server example project includes an expanded `MH` helper module (MiniHtml 3.10) for composing HTML in B4J. These helpers are part of the example project, not the `WebApiUtils.b4xlib` itself.
+
+New helper groups include:
+
+- **Bootstrap layout:** `Container`, `ContainerFluid`, `Row`, `Col`
+- **Form controls:** `InputText`, `InputEmail`, `InputPassword`, `InputNumber`, `InputDate`, `InputFile`, `TextareaInput`, `CheckboxInput`, `RadioInput`, `SelectInput`
+- **Bootstrap components:** cards, badges, list groups, progress bars, spinners, dismissible alerts
+- **Navigation and HTMX:** navbar construction, navigation items, `HxGet`, and `HxPost`
+- **Utilities:** CSS/JavaScript links, responsive images, icon/image links, page heading and footer helpers
+
+Example:
+
+```b4x
+Dim form As MiniHtml = MH.Div.cls("container")
+Dim email As MiniHtml = MH.InputEmail("email", "email", "", "name@example.com")
+email.up(form)
+MH.ButtonIcon("Save", "bi bi-check", "btn btn-primary").up(form)
+```
+
+`MC` now also provides cache removal helpers:
+
+```b4x
+MC.ClearFromCache(App.ctx, "Products Table")
+MC.ClearAllFromCache(App.ctx, "Products") ' Removes keys containing this text
 ```
 
 ---
