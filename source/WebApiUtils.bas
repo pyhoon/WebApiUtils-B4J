@@ -5,7 +5,7 @@ Type=StaticCode
 Version=10.3
 @EndOfDesignText@
 'Web API Utility
-'Version: 7.00
+'Version: 7.01
 Sub Process_Globals
 	Public Const MIME_TYPE_HTML As String = "text/html"
 	Public Const MIME_TYPE_JSON As String = "application/json"
@@ -240,8 +240,9 @@ End Sub
 Public Sub RequestDataText (Request As ServletRequest) As String
 	Dim str As String
 	Dim inp As InputStream = Request.InputStream
-	If inp.BytesAvailable <= 0 Then
-		Return Null
+	Dim buffer() As Byte = Bit.InputStreamToBytes(inp)
+	If buffer.Length = 0 Then
+		Return str
 	End If
 	Dim buffer() As Byte = Bit.InputStreamToBytes(inp)
 	str = BytesToString(buffer, 0, buffer.Length, "UTF8")
@@ -251,10 +252,10 @@ End Sub
 Public Sub RequestDataJson (Request As ServletRequest) As Map
 	Dim data As Map
 	Dim inp As InputStream = Request.InputStream
-	If inp.BytesAvailable <= 0 Then
+	Dim buffer() As Byte = Bit.InputStreamToBytes(inp)
+	If buffer.Length = 0 Then
 		Return data
 	End If
-	Dim buffer() As Byte = Bit.InputStreamToBytes(inp)
 	Dim str As String = BytesToString(buffer, 0, buffer.Length, "UTF8")
 	data = str.As(JSON).ToMap
 	Return data
@@ -263,17 +264,12 @@ End Sub
 Public Sub RequestDataXml (Request As ServletRequest) As Map
 	Dim data As Map
 	Dim inp As InputStream = Request.InputStream
-	If inp.BytesAvailable <= 0 Then
+	Dim buffer() As Byte = Bit.InputStreamToBytes(inp)
+	If buffer.Length = 0 Then
 		Return data
 	End If
-	Dim buffer() As Byte = Bit.InputStreamToBytes(inp)
 	Dim str As String = BytesToString(buffer, 0, buffer.Length, "UTF8")
 	'str = LinearizeXML(str)
-	'Dim xm As Xml2Map
-	'xm.Initialize
-	'xm.StripNamespaces = True
-	'data = xm.Parse(str)
-	'Return data
 	Return ParseXML(str)
 End Sub
 

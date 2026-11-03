@@ -5,7 +5,7 @@ Type=Class
 Version=10.5
 @EndOfDesignText@
 ' Help Handler class
-' Version 7.00
+' Version 7.01
 Sub Class_Globals
 	Private AllGroups 	As Map
 	Private AllMethods 	As List
@@ -1216,7 +1216,7 @@ Private Sub ServeOpenApiJson '(resp As ServletResponse)
 	' 1. Define OpenAPI Metadata
 	Dim InfoMap As Map = CreateMap( _
         "title": "Pakai Server v6 API", _
-        "version": "7.00", _
+        "version": "7.01", _
         "description": "Auto-compiled specification generated directly by HelpHandler" _
     )
     
