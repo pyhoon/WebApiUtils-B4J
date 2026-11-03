@@ -1,5 +1,5 @@
 # WebApiUtils
-Version: 7.00
+Version: 7.01
 
 A B4J library for building REST APIs with the [Pakai Server](https://github.com/pyhoon/pakai-server-b4j) framework. Provides HTTP request/response handling, JSON/XML parsing, cookie management, authentication, file uploads, HTML templating, and auto-generated OpenAPI 3.0 documentation with Swagger UI integration.
 
